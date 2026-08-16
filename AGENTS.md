@@ -18,8 +18,10 @@ first-party code and need action tonight.
 Built for **Hack Hydra** (Aug 12–20, 2026), Track 02A. Solo project.
 Full plan: `docs/spec-v3.md`. Read it before making architectural decisions.
 
-Surfaces: web console (primary) · CLI (`npx reachable-scan`) · README badge.
-**There is no desktop app.** Do not propose one.
+Surfaces: web console (primary) · README badge (`/badge/{owner}/{repo}.svg`).
+**There is no desktop app.** The CLI (`npx reachable-scan`) was cut on 2026-08-16
+after the competitor review — not on the never-cut list, ~3 h, and the badge covers
+the third-surface story. Do not propose either.
 
 ---
 
@@ -88,7 +90,6 @@ repo docs, then `cypher-compat.md`, then a probe against the running node.
 | Access | `neo4j` Python driver over Bolt | `bolt://127.0.0.1:7687 — `bolt://`, not `neo4j://` (that triggers routing discovery)` |
 | Worker | Python 3.11+ (developed and tested on 3.14.7) | ingestion, queries, incident composition |
 | Web | Next.js App Router + Tailwind + shadcn/ui | server-side DB access only |
-| CLI | Node, published via `npx` | reads local lockfiles |
 | Deploy | Vercel (web) + small VM (graph-node) | precomputed JSON as fallback |
 
 Data sources: `registry.npmjs.org` (versions, maintainers, publish times) ·
@@ -111,7 +112,8 @@ worker/
     sources/           npm.py osv.py github.py (lockfile history) reach.py (L0/L1 import scan) depsdev.py
     typosquat.py       materialises NAME_SIMILAR_TO edges
     load.py            UNWIND MERGE write primitives, idempotent by deterministic id
-    pipeline.py        seeds.json -> graph, five resumable stages
+    pipeline.py        seeds.json -> graph, six resumable stages (services, packages,
+                       advisories, reach, typosquats, verify)
     queries.py         Q1–Q7, one function each, typed results
     incident.py        composes the six answers into one payload
   tests/               golden-file tests against the fixture
@@ -120,8 +122,10 @@ scripts/               probe.py, roundtrip.py — Phase 0 harnesses, kept
 web/
   app/                 / · /incident/[advisory] · /incident/[advisory]/[service]
   lib/                 server-only DB + data loading (env.ts imports "server-only")
-cli/                   npx reachable-scan  (`reachable` itself is a taken 2015 npm name)
-seeds.json             the 8 seed repos (JSON, not YAML — no dependency)
+seeds.json             12 seed repos in two disclosed cohorts: 8 core + 4 real victims
+docs/JUDGE_GUIDE.md    90-second path + six-question table for judges
+benchmarks/results/    provenance-stamped timing JSON written by `make incident --out`
+worker/out/            committed incident JSON — the web contract and the demo fallback
 ```
 
 There is deliberately **no `schema/` directory and no `.cypher` files.** The
@@ -404,6 +408,12 @@ least necessary).
 1. Graph explorer → 2. Eval harness → 3. Reachability L2 (keep L0/L1) →
 4. CLI worm check → 5. Typosquat panel → 6. Live chat
 
+**Applied 2026-08-16 (competitor review, owner-approved):** graph explorer, eval
+harness, L2, the **whole CLI**, typosquat *panel* (Q5 stays in the JSON and the
+incident page shows near-names with their kind, labelled as a hypothesis), live
+chat. Deploy is JSON-first on Vercel; a public graph-node only if it lands in
+< 2 h.
+
 **Never cut:** the six queries · the incident page · the badge · the video.
 
 ---
@@ -424,19 +434,32 @@ Before reporting any task complete:
 
 > Keep this current. It is how a fresh agent session knows where things stand.
 
-**Current phase:** Phase 0 — engine proven; awaiting decisions before Phase 1
-**Blocked on:** owner sign-off on the integer-id schema change (§8), seed repo
-selection (Step 6), and the two Discord questions (Step 7) — none posted yet.
-**Last verified working (2026-08-16):**
-`make node` (Docker image, not a source build) · `make roundtrip` — a real write
-committed and read back over Bolt · `make probe` — 24 cases, 23 as expected,
-1 surprise, all recorded in §8 and the `hydradb-cypher` skill.
+**Current phase:** Phases 0–4 and 6 (L0/L1) built; real ingest of 12 seeds in
+progress; Phase 5 (differentiator UI) mostly landed with the console; next are
+the first real incident JSON, README, deploy, video.
 
-Not done in Phase 0: `just native-check` / `just smoke` were skipped in favour
-of the prebuilt Docker image, so the source build is unproven on this machine.
+**Last verified working (2026-08-16 evening):**
+`make node` · `make fixture` · `make test` (11 golden tests, lint, leak check) ·
+`make incident ID=MAL-TEST-1` on the fixture · `make ingest` services + packages
+stages against real GitHub/npm/OSV data (8 core + 4 victim repos, ~6.2k packages,
+~110 lockfile snapshots; three real lockfiles pin `debug@4.4.2` / `chalk@5.6.1`
+inside or after the 2025-09-08 window) · `web/` builds and prerenders from
+committed JSON.
+
+**Known open items:** ingest stages advisories→reach→typosquats→verify must
+complete on the real graph; `worker/out/*.json` and `benchmarks/results/*` are
+empty until `make incident … --out` runs with the ingest idle; README is a stub;
+no deploy; no video. `docs/JUDGE_GUIDE.md` has `see benchmarks/results/` where
+numbers belong — fill from measurements only.
+
+**Decisions this session:** RESOLVED is the closure (transitive arms removed
+everywhere); Q3 has two in-engine evidence classes (in_window, pinned_removed);
+`unscanned` is a first-class verdict; CLI cut; chalk/debug is the primary
+incident, TanStack the Q2 story; every payload section carries the executed
+Cypher and its limitations.
 
 Phases: 0 engine · 1 model · 2 ingestion · 3 queries · 4 web · 5 differentiators
-· 6 reachability · 7 CLI+badge · 8 deploy · 9 submission.
+· 6 reachability · 7 badge · 8 deploy · 9 submission.
 See `docs/spec-v3.md` for each phase's goal, done-when, and cut-if-late.
 
 ---
