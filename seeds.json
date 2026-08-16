@@ -1,0 +1,39 @@
+{
+  "_comment": "Seed services and demo incidents. Every repo was verified on 2026-08-16 to ship package-lock.json lockfileVersion 3 with real commit history; 172 transitive deps are shared by all eight. Disclosed per Track 02 rules (bring-your-own dataset).",
+  "services": [
+    {"slug": "twbs/bootstrap", "criticality": 3, "lockfile_commits": 1524, "history_from": "2017-07-16"},
+    {"slug": "medplum/medplum", "criticality": 3, "lockfile_commits": 938, "history_from": "2021-04-20"},
+    {"slug": "Kong/insomnia", "criticality": 3, "lockfile_commits": 530, "history_from": "2017-05-26"},
+    {"slug": "documenso/documenso", "criticality": 3, "lockfile_commits": 416, "history_from": "2022-11-14"},
+    {"slug": "louislam/uptime-kuma", "criticality": 2, "lockfile_commits": 360, "history_from": "2021-06-24"},
+    {"slug": "usebruno/bruno", "criticality": 2, "lockfile_commits": 321, "history_from": "2021-12-03"},
+    {"slug": "wagtail/wagtail", "criticality": 2, "lockfile_commits": 224, "history_from": "2017-08-11"},
+    {"slug": "socketio/socket.io", "criticality": 1, "lockfile_commits": 127, "history_from": "2020-09-17"}
+  ],
+  "snapshots": {
+    "_comment": "Lockfile snapshots per service: the last commit touching package-lock.json at or before each cutoff, plus dense hourly-resolution samples around each incident window so Q3 has lockfiles inside/before/after the window.",
+    "yearly_cutoffs": ["2023-01-01", "2024-01-01", "2025-01-01", "2026-01-01"],
+    "around_incidents_days": 14
+  },
+  "incidents": [
+    {
+      "id": "GHSA-g7cv-rxg3-hmpx",
+      "name": "TanStack worm (Mini Shai-Hulud)",
+      "date": "2026-05-11",
+      "kind": "malware",
+      "note": "42 packages, 84 versions, 5m39s publish window, advisory 4h52m later. Largest multi-package npm advisory in OSV. Primary demo."
+    },
+    {
+      "id": "GHSA-2v46-p5h4-248w",
+      "name": "chalk / debug / ansi-styles compromise",
+      "date": "2025-09-08",
+      "kind": "malware",
+      "note": "No umbrella advisory; MAL-2025-4696x..4698x per package. 806k dependents on debug alone. Second demo — the blast radius that does not fit on screen.",
+      "packages": {"chalk": ["5.6.1"], "debug": ["4.4.2"], "ansi-styles": ["6.2.2"], "supports-color": ["10.2.1"], "strip-ansi": ["7.1.1"], "ansi-regex": ["6.2.1"], "wrap-ansi": ["9.0.1"], "color-convert": ["3.1.1"], "color-name": ["2.0.1"], "is-arrayish": ["0.3.3"], "slice-ansi": ["7.1.1"], "error-ex": ["1.3.3"], "simple-swizzle": ["0.2.3"]}
+    }
+  ],
+  "typosquat_corpus": {
+    "_comment": "NAME_SIMILAR_TO is materialised over the top-N packages by downloads plus every package name touched by ingest.",
+    "top_n_by_downloads": 2000
+  }
+}
