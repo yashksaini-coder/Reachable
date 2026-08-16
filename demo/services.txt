@@ -24,3 +24,6 @@ GoMake-ltd/n8n-node-gomake 2
 LVQT-ss/cakestory-api 1
 lperry65/Aider-Chat 1
 ChrisTregaskis/ai-research-automation 1
+
+# added through the console (Services → add repository) while testing add-by-URL; kept as a third cohort
+koajs/koa 1
