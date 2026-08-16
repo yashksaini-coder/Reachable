@@ -267,15 +267,16 @@ def stage_advisories(
 def stage_reach(s) -> None:
     """L0/L1 reachability for every (service, lockfile) that resolves an advisory-affected
     version: scan first-party sources at that commit for imports of the affected packages."""
-    rows = run(
-        s,
-        "MATCH (a:Advisory)-[:AFFECTS]->(v:Version)-[:VERSION_OF]->(p:Package) "
-        "MATCH (v)<-[:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) "
-        "RETURN sv.key AS svc, l.sha AS sha, p.name AS pkg",
-    )
+    # Anchored per advisory: an unanchored walk over 240k AFFECTS edges hits the 30 s timeout.
     targets: dict[tuple[str, str], set[str]] = defaultdict(set)
-    for r in rows:
-        targets[(r["svc"], r["sha"])].add(r["pkg"])
+    for a in run(s, "MATCH (a:Advisory) RETURN a.id AS id"):
+        for r in run(
+            s,
+            f"MATCH (a:Advisory {{id: {a['id']}}})-[:AFFECTS]->(v:Version)<-[:RESOLVED]-(l:Lockfile)"
+            "<-[:HAS_LOCKFILE]-(sv:Service) MATCH (v)-[:VERSION_OF]->(p:Package) "
+            "RETURN sv.key AS svc, l.sha AS sha, p.name AS pkg",
+        ):
+            targets[(r["svc"], r["sha"])].add(r["pkg"])
     log(f"  {len(targets)} exposed (service, commit) pairs to scan")
     files, contains, imports = [], [], []
     for (svc, sha), pkgs in sorted(targets.items()):

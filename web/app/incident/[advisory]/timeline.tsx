@@ -30,8 +30,8 @@ export function Timeline({
   const hours = Math.round(((hi - lo) / 3600) * 10) / 10;
 
   return (
-    <div className="overflow-x-auto rounded border border-line bg-panel p-3">
-      <div className="mb-1 flex justify-between font-mono text-[10px] text-ink-3">
+    <div className="overflow-x-auto rounded-lg border border-border bg-card/70 p-3">
+      <div className="mb-1 flex justify-between font-mono text-[10px] text-muted-foreground">
         <span>{iso(lo)}</span>
         <span>{hours} h shown · bar = installable window · tick = lockfile commit</span>
         <span>{iso(hi)}</span>
