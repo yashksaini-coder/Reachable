@@ -134,7 +134,13 @@ def affects_edges(
             continue
         live_to, kind = UNBOUNDED, "exact"
         if adv["kind"] == "malware":
-            cands = [t for t in (w.get("next_surviving"), adv["published_at"]) if t is not None]
+            # A bound that predates the publish is not a bound (advisory published before
+            # a later-added bad version shipped) — only bounds after live_from count.
+            cands = [
+                t
+                for t in (w.get("next_surviving"), adv["published_at"])
+                if t is not None and t >= w["published_at"]
+            ]
             if cands:
                 live_to, kind = min(cands), "upper_bound"
         rows.append(

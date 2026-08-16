@@ -1,6 +1,9 @@
 """Hand-verified fixture graph. Every label, every relationship, every query has a
 known answer AND a known non-answer here. `make fixture` wipes and reloads it.
 
+Keys live under the `fx/` namespace (pkg:fx/…, fx:<login>, sym:fx/…) so the fixture can
+never collide with — or wipe — real ingested data in the same graph.
+
 The story (all timestamps are int epoch seconds, UTC):
 
   Package chalk, maintained by "sindre" (2FA) and "qix" (no 2FA).
@@ -30,7 +33,7 @@ Q2 (which version introduced MAL-TEST-1): chalk@5.6.1, first at T0+100.
 Q3 (resolved while live): webapp lock A, reachy lock F. NOT webapp lock B (after), api C (before).
 Q4 (maintainer fan-out from chalk): qix -> strip-ansi -> worker exposed. sindre -> only chalk.
 Q5 (typosquats of chalk): chalks (distance 1, kind 'insertion'). NOT colors.
-Q7 (reachability): reachy L2 (symbol used); webapp L0 (present, not imported).
+Q7 (reachability): reachy L2 (symbol used); webapp L0 (scanned, not imported); legacy unscanned.
 """
 
 from reachable.db import run, session
@@ -40,67 +43,67 @@ T0 = 1_757_300_000  # 2025-09-08T04:13:20Z, arbitrary but real-looking
 
 NODES: dict[str, list[dict]] = {
     "Package": [
-        {"key": "pkg:npm/chalk", "name": "chalk", "ecosystem": "npm", "downloads": 422_000_000},
+        {"key": "pkg:fx/chalk", "name": "chalk", "ecosystem": "npm", "downloads": 422_000_000},
         {
-            "key": "pkg:npm/strip-ansi",
+            "key": "pkg:fx/strip-ansi",
             "name": "strip-ansi",
             "ecosystem": "npm",
             "downloads": 500_000_000,
         },
         {
-            "key": "pkg:npm/ansi-regex",
+            "key": "pkg:fx/ansi-regex",
             "name": "ansi-regex",
             "ecosystem": "npm",
             "downloads": 520_000_000,
         },
-        {"key": "pkg:npm/chalks", "name": "chalks", "ecosystem": "npm", "downloads": 12},
-        {"key": "pkg:npm/colors", "name": "colors", "ecosystem": "npm", "downloads": 30_000_000},
+        {"key": "pkg:fx/chalks", "name": "chalks", "ecosystem": "npm", "downloads": 12},
+        {"key": "pkg:fx/colors", "name": "colors", "ecosystem": "npm", "downloads": 30_000_000},
     ],
     "Version": [
         {
-            "key": "pkg:npm/chalk@5.6.0",
+            "key": "pkg:fx/chalk@5.6.0",
             "version": "5.6.0",
             "published_at": T0,
             "removed": False,
             "malicious": False,
         },
         {
-            "key": "pkg:npm/chalk@5.6.1",
+            "key": "pkg:fx/chalk@5.6.1",
             "version": "5.6.1",
             "published_at": T0 + 100,
             "removed": True,
             "malicious": True,
         },
         {
-            "key": "pkg:npm/chalk@5.6.2",
+            "key": "pkg:fx/chalk@5.6.2",
             "version": "5.6.2",
             "published_at": T0 + 200,
             "removed": False,
             "malicious": False,
         },
         {
-            "key": "pkg:npm/strip-ansi@7.1.0",
+            "key": "pkg:fx/strip-ansi@7.1.0",
             "version": "7.1.0",
             "published_at": T0 - 1000,
             "removed": False,
             "malicious": False,
         },
         {
-            "key": "pkg:npm/ansi-regex@6.0.0",
+            "key": "pkg:fx/ansi-regex@6.0.0",
             "version": "6.0.0",
             "published_at": T0 - 2000,
             "removed": False,
             "malicious": False,
         },
         {
-            "key": "pkg:npm/chalks@0.0.1",
+            "key": "pkg:fx/chalks@0.0.1",
             "version": "0.0.1",
             "published_at": T0 + 90,
             "removed": False,
             "malicious": False,
         },
         {
-            "key": "pkg:npm/colors@1.4.0",
+            "key": "pkg:fx/colors@1.4.0",
             "version": "1.4.0",
             "published_at": T0 - 5000,
             "removed": False,
@@ -109,28 +112,28 @@ NODES: dict[str, list[dict]] = {
     ],
     "Maintainer": [
         {
-            "key": "npm:sindre",
+            "key": "fx:sindre",
             "login": "sindre",
             "account_created": T0 - 300_000_000,
             "twofa": True,
             "email_domain": "example.com",
         },
         {
-            "key": "npm:qix",
+            "key": "fx:qix",
             "login": "qix",
             "account_created": T0 - 200_000_000,
             "twofa": False,
             "email_domain": "example.com",
         },
         {
-            "key": "npm:mallory",
+            "key": "fx:mallory",
             "login": "mallory",
             "account_created": T0 + 80,
             "twofa": False,
             "email_domain": "mail.ru",
         },
         {
-            "key": "npm:marak",
+            "key": "fx:marak",
             "login": "marak",
             "account_created": T0 - 400_000_000,
             "twofa": True,
@@ -227,65 +230,67 @@ NODES: dict[str, list[dict]] = {
     ],
     "File": [
         {"key": "file:acme/reachy:src/log.js", "path": "src/log.js", "language": "javascript"},
+        # webapp is SCANNED but imports nothing from the incident -> L0. legacy is unscanned.
+        {"key": "file:acme/webapp:src/index.js", "path": "src/index.js", "language": "javascript"},
     ],
     "Symbol": [
-        {"key": "sym:npm/chalk@5.6.1#default", "name": "default"},
+        {"key": "sym:fx/chalk@5.6.1#default", "name": "default"},
     ],
 }
 
 # (type, src_label, src_key, dst_label, dst_key, props)
 EDGES: list[tuple] = [
-    ("VERSION_OF", "Version", "pkg:npm/chalk@5.6.0", "Package", "pkg:npm/chalk", {}),
-    ("VERSION_OF", "Version", "pkg:npm/chalk@5.6.1", "Package", "pkg:npm/chalk", {}),
-    ("VERSION_OF", "Version", "pkg:npm/chalk@5.6.2", "Package", "pkg:npm/chalk", {}),
-    ("VERSION_OF", "Version", "pkg:npm/strip-ansi@7.1.0", "Package", "pkg:npm/strip-ansi", {}),
-    ("VERSION_OF", "Version", "pkg:npm/ansi-regex@6.0.0", "Package", "pkg:npm/ansi-regex", {}),
-    ("VERSION_OF", "Version", "pkg:npm/chalks@0.0.1", "Package", "pkg:npm/chalks", {}),
-    ("VERSION_OF", "Version", "pkg:npm/colors@1.4.0", "Package", "pkg:npm/colors", {}),
+    ("VERSION_OF", "Version", "pkg:fx/chalk@5.6.0", "Package", "pkg:fx/chalk", {}),
+    ("VERSION_OF", "Version", "pkg:fx/chalk@5.6.1", "Package", "pkg:fx/chalk", {}),
+    ("VERSION_OF", "Version", "pkg:fx/chalk@5.6.2", "Package", "pkg:fx/chalk", {}),
+    ("VERSION_OF", "Version", "pkg:fx/strip-ansi@7.1.0", "Package", "pkg:fx/strip-ansi", {}),
+    ("VERSION_OF", "Version", "pkg:fx/ansi-regex@6.0.0", "Package", "pkg:fx/ansi-regex", {}),
+    ("VERSION_OF", "Version", "pkg:fx/chalks@0.0.1", "Package", "pkg:fx/chalks", {}),
+    ("VERSION_OF", "Version", "pkg:fx/colors@1.4.0", "Package", "pkg:fx/colors", {}),
     (
         "DEPENDS_ON",
         "Version",
-        "pkg:npm/chalk@5.6.1",
+        "pkg:fx/chalk@5.6.1",
         "Version",
-        "pkg:npm/strip-ansi@7.1.0",
+        "pkg:fx/strip-ansi@7.1.0",
         {"range": "^7.1.0"},
     ),
     (
         "DEPENDS_ON",
         "Version",
-        "pkg:npm/chalk@5.6.0",
+        "pkg:fx/chalk@5.6.0",
         "Version",
-        "pkg:npm/strip-ansi@7.1.0",
+        "pkg:fx/strip-ansi@7.1.0",
         {"range": "^7.1.0"},
     ),
     (
         "DEPENDS_ON",
         "Version",
-        "pkg:npm/chalk@5.6.2",
+        "pkg:fx/chalk@5.6.2",
         "Version",
-        "pkg:npm/strip-ansi@7.1.0",
+        "pkg:fx/strip-ansi@7.1.0",
         {"range": "^7.1.0"},
     ),
     (
         "DEPENDS_ON",
         "Version",
-        "pkg:npm/strip-ansi@7.1.0",
+        "pkg:fx/strip-ansi@7.1.0",
         "Version",
-        "pkg:npm/ansi-regex@6.0.0",
+        "pkg:fx/ansi-regex@6.0.0",
         {"range": "^6.0.0"},
     ),
-    ("MAINTAINS", "Maintainer", "npm:sindre", "Package", "pkg:npm/chalk", {}),
-    ("MAINTAINS", "Maintainer", "npm:qix", "Package", "pkg:npm/chalk", {}),
-    ("MAINTAINS", "Maintainer", "npm:qix", "Package", "pkg:npm/strip-ansi", {}),
-    ("MAINTAINS", "Maintainer", "npm:qix", "Package", "pkg:npm/ansi-regex", {}),
-    ("MAINTAINS", "Maintainer", "npm:mallory", "Package", "pkg:npm/chalks", {}),
-    ("MAINTAINS", "Maintainer", "npm:marak", "Package", "pkg:npm/colors", {}),
+    ("MAINTAINS", "Maintainer", "fx:sindre", "Package", "pkg:fx/chalk", {}),
+    ("MAINTAINS", "Maintainer", "fx:qix", "Package", "pkg:fx/chalk", {}),
+    ("MAINTAINS", "Maintainer", "fx:qix", "Package", "pkg:fx/strip-ansi", {}),
+    ("MAINTAINS", "Maintainer", "fx:qix", "Package", "pkg:fx/ansi-regex", {}),
+    ("MAINTAINS", "Maintainer", "fx:mallory", "Package", "pkg:fx/chalks", {}),
+    ("MAINTAINS", "Maintainer", "fx:marak", "Package", "pkg:fx/colors", {}),
     (
         "AFFECTS",
         "Advisory",
         "MAL-TEST-1",
         "Version",
-        "pkg:npm/chalk@5.6.1",
+        "pkg:fx/chalk@5.6.1",
         {"live_from": T0 + 100, "live_to": T0 + 200, "live_to_kind": "upper_bound"},
     ),
     (
@@ -293,7 +298,7 @@ EDGES: list[tuple] = [
         "Advisory",
         "GHSA-TEST-CVE",
         "Version",
-        "pkg:npm/ansi-regex@6.0.0",
+        "pkg:fx/ansi-regex@6.0.0",
         {"live_from": T0 - 2000, "live_to": 4_102_444_800, "live_to_kind": "exact"},
     ),  # 2100-01-01: still live
     ("HAS_LOCKFILE", "Service", "svc:acme/webapp", "Lockfile", "lock:acme/webapp@aaaa", {}),
@@ -308,7 +313,7 @@ EDGES: list[tuple] = [
         "Lockfile",
         "lock:acme/webapp@aaaa",
         "Version",
-        "pkg:npm/chalk@5.6.1",
+        "pkg:fx/chalk@5.6.1",
         {"at": T0 + 150},
     ),
     (
@@ -316,7 +321,7 @@ EDGES: list[tuple] = [
         "Lockfile",
         "lock:acme/webapp@aaaa",
         "Version",
-        "pkg:npm/strip-ansi@7.1.0",
+        "pkg:fx/strip-ansi@7.1.0",
         {"at": T0 + 150},
     ),
     (
@@ -324,7 +329,7 @@ EDGES: list[tuple] = [
         "Lockfile",
         "lock:acme/webapp@aaaa",
         "Version",
-        "pkg:npm/ansi-regex@6.0.0",
+        "pkg:fx/ansi-regex@6.0.0",
         {"at": T0 + 150},
     ),
     (
@@ -332,7 +337,7 @@ EDGES: list[tuple] = [
         "Lockfile",
         "lock:acme/webapp@bbbb",
         "Version",
-        "pkg:npm/chalk@5.6.2",
+        "pkg:fx/chalk@5.6.2",
         {"at": T0 + 300},
     ),
     (
@@ -340,7 +345,7 @@ EDGES: list[tuple] = [
         "Lockfile",
         "lock:acme/webapp@bbbb",
         "Version",
-        "pkg:npm/strip-ansi@7.1.0",
+        "pkg:fx/strip-ansi@7.1.0",
         {"at": T0 + 300},
     ),
     (
@@ -348,7 +353,7 @@ EDGES: list[tuple] = [
         "Lockfile",
         "lock:acme/webapp@bbbb",
         "Version",
-        "pkg:npm/ansi-regex@6.0.0",
+        "pkg:fx/ansi-regex@6.0.0",
         {"at": T0 + 300},
     ),
     (
@@ -356,7 +361,7 @@ EDGES: list[tuple] = [
         "Lockfile",
         "lock:acme/api@cccc",
         "Version",
-        "pkg:npm/chalk@5.6.0",
+        "pkg:fx/chalk@5.6.0",
         {"at": T0 + 50},
     ),
     (
@@ -364,7 +369,7 @@ EDGES: list[tuple] = [
         "Lockfile",
         "lock:acme/api@cccc",
         "Version",
-        "pkg:npm/strip-ansi@7.1.0",
+        "pkg:fx/strip-ansi@7.1.0",
         {"at": T0 + 50},
     ),
     (
@@ -372,7 +377,7 @@ EDGES: list[tuple] = [
         "Lockfile",
         "lock:acme/api@cccc",
         "Version",
-        "pkg:npm/ansi-regex@6.0.0",
+        "pkg:fx/ansi-regex@6.0.0",
         {"at": T0 + 50},
     ),
     (
@@ -380,7 +385,7 @@ EDGES: list[tuple] = [
         "Lockfile",
         "lock:acme/worker@dddd",
         "Version",
-        "pkg:npm/strip-ansi@7.1.0",
+        "pkg:fx/strip-ansi@7.1.0",
         {"at": T0 + 150},
     ),
     (
@@ -388,7 +393,7 @@ EDGES: list[tuple] = [
         "Lockfile",
         "lock:acme/worker@dddd",
         "Version",
-        "pkg:npm/ansi-regex@6.0.0",
+        "pkg:fx/ansi-regex@6.0.0",
         {"at": T0 + 150},
     ),
     (
@@ -396,7 +401,7 @@ EDGES: list[tuple] = [
         "Lockfile",
         "lock:acme/legacy@eeee",
         "Version",
-        "pkg:npm/colors@1.4.0",
+        "pkg:fx/colors@1.4.0",
         {"at": T0 + 150},
     ),
     (
@@ -404,7 +409,7 @@ EDGES: list[tuple] = [
         "Lockfile",
         "lock:acme/reachy@ffff",
         "Version",
-        "pkg:npm/chalk@5.6.1",
+        "pkg:fx/chalk@5.6.1",
         {"at": T0 + 150},
     ),
     (
@@ -412,7 +417,7 @@ EDGES: list[tuple] = [
         "Lockfile",
         "lock:acme/reachy@ffff",
         "Version",
-        "pkg:npm/strip-ansi@7.1.0",
+        "pkg:fx/strip-ansi@7.1.0",
         {"at": T0 + 150},
     ),
     (
@@ -420,17 +425,18 @@ EDGES: list[tuple] = [
         "Lockfile",
         "lock:acme/reachy@ffff",
         "Version",
-        "pkg:npm/ansi-regex@6.0.0",
+        "pkg:fx/ansi-regex@6.0.0",
         {"at": T0 + 150},
     ),
     ("CONTAINS", "Service", "svc:acme/reachy", "File", "file:acme/reachy:src/log.js", {}),
-    ("IMPORTS", "File", "file:acme/reachy:src/log.js", "Package", "pkg:npm/chalk", {"line": 1}),
+    ("CONTAINS", "Service", "svc:acme/webapp", "File", "file:acme/webapp:src/index.js", {}),
+    ("IMPORTS", "File", "file:acme/reachy:src/log.js", "Package", "pkg:fx/chalk", {"line": 1}),
     (
         "USES_SYMBOL",
         "File",
         "file:acme/reachy:src/log.js",
         "Symbol",
-        "sym:npm/chalk@5.6.1#default",
+        "sym:fx/chalk@5.6.1#default",
         {"line": 7},
     ),
     (
@@ -438,15 +444,15 @@ EDGES: list[tuple] = [
         "Advisory",
         "MAL-TEST-1",
         "Symbol",
-        "sym:npm/chalk@5.6.1#default",
+        "sym:fx/chalk@5.6.1#default",
         {"inferred": True},
     ),
     (
         "NAME_SIMILAR_TO",
         "Package",
-        "pkg:npm/chalks",
+        "pkg:fx/chalks",
         "Package",
-        "pkg:npm/chalk",
+        "pkg:fx/chalk",
         {"distance": 1, "kind": "insertion"},
     ),
 ]
@@ -471,8 +477,15 @@ def set_clause(var: str, keys: list[str]) -> str:
 
 
 def wipe(s) -> None:
-    ids = [{"id": gid(n["key"])} for rows in NODES.values() for n in rows]
-    run(s, "UNWIND $rows AS row MATCH (n {id: row.id}) DETACH DELETE n", rows=ids)
+    """Delete the fixture's EDGES only. Node deletion by id is a full scan on this engine
+    (~1.3 s per row at 25k nodes; DETACH DELETE the same), so nodes are left in place and
+    re-MERGEd by load() — every property is overwritten, and an orphan fx/ node is harmless."""
+    for (rtype, _sl, _dl), rows in edge_rows().items():
+        run(
+            s,
+            f"UNWIND $rows AS row MATCH (a {{id: row.src}})-[r:{rtype}]->(b {{id: row.dst}}) DELETE r",
+            rows=[{"src": r["src"], "dst": r["dst"]} for r in rows],
+        )
 
 
 def load(s) -> None:
@@ -500,8 +513,8 @@ def main() -> None:
         wipe(s)
         load(s)
         n = sum(len(v) for v in NODES.values())
-        got = run(s, "MATCH (n:Version) RETURN count(*) AS c")[0]["c"]
-        assert got == len(NODES["Version"]), (got, len(NODES["Version"]))
+        got = run(s, "MATCH (n:Version) WHERE n.key STARTS WITH 'pkg:fx/' RETURN count(*) AS c")
+        assert got[0]["c"] == len(NODES["Version"]), (got, len(NODES["Version"]))
         print(f"fixture loaded: {n} nodes, {len(EDGES)} edges")
 
 

@@ -51,6 +51,10 @@ def _by_shape(rows: list[dict], drop: tuple[str, ...]) -> dict[tuple[str, ...], 
     that a fuller row wrote earlier — MERGE unions properties across statements."""
     groups: dict[tuple[str, ...], list[dict]] = {}
     for r in rows:
+        # The engine refuses null in UNWIND parameters ("only boolean, signed integer, finite
+        # float, and string"), so a None-valued property is simply not written — which is also
+        # the honest representation of "not exposed by the registry".
+        r = {k: v for k, v in r.items() if v is not None}
         groups.setdefault(tuple(sorted(set(r) - set(drop))), []).append(r)
     return groups
 

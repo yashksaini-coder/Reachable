@@ -8,7 +8,7 @@ is published anywhere; `next_surviving_publish` is the live_to upper-bound proxy
 import re
 from datetime import datetime
 
-from reachable.http import get_json
+from reachable.http import HttpError, get_json
 from reachable.ids import SEMVER, pkg_key, safe_name
 from reachable.load import log
 
@@ -109,11 +109,19 @@ def downloads(names: list[str]) -> dict[str, int]:
     scoped = [n for n in names if n.startswith("@")]
     plain = [n for n in names if not n.startswith("@")]
     for n in scoped:
-        d = get_json(f"{DOWNLOADS}/{n}", ok404=True)
+        try:
+            d = get_json(f"{DOWNLOADS}/{n}", ok404=True)
+        except HttpError as e:  # downloads are a ranking signal, never worth failing an ingest
+            log(f"npm downloads: {e}")
+            d = None
         out[n] = int((d or {}).get("downloads") or 0)
     for i in range(0, len(plain), 128):
         chunk = plain[i : i + 128]
-        d = get_json(f"{DOWNLOADS}/{','.join(chunk)}", ok404=True) or {}
+        try:
+            d = get_json(f"{DOWNLOADS}/{','.join(chunk)}", ok404=True) or {}
+        except HttpError as e:
+            log(f"npm downloads: {e}")
+            d = {}
         if len(chunk) == 1:  # single-name response is not keyed by name
             d = {chunk[0]: d}
         for n in chunk:

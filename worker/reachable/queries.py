@@ -1,11 +1,17 @@
 """The six answers, one typed function each. Every traversal runs inside HydraDB.
 
 Engine rules that shape every query here (AGENTS.md §8):
-- var-length source must be an inline INTEGER literal — never a parameter, never a bound node
+- RESOLVED is the flattened install tree, so "does this lockfile pull in X" is ONE hop, and the
+  transitive arms the spec drafted are redundant. Var-length incoming from a popular version
+  explodes (250k-path frontier cap / 30 s timeout on the real graph) — never do that.
 - algo.* is a complete statement; filtering happens after YIELD in Python
-- MSpaths pathCount defaults to 1 and resultLimit truncates silently -> both handled in _mspaths
-- no min/max/DISTINCT-in-aggregate -> ORDER BY LIMIT 1, and dedupe via grouping keys
+- MSpaths pathCount defaults to 1 and resultLimit truncates silently -> both explicit
+- no min/max/DISTINCT-in-aggregate -> ORDER BY LIMIT 1, dedupe via grouping keys
 - no literal constants in RETURN -> levels/labels are attached in Python
+- every id formatted into query text goes through _int(); the assert is the injection defence
+
+Every Result carries the statement that was actually executed (`cypher`) so the console's
+"How HydraDB answered this" card is generated from truth, never from a static string.
 """
 
 from dataclasses import dataclass, field
@@ -13,11 +19,8 @@ from dataclasses import dataclass, field
 from reachable.db import timed
 from reachable.ids import cypher_str_list, gid
 
-MAX_HOPS = 8
-
 
 def _int(v) -> int:
-    """The one place an id is formatted into query text. The assert IS the injection defence."""
     assert isinstance(v, int) and v >= 0, v
     return v
 
@@ -28,6 +31,21 @@ class Result:
     ms: float
     truncated: bool = False
     meta: dict = field(default_factory=dict)
+    cypher: list[str] = field(default_factory=list)  # executed statements, in order
+    limitations: list[str] = field(default_factory=list)
+
+
+def _run(s, res: Result, q: str, **params) -> list[dict]:
+    rows, ms = timed(s, q, **params)
+    res.ms += ms
+    res.cypher.append(q)
+    return rows
+
+
+def _pathkeys(path) -> list[str]:
+    """HydraDB yields a path as a flat list [node_props, REL_TYPE, node_props, ...] with no labels;
+    the key prefix (pkg:/lock:/svc:) is the label. Returns the alternating keys and rel types."""
+    return [el if isinstance(el, str) else el["key"] for el in path]
 
 
 # ---------------------------------------------------------------- Q2 · which version
@@ -35,71 +53,114 @@ class Result:
 
 def q2_affected_versions(s, advisory_key: str) -> Result:
     """Which version introduced it: earliest affected version + the full affected list."""
+    res = Result([], 0.0)
     a = _int(gid(advisory_key))
-    first, ms1 = timed(
+    first = _run(
         s,
+        res,
         f"MATCH (a:Advisory {{id: {a}}})-[:AFFECTS]->(v:Version) "
         "RETURN v.key AS version, v.published_at AS published_at "
         "ORDER BY v.published_at ASC LIMIT 1",
     )
-    all_, ms2 = timed(
+    res.rows = _run(
         s,
+        res,
         f"MATCH (a:Advisory {{id: {a}}})-[af:AFFECTS]->(v:Version)-[:VERSION_OF]->(p:Package) "
         "RETURN p.key AS package, v.key AS version, v.published_at AS published_at, "
-        "af.live_from AS live_from, af.live_to AS live_to, af.live_to_kind AS live_to_kind "
-        "ORDER BY v.published_at ASC",
+        "v.removed AS removed, af.live_from AS live_from, af.live_to AS live_to, "
+        "af.live_to_kind AS live_to_kind ORDER BY v.published_at ASC",
     )
-    return Result(all_, ms1 + ms2, meta={"first": first[0] if first else None})
+    res.meta["first"] = first[0] if first else None
+    if any(r["live_to_kind"] == "upper_bound" for r in res.rows):
+        res.limitations.append(
+            "live_to is an upper bound: npm publishes no takedown time; we use "
+            "min(next surviving publish, advisory published)."
+        )
+    return res
 
 
-# ---------------------------------------------------------------- Q1 · reverse closure
+# ---------------------------------------------------------------- Q1 · who is exposed
 
 
-def _mspaths(s, source_keys: list[str], *, limit: int, max_hops: int = MAX_HOPS) -> Result:
-    """Reverse dependency closure from many sources in ONE engine call.
+def q1_exposed_services(s, bad_version_keys: list[str], *, explain: bool = True) -> Result:
+    """Which services are transitively exposed, with the path that proves it.
 
-    resultLimit is requested as limit+1 so truncation is detectable — the engine
-    reports has_more=False whether or not it truncated. pathCount is explicit
-    because it silently defaults to 1.
+    Membership: RESOLVED is the flattened install tree npm actually wrote, so any lockfile that
+    transitively depends on a bad version has a RESOLVED edge to it — one hop, in-engine.
+    Explanation: per (bad, lockfile), algo.SPpaths over DEPENDS_ON+RESOLVED yields the chain
+    "which of your dependencies pulls it in" (integer node ids as parameters — no literal surface).
     """
+    res = Result([], 0.0)
+    hits: dict[tuple[str, str], dict] = {}
+    for key in bad_version_keys:
+        vid = _int(gid(key))
+        for r in _run(
+            s,
+            res,
+            f"MATCH (bad:Version {{id: {vid}}})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) "
+            "RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, "
+            "l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+        ):
+            k = (r["service"], r["lockfile"])
+            hits.setdefault(k, {**r, "bad_versions": []})["bad_versions"].append(key)
+    if explain and hits:
+        # One SPpaths call per (bad, lockfile): bounded, integer-id parameters, pathCount 3 keeps
+        # the direct RESOLVED edge plus up to two DEPENDS_ON chains as the human explanation.
+        q = (
+            "CALL algo.SPpaths({sourceNode: $src, targetNode: $dst, relTypes: ['DEPENDS_ON', 'RESOLVED'], "
+            "relDirection: 'incoming', maxLen: 9, pathCount: 3}) YIELD path RETURN path"
+        )
+        for h in hits.values():
+            h["paths"] = []
+            for key in h["bad_versions"]:
+                for row in _run(s, res, q, src=_int(gid(key)), dst=_int(h["lid"])):
+                    chain = _pathkeys(row["path"])
+                    h["paths"].append(
+                        {"bad": key, "chain": chain, "hops": (len(chain) - 1) // 2 - 1}
+                    )
+            h["hops"] = min((p["hops"] for p in h["paths"]), default=0)
+            h["via"] = next((p["chain"][2] for p in h["paths"] if p["hops"] > 0), None)
+    for h in hits.values():
+        h.pop("lid", None)
+        h.setdefault("hops", 0)
+        h.setdefault("paths", [])
+        h.setdefault("via", None)
+    res.rows = sorted(hits.values(), key=lambda d: (d["service"], -d["committed_at"]))
+    res.meta["services"] = sorted({h["service"] for h in hits.values()})
+    res.meta["lockfiles"] = len(hits)
+    res.limitations.append(
+        "Membership is exact (RESOLVED = the lockfile's flattened install tree). "
+        "Explanation paths are the 3 shortest per lockfile, not all of them."
+    )
+    return res
+
+
+def q1_blast_radius_count(
+    s, bad_version_keys: list[str], service_keys: list[str], *, path_count: int = 1
+) -> Result:
+    """One algo.MSpaths call: N compromised versions x M services, reverse direction.
+    The many-to-many demo query. Sources and targets are inline literals (engine rule), so both
+    lists must already have passed the allowlist. Returns distinct (bad, service) pairs."""
+    res = Result([], 0.0)
     q = (
         "CALL algo.MSpaths({sourceLabel: 'Version', sourceProperty: 'key', "
-        f"sourceValues: {cypher_str_list(source_keys)}, "
+        f"sourceValues: {cypher_str_list(bad_version_keys)}, "
+        f"targetLabel: 'Service', targetProperty: 'key', targetValues: {cypher_str_list(service_keys)}, "
         "relTypes: ['DEPENDS_ON', 'RESOLVED', 'HAS_LOCKFILE'], relDirection: 'incoming', "
         "maxLen: $maxlen, pathCount: $pathcount, resultLimit: $limit}) YIELD path RETURN path"
     )
-    rows, ms = timed(s, q, maxlen=max_hops + 2, pathcount=limit, limit=limit + 1)
-    truncated = len(rows) > limit
-    return Result(rows[:limit], ms, truncated)
-
-
-def q1_exposed_services(s, bad_version_keys: list[str], *, limit: int = 1000) -> Result:
-    """Which services are transitively exposed, with the path that proves it.
-
-    Path shape: Version(bad) <-DEPENDS_ON- ... <-RESOLVED- Lockfile <-HAS_LOCKFILE- Service.
-    Only paths that reach a Service count; the rest are partial and dropped.
-    """
-    r = _mspaths(s, bad_version_keys, limit=limit)
-    out: dict[str, dict] = {}
-    for row in r.rows:
-        # HydraDB returns a path as a flat list: [node_props, REL_TYPE, node_props, ...]
-        # with no labels — the key prefix (svc:/lock:/pkg:) is the label.
-        chain = [el["key"] for el in row["path"] if not isinstance(el, str)]
-        if not chain[-1].startswith("svc:"):
-            continue  # partial path that stopped before reaching a Service
-        hops = (len(chain) - 1) - 2  # minus RESOLVED and HAS_LOCKFILE
-        svc = chain[-1]
-        prev = out.get(svc)
-        if prev is None or hops < prev["hops"]:
-            out[svc] = {
-                "service": svc,
-                "lockfile": chain[-2],
-                "hops": hops,
-                "path": chain,
-                "bad_version": chain[0],
-            }
-    rows = sorted(out.values(), key=lambda d: (d["hops"], d["service"]))
-    return Result(rows, r.ms, r.truncated, meta={"paths_scanned": len(r.rows)})
+    limit = len(bad_version_keys) * len(service_keys) * path_count
+    rows = _run(s, res, q, maxlen=10, pathcount=path_count, limit=limit + 1)
+    res.truncated = len(rows) > limit
+    pairs = {}
+    for r in rows[:limit]:
+        chain = _pathkeys(r["path"])
+        pairs.setdefault((chain[0], chain[-1]), chain)
+    res.rows = [{"bad": b, "service": sv, "chain": c} for (b, sv), c in sorted(pairs.items())]
+    res.meta = {"sources": len(bad_version_keys), "targets": len(service_keys), "paths": len(rows)}
+    if res.truncated:
+        res.limitations.append("resultLimit reached — blast radius may be incomplete.")
+    return res
 
 
 # ---------------------------------------------------------------- Q3 · resolved while live
@@ -108,106 +169,104 @@ def q1_exposed_services(s, bad_version_keys: list[str], *, limit: int = 1000) ->
 def q3_resolved_while_live(s, advisory_key: str) -> Result:
     """Which lockfiles resolved an affected version INSIDE its live window.
 
-    Arm 1 — direct: one query for the whole incident; the window predicate runs in-engine
-    (relationship property vs relationship property, verified).
-    Arm 2 — transitive: per affected version, closure via *1..8 then the same predicate.
+    One query for the whole incident. The window predicate compares two relationship properties
+    in-engine (RESOLVED.at vs AFFECTS.live_from/live_to). No transitive arm is needed: RESOLVED
+    is the flattened tree, so an indirect dependency still has its own RESOLVED edge.
     """
+    res = Result([], 0.0)
     a = _int(gid(advisory_key))
-    direct, ms = timed(
+    res.rows = _run(
         s,
+        res,
         f"MATCH (a:Advisory {{id: {a}}})-[af:AFFECTS]->(v:Version)<-[r:RESOLVED]-(l:Lockfile)"
         "<-[:HAS_LOCKFILE]-(sv:Service) "
         "WHERE r.at >= af.live_from AND r.at <= af.live_to "
-        "RETURN sv.key AS service, l.key AS lockfile, r.at AS resolved_at, v.key AS version, "
-        "af.live_from AS live_from, af.live_to AS live_to, af.live_to_kind AS live_to_kind "
-        "ORDER BY r.at ASC",
+        "RETURN sv.key AS service, l.key AS lockfile, l.sha AS sha, r.at AS resolved_at, "
+        "v.key AS version, af.live_from AS live_from, af.live_to AS live_to, "
+        "af.live_to_kind AS live_to_kind ORDER BY r.at ASC",
     )
-    for d in direct:
-        d["via"] = "direct"
-    affected, ms2 = timed(
-        s,
-        f"MATCH (a:Advisory {{id: {a}}})-[:AFFECTS]->(v:Version) RETURN v.id AS vid, v.key AS key",
+    res.meta["services"] = sorted({r["service"] for r in res.rows})
+    res.limitations.append(
+        "A lockfile commit inside the window means the pin was live when the artifact was "
+        "installable; it does not prove an install happened."
     )
-    ms += ms2
-    seen = {(d["service"], d["lockfile"], d["version"]) for d in direct}
-    transitive: list[dict] = []
-    for v in affected:
-        rows, ms3 = timed(
-            s,
-            f"MATCH (bad:Version {{id: {_int(v['vid'])}}})<-[:DEPENDS_ON*1..{MAX_HOPS}]-(root:Version)"
-            "<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service), "
-            "(a:Advisory)-[af:AFFECTS]->(bad) "
-            "WHERE r.at >= af.live_from AND r.at <= af.live_to "
-            "RETURN sv.key AS service, l.key AS lockfile, r.at AS resolved_at, root.key AS via_root, "
-            "af.live_from AS live_from, af.live_to AS live_to, af.live_to_kind AS live_to_kind",
-        )
-        ms += ms3
-        for row in rows:
-            k = (row["service"], row["lockfile"], v["key"])
-            if k in seen:
-                continue
-            seen.add(k)
-            transitive.append({**row, "version": v["key"], "via": "transitive"})
-    return Result(
-        direct + transitive, ms, meta={"direct": len(direct), "transitive": len(transitive)}
-    )
+    return res
 
 
 # ---------------------------------------------------------------- Q4 · maintainer fan-out
 
 
 def q4_maintainer_fanout(s, bad_version_key: str) -> Result:
-    """Which OTHER packages share a maintainer with the compromised one, and who is exposed to those.
+    """Which OTHER packages share a maintainer with the compromised one, and who resolves those.
 
     Stage 1: maintainers of the bad package and every other package they maintain.
-    Stage 2: per other-package version, services resolving it (traversal + dedup in-engine).
+    Stage 2: per co-maintained package, services resolving ANY of its versions (3-hop join,
+    grouped by service — the count(DISTINCT) substitute). No var-length: RESOLVED is the closure.
     """
+    res = Result([], 0.0)
     b = _int(gid(bad_version_key))
-    stage1, ms = timed(
+    stage1 = _run(
         s,
+        res,
         f"MATCH (bad:Version {{id: {b}}})-[:VERSION_OF]->(p:Package)<-[:MAINTAINS]-(m:Maintainer)"
-        "-[:MAINTAINS]->(other:Package)<-[:VERSION_OF]-(ov:Version) "
-        "RETURN m.key AS maintainer, m.twofa AS twofa, p.key AS bad_package, "
-        "other.key AS package, ov.id AS vid, ov.key AS version",
+        "-[:MAINTAINS]->(other:Package) "
+        "RETURN m.key AS maintainer, m.twofa AS twofa, m.account_created AS account_created, "
+        "p.key AS bad_package, other.key AS package, other.id AS pid, other.downloads AS downloads",
     )
     by_pkg: dict[str, dict] = {}
+    maints: dict[str, dict] = {}
     for r in stage1:
+        maints.setdefault(
+            r["maintainer"],
+            {
+                "login": r["maintainer"],
+                "twofa": r["twofa"],
+                "account_created": r["account_created"],
+            },
+        )
         if r["package"] == r["bad_package"]:
             continue
         e = by_pkg.setdefault(
             r["package"],
-            {"package": r["package"], "maintainers": set(), "services": set(), "versions": set()},
+            {
+                "package": r["package"],
+                "pid": r["pid"],
+                "downloads": r["downloads"],
+                "maintainers": set(),
+                "services": set(),
+            },
         )
-        e["maintainers"].add((r["maintainer"], r["twofa"]))
-        e["versions"].add(r["vid"])
+        e["maintainers"].add(r["maintainer"])
     for e in by_pkg.values():
-        for vid in e["versions"]:
-            rows, ms2 = timed(
-                s,
-                f"MATCH (ov:Version {{id: {_int(vid)}}})<-[:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) "
-                "RETURN sv.key AS service, count(*) AS n",
-            )
-            ms += ms2
-            e["services"].update(r["service"] for r in rows)
-            rows, ms3 = timed(
-                s,
-                f"MATCH (ov:Version {{id: {_int(vid)}}})<-[:DEPENDS_ON*1..{MAX_HOPS}]-(root:Version)"
-                "<-[:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) "
-                "RETURN sv.key AS service, count(*) AS n",
-            )
-            ms += ms3
-            e["services"].update(r["service"] for r in rows)
-    out = [
-        {
-            "package": e["package"],
-            "maintainers": [{"login": m, "twofa": t} for m, t in sorted(e["maintainers"])],
-            "services_at_risk": sorted(e["services"]),
-        }
-        for e in by_pkg.values()
-    ]
-    out.sort(key=lambda d: (-len(d["services_at_risk"]), d["package"]))
-    maintainers = sorted({m for r in stage1 for m in [(r["maintainer"], r["twofa"])]})
-    return Result(out, ms, meta={"maintainers": [{"login": m, "twofa": t} for m, t in maintainers]})
+        for r in _run(
+            s,
+            res,
+            f"MATCH (p:Package {{id: {_int(e['pid'])}}})<-[:VERSION_OF]-(v:Version)<-[:RESOLVED]-(l:Lockfile)"
+            "<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, count(*) AS n",
+        ):
+            e["services"].add(r["service"])
+    res.rows = sorted(
+        (
+            {
+                "package": e["package"],
+                "downloads": e["downloads"],
+                "maintainers": sorted(e["maintainers"]),
+                "services_at_risk": sorted(e["services"]),
+            }
+            for e in by_pkg.values()
+        ),
+        key=lambda d: (-len(d["services_at_risk"]), -(d["downloads"] or 0), d["package"]),
+    )
+    res.meta["maintainers"] = sorted(maints.values(), key=lambda m: m["login"])
+    if any(m["twofa"] is None for m in maints.values()):
+        res.limitations.append(
+            "twofa / account_created are not exposed by the public npm registry; shown as unknown, never guessed."
+        )
+    res.limitations.append(
+        "'services at risk' = services resolving the co-maintained package today — the exposure IF that "
+        "package is compromised next, not exposure to this incident."
+    )
+    return res
 
 
 # ---------------------------------------------------------------- Q5 · typosquats
@@ -215,9 +274,11 @@ def q4_maintainer_fanout(s, bad_version_key: str) -> Result:
 
 def q5_typosquats(s, package_key: str, *, max_distance: int = 2) -> Result:
     """Names within edit distance of the package, ranked by how suspicious they look."""
+    res = Result([], 0.0)
     p = _int(gid(package_key))
-    rows, ms = timed(
+    res.rows = _run(
         s,
+        res,
         f"MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {{id: {p}}}) "
         "WHERE sim.distance <= $maxd "
         "MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) "
@@ -226,30 +287,45 @@ def q5_typosquats(s, package_key: str, *, max_distance: int = 2) -> Result:
         "ORDER BY sim.distance ASC, suspect.downloads ASC",
         maxd=max_distance,
     )
-    return Result(rows, ms)
+    res.limitations.append(
+        "The corpus is packages present in the ingested graph, so near-neighbours may be "
+        "legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+    )
+    return res
 
 
 # ---------------------------------------------------------------- Q7 · reachability
 
 
 def q7_reachability(s, advisory_key: str, service_key: str) -> Result:
-    """L0 present-not-imported · L1 imported-symbol-unreferenced · L2 symbol referenced."""
+    """unscanned (no File nodes for the service) · L0 present-not-imported ·
+    L1 imported-symbol-unreferenced · L2 symbol referenced."""
+    res = Result([], 0.0)
     a, sv = _int(gid(advisory_key)), _int(gid(service_key))
-    imports, ms = timed(
+    scanned = _run(
         s,
+        res,
+        f"MATCH (sv:Service {{id: {sv}}})-[:CONTAINS]->(f:File) RETURN count(*) AS n",
+    )[0]["n"]
+    imports = _run(
+        s,
+        res,
         f"MATCH (a:Advisory {{id: {a}}})-[:AFFECTS]->(v:Version)-[:VERSION_OF]->(p:Package)"
         f"<-[i:IMPORTS]-(f:File)<-[:CONTAINS]-(sv:Service {{id: {sv}}}) "
         "RETURN f.path AS path, i.line AS line, p.key AS package",
     )
-    symbols, ms2 = timed(
+    symbols = _run(
         s,
+        res,
         f"MATCH (a:Advisory {{id: {a}}})-[vs:VULNERABLE_SYMBOL]->(sym:Symbol)<-[u:USES_SYMBOL]-(f:File)"
         f"<-[:CONTAINS]-(sv:Service {{id: {sv}}}) "
         "RETURN f.path AS path, u.line AS line, sym.name AS symbol, vs.inferred AS inferred",
     )
-    level = "L2" if symbols else "L1" if imports else "L0"
-    return Result(
-        [{"level": level, "imports": imports, "symbols": symbols}],
-        ms + ms2,
-        meta={"level": level},
-    )
+    if scanned == 0:
+        level = "unscanned"
+        res.limitations.append("No source files ingested for this service; reachability unknown.")
+    else:
+        level = "L2" if symbols else "L1" if imports else "L0"
+    res.rows = [{"level": level, "files_scanned": scanned, "imports": imports, "symbols": symbols}]
+    res.meta["level"] = level
+    return res

@@ -2,7 +2,8 @@
 
 Cache key = sha256(method + url + body). Responses are cached forever — a re-run
 never re-fetches. Delete .cache/ to refresh. Non-2xx responses are cached too
-(as 404s etc.) so a missing package is not re-asked on every run.
+(as 404s etc.) so a missing package is not re-asked on every run — except 429/5xx,
+which are transient and never cached.
 """
 
 import hashlib
@@ -28,7 +29,7 @@ def _path(method: str, url: str, body: bytes | None) -> Path:
     return CACHE / h[:2] / f"{h}.json"
 
 
-def request(method: str, url: str, *, json_body=None, headers=None, retries: int = 4) -> dict:
+def request(method: str, url: str, *, json_body=None, headers=None, retries: int = 6) -> dict:
     """Return {"status": int, "body": str}. Cached on disk by (method, url, body)."""
     body = json.dumps(json_body, sort_keys=True).encode() if json_body is not None else None
     p = _path(method, url, body)
@@ -51,11 +52,13 @@ def request(method: str, url: str, *, json_body=None, headers=None, retries: int
             time.sleep(2**attempt)
             continue
         if r.status_code in (429, 500, 502, 503, 504) and attempt < retries - 1:
-            time.sleep(float(r.headers.get("retry-after", 2**attempt)))
+            # Cloudflare 429s rarely carry retry-after; back off hard rather than burn retries.
+            time.sleep(float(r.headers.get("retry-after", 0)) or 5 * (attempt + 1))
             continue
         out = {"status": r.status_code, "body": r.text}
-        p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_text(json.dumps(out))
+        if r.status_code < 500 and r.status_code != 429:  # never cache transient failures
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(json.dumps(out))
         return out
     raise AssertionError("unreachable")
 

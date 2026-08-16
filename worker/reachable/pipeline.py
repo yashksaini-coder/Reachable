@@ -63,33 +63,38 @@ def graph_packages(s) -> list[str]:
     return sorted(r["name"] for r in run(s, "MATCH (p:Package) RETURN p.name AS name"))
 
 
-def stage_packages(s, names: list[str]) -> dict[str, dict]:
-    """Enrich every Package from its packument. Returns {name: packument} for the advisory stage."""
-    docs: dict[str, dict] = {}
-    pkgs, vers, vof, maints, medges = [], [], [], [], []
-    for i, name in enumerate(names):
-        r = npm.ingest_package(name)
-        if r is None:
-            log(f"  no packument: {name}")
-            continue
-        docs[name] = npm.fetch_packument(name)  # disk-cached: free second read
-        pkgs.append(r["package"])
-        vers.extend(r["versions"])
-        vof.extend(r["version_of"])
-        maints.extend(r["maintainers"])
-        medges.extend(r["maintains"])
-        if (i + 1) % 200 == 0:
-            log(f"  packuments {i + 1}/{len(names)}")
-    dl = npm.downloads(list(docs))
-    for p in pkgs:
-        p["downloads"] = dl.get(p["name"], 0)
-    upsert_nodes(s, "Package", pkgs)
-    upsert_nodes(s, "Version", vers)
-    upsert_nodes(s, "Maintainer", _dedupe(maints))
-    upsert_edges(s, "VERSION_OF", "Version", "Package", vof)
-    upsert_edges(s, "MAINTAINS", "Maintainer", "Package", medges)
-    log(f"  {len(pkgs)} packages, {len(vers)} versions, {len(_dedupe(maints))} maintainers")
-    return docs
+def stage_packages(s, names: list[str], batch: int = 250) -> dict[str, list[str]]:
+    """Enrich every Package from its packument, streaming in batches so memory stays flat
+    (holding 6k packuments cost 9 GB RSS). Returns {name: [versions]} — the compact
+    thing the advisory stage needs for range expansion; windows re-read the cached doc."""
+    known: dict[str, list[str]] = {}
+    total = 0
+    for i in range(0, len(names), batch):
+        chunk = names[i : i + batch]
+        pkgs, vers, vof, maints, medges = [], [], [], [], []
+        for name in chunk:
+            r = npm.ingest_package(name)
+            if r is None:
+                log(f"  no packument: {name}")
+                continue
+            known[name] = [v["version"] for v in r["versions"]]
+            pkgs.append(r["package"])
+            vers.extend(r["versions"])
+            vof.extend(r["version_of"])
+            maints.extend(r["maintainers"])
+            medges.extend(r["maintains"])
+        dl = npm.downloads([p["name"] for p in pkgs])
+        for p in pkgs:
+            p["downloads"] = dl.get(p["name"], 0)
+        upsert_nodes(s, "Package", pkgs)
+        upsert_nodes(s, "Version", vers)
+        upsert_nodes(s, "Maintainer", _dedupe(maints))
+        upsert_edges(s, "VERSION_OF", "Version", "Package", vof)
+        upsert_edges(s, "MAINTAINS", "Maintainer", "Package", medges)
+        total += len(pkgs)
+        log(f"  packuments {min(i + batch, len(names))}/{len(names)}  (+{len(vers)} versions)")
+    log(f"  {total} packages enriched")
+    return known
 
 
 def _dedupe(rows: list[dict]) -> list[dict]:
@@ -99,27 +104,30 @@ def _dedupe(rows: list[dict]) -> list[dict]:
     return list(seen.values())
 
 
-def _windows(docs: dict[str, dict], pairs) -> dict:
-    """(name, version) -> {published_at, next_surviving} from the packuments."""
+def _windows(pairs) -> dict:
+    """(name, version) -> {published_at, next_surviving}. Packuments come from the disk cache."""
     out = {}
+    by_name: dict[str, list[str]] = defaultdict(list)
     for name, version in pairs:
-        doc = docs.get(name)
+        by_name[name].append(version)
+    for name, versions in by_name.items():
+        doc = npm.fetch_packument(name)
         if doc is None:
-            doc = npm.fetch_packument(name)
-            if doc is None:
-                continue
-            docs[name] = doc
-        t = doc.get("time", {}).get(version)
-        if t is None:
             continue
-        out[(name, version)] = {
-            "published_at": npm.epoch(t),
-            "next_surviving": npm.next_surviving_publish(doc, version),
-        }
+        for version in versions:
+            t = doc.get("time", {}).get(version)
+            if t is None:
+                continue
+            out[(name, version)] = {
+                "published_at": npm.epoch(t),
+                "next_surviving": npm.next_surviving_publish(doc, version),
+            }
     return out
 
 
-def stage_advisories(s, seeds: dict, docs: dict[str, dict], touched: dict[str, set[str]]) -> None:
+def stage_advisories(
+    s, seeds: dict, known: dict[str, list[str]], touched: dict[str, set[str]]
+) -> None:
     ids: set[str] = {i["id"] for i in seeds["incidents"]}
     pairs = sorted((n, v) for n, vs in touched.items() for v in vs)
     # every (name, version) in the graph -> advisory ids
@@ -142,10 +150,10 @@ def stage_advisories(s, seeds: dict, docs: dict[str, dict], touched: dict[str, s
         if rec is None:
             log(f"  missing advisory {aid}")
             continue
-        p = osv.affected_pairs(rec, known_versions=_known(docs))
+        p = osv.affected_pairs(rec, known_versions=known)
         all_pairs.update(p)
-        windows = _windows(docs, p)
-        r = osv.ingest_advisory(aid, windows, known_versions=_known(docs))
+        windows = _windows(p)
+        r = osv.ingest_advisory(aid, windows, known_versions=known)
         advisories.append(r["advisory"])
         affects.extend(r["affects"])
     # affected versions that were not already in the graph need Version + Package nodes
@@ -165,10 +173,10 @@ def stage_advisories(s, seeds: dict, docs: dict[str, dict], touched: dict[str, s
     upsert_nodes(s, "Advisory", advisories)
     upsert_edges(s, "AFFECTS", "Advisory", "Version", affects)
     # affected versions discovered here still need their packument (published_at, removed)
-    missing = sorted({n for n, _ in all_pairs} - set(docs))
+    missing = sorted({n for n, _ in all_pairs} - set(known))
     if missing:
         log(f"  enriching {len(missing)} advisory-only packages")
-        docs.update(stage_packages(s, missing))
+        known.update(stage_packages(s, missing))
     # mark malicious versions
     mal = [
         {"key": a["dst"], "malicious": True}
@@ -181,13 +189,6 @@ def stage_advisories(s, seeds: dict, docs: dict[str, dict], touched: dict[str, s
     log(f"  {len(advisories)} advisories, {len(affects)} AFFECTS, {len(mal)} malicious versions")
 
 
-def _known(docs: dict[str, dict]) -> dict[str, list[str]]:
-    return {
-        n: [v for v in d.get("time", {}) if v not in ("created", "modified")]
-        for n, d in docs.items()
-    }
-
-
 def stage_typosquats(s, seeds: dict) -> None:
     rows = run(s, "MATCH (p:Package) RETURN p.name AS name, p.downloads AS downloads")
     names = [r["name"] for r in rows]
@@ -198,28 +199,38 @@ def stage_typosquats(s, seeds: dict) -> None:
     log(f"  {len(edges)} NAME_SIMILAR_TO edges over {len(names)} names ({len(popular)} popular)")
 
 
+EDGE_SHAPES = {
+    "VERSION_OF": ("Version", "Package"),
+    "DEPENDS_ON": ("Version", "Version"),
+    "MAINTAINS": ("Maintainer", "Package"),
+    "AFFECTS": ("Advisory", "Version"),
+    "HAS_LOCKFILE": ("Service", "Lockfile"),
+    "RESOLVED": ("Lockfile", "Version"),
+    "NAME_SIMILAR_TO": ("Package", "Package"),
+}
+
+
 def stage_verify(s) -> None:
     for label in ("Package", "Version", "Maintainer", "Advisory", "Service", "Lockfile"):
         log(f"  {label:10} {load.count(s, label):>7}")
-    for rel in (
-        "VERSION_OF",
-        "DEPENDS_ON",
-        "MAINTAINS",
-        "AFFECTS",
-        "HAS_LOCKFILE",
-        "RESOLVED",
-        "NAME_SIMILAR_TO",
-    ):
-        n = run(s, f"MATCH ()-[r:{rel}]->() RETURN count(*) AS c")[0]["c"]
+    # Whole-type edge scans exceed the 30 s engine timeout past ~100k edges (AGENTS.md §8), so
+    # only the small relationship types are counted; the big ones are reported at write time.
+    for rel, (a, b) in EDGE_SHAPES.items():
+        if rel in ("DEPENDS_ON", "RESOLVED", "VERSION_OF"):
+            log(f"  {rel:15}   (not counted — large; see stage logs)")
+            continue
+        n = run(s, f"MATCH (x:{a})-[r:{rel}]->(y:{b}) RETURN count(*) AS c")[0]["c"]
         log(f"  {rel:15} {n:>7}")
     # coverage: a Version resolved by a lockfile with no published_at means the packument
     # stage missed it — Q3 would silently drop the row rather than complain
     total = load.count(s, "Version")
     dated = run(s, "MATCH (v:Version) WHERE v.published_at >= 0 RETURN count(*) AS c")[0]["c"]
     log(f"  Version.published_at coverage: {dated}/{total}")
-    aff = run(s, "MATCH ()-[a:AFFECTS]->() RETURN count(*) AS c")[0]["c"]
+    aff = run(s, "MATCH (x:Advisory)-[a:AFFECTS]->(y:Version) RETURN count(*) AS c")[0]["c"]
     win = run(
-        s, "MATCH ()-[a:AFFECTS]->() WHERE a.live_from >= 0 AND a.live_to >= 0 RETURN count(*) AS c"
+        s,
+        "MATCH (x:Advisory)-[a:AFFECTS]->(y:Version) "
+        "WHERE a.live_from >= 0 AND a.live_to >= 0 RETURN count(*) AS c",
     )[0]["c"]
     log(f"  AFFECTS window coverage: {win}/{aff}")
     assert win == aff, "AFFECTS edges without a window — Q3 would under-report"
@@ -239,13 +250,13 @@ def main(argv=None) -> None:
     t0 = time.perf_counter()
     with session() as s:
         touched: dict[str, set[str]] = defaultdict(set)
-        docs: dict[str, dict] = {}
+        known: dict[str, list[str]] = {}
         if "services" in only:
             log("== services")
             touched = stage_services(s, seeds)
         if "packages" in only:
             log("== packages")
-            docs = stage_packages(s, graph_packages(s))
+            known = stage_packages(s, graph_packages(s))
         if "advisories" in only:
             log("== advisories")
             if not touched:  # resumed run: rebuild the (name, version) set from the graph
@@ -254,7 +265,13 @@ def main(argv=None) -> None:
                     "MATCH (v:Version)-[:VERSION_OF]->(p:Package) RETURN p.name AS n, v.version AS v",
                 ):
                     touched[r["n"]].add(r["v"])
-            stage_advisories(s, seeds, docs, touched)
+            if not known:  # resumed run: version lists from the graph
+                for r in run(
+                    s,
+                    "MATCH (v:Version)-[:VERSION_OF]->(p:Package) RETURN p.name AS n, v.version AS v",
+                ):
+                    known.setdefault(r["n"], []).append(r["v"])
+            stage_advisories(s, seeds, known, touched)
         if "typosquats" in only:
             log("== typosquats")
             stage_typosquats(s, seeds)
