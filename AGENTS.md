@@ -161,14 +161,41 @@ HydraDB supports a *practical OpenCypher subset*, not all of Cypher. The
 following are **assumptions in the spec that must be verified against a running
 node** before being built on. Mark each ✅ here once confirmed.
 
-- [ ] `algo.MSpaths` argument names — especially `relDirection`. README shows
-      `'both'`; the spec assumes `'incoming'` works for reverse closure.
-- [ ] `CREATE INDEX` exact syntax
-- [ ] Bounded variable-length paths `*1..8` with a relationship type filter
-- [ ] `OPTIONAL MATCH` + aggregation in the same query (used by Q4)
-- [ ] Relationship properties in `MERGE` patterns
-- [ ] Practical batch size for `UNWIND` writes
-- [ ] `consistency: "strong"` via the Bolt driver
+Verified 2026-08-16 by `make probe` against a live node (HydraDB `0.1.0`,
+`ghcr.io/hydra-db/hydradb:latest`, neo4j driver 6.2.0). Full detail and exact
+syntax live in `.claude/skills/hydradb-cypher/SKILL.md`.
+
+- [x] `algo.MSpaths` argument names — **`relDirection: 'incoming'` works.**
+      Accepts `'incoming'` / `'outgoing'` / `'both'`, default `'outgoing'`.
+      The Q1 reverse-closure design survives intact.
+- [x] `CREATE INDEX` exact syntax — **no DDL at all.** Both the 3.x and 4.x
+      forms are rejected; `graph-indexer` builds indexes in the background.
+- [x] Bounded variable-length `*1..8` with a rel-type filter — works. Engine
+      caps hops at **16**.
+- [x] `OPTIONAL MATCH` + aggregation — works **only with `count(*)`**.
+      `count(b)` is rejected, as are `min` / `max`. Q4 must be rewritten to
+      `count(*)` or `collect(...)`.
+- [x] Relationship properties in `MERGE` — works, in the `UNWIND` form.
+- [x] Practical `UNWIND` batch size — **hard cap 1024 rows**; 1025 is refused
+      by admission control. Measured 1000 rows in 9–17 ms (~60k–113k rows/s).
+- [x] `consistency: "strong"` via Bolt — **not reachable from the Python
+      driver.** HydraDB refuses explicit transactions, which is the only place
+      the driver exposes metadata. Use the HTTP API for that one query.
+
+Four further findings that constrain the schema, all newly discovered:
+
+- [x] **Node and relationship ids must be non-negative integers.** Purls must be
+      hashed to ints; the human key lives in a property.
+- [x] **Relationships need their own id** in `UNWIND ... MERGE`.
+- [x] **All property writes go through `UNWIND`** — plain `MERGE ... SET` is
+      rejected.
+- [x] **`MSpaths.sourceValues` must be inline string literals** — parameters and
+      integers are both refused, so values are interpolated into query text.
+      This is a Cypher-injection surface fed by registry data; validate npm
+      names against a strict allowlist and reject, never escape.
+
+Still unverified: HTTP `consistency: "strong"` round trip · `sum` / `avg` ·
+`UNION` arms · weighted paths · behaviour with `graph-indexer` running.
 
 **Workflow when unsure:** add a case to `make probe` and run it. Ten seconds of
 probing beats an hour of debugging a wrong assumption. Never infer support from
@@ -264,9 +291,16 @@ Before reporting any task complete:
 
 > Keep this current. It is how a fresh agent session knows where things stand.
 
-**Current phase:** Phase 0 — prove the engine runs
-**Blocked on:** —
-**Last verified working:** —
+**Current phase:** Phase 0 — engine proven; awaiting decisions before Phase 1
+**Blocked on:** owner sign-off on the integer-id schema change (§8), seed repo
+selection (Step 6), and the two Discord questions (Step 7) — none posted yet.
+**Last verified working (2026-08-16):**
+`make node` (Docker image, not a source build) · `make roundtrip` — a real write
+committed and read back over Bolt · `make probe` — 24 cases, 23 as expected,
+1 surprise, all recorded in §8 and the `hydradb-cypher` skill.
+
+Not done in Phase 0: `just native-check` / `just smoke` were skipped in favour
+of the prebuilt Docker image, so the source build is unproven on this machine.
 
 Phases: 0 engine · 1 model · 2 ingestion · 3 queries · 4 web · 5 differentiators
 · 6 reachability · 7 CLI+badge · 8 deploy · 9 submission.
