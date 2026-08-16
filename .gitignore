@@ -1,0 +1,9 @@
+.env
+*.token
+.cache/
+data/
+node_modules/
+__pycache__/
+.venv/
+.next/
+*.pyc
