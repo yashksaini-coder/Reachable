@@ -10,6 +10,7 @@ import { Timeline } from "./timeline";
 import { BlastGraph } from "./graph";
 import { Rail } from "./rail";
 import { Reveal } from "./reveal";
+import { FindVictims } from "./victims";
 
 export const dynamic = "force-static";
 export async function generateStaticParams() {
@@ -479,6 +480,10 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
               {h.unscanned > 0 ? ` · ${h.unscanned} unscanned` : ""} · composed in <span className="num">{fmtMs(inc.timing_ms.total)}</span>
             </p>
           </Question>
+        </Reveal>
+
+        <Reveal>
+          <FindVictims advisory={inc.advisory.key} />
         </Reveal>
 
         <Provenance inc={inc} />

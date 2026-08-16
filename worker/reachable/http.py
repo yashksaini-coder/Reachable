@@ -51,12 +51,12 @@ def request(method: str, url: str, *, json_body=None, headers=None, retries: int
                 raise
             time.sleep(2**attempt)
             continue
-        if r.status_code in (429, 500, 502, 503, 504) and attempt < retries - 1:
+        if r.status_code in (408, 429, 500, 502, 503, 504) and attempt < retries - 1:
             # Cloudflare 429s rarely carry retry-after; back off hard rather than burn retries.
             time.sleep(float(r.headers.get("retry-after", 0)) or 5 * (attempt + 1))
             continue
         out = {"status": r.status_code, "body": r.text}
-        if r.status_code < 500 and r.status_code != 429:  # never cache transient failures
+        if r.status_code < 500 and r.status_code not in (408, 429):  # never cache transient failures
             p.parent.mkdir(parents=True, exist_ok=True)
             p.write_text(json.dumps(out))
         return out

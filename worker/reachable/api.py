@@ -33,11 +33,13 @@ import time
 from dataclasses import asdict
 from datetime import UTC, datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, quote, urlparse
 
 from reachable import jobs, queries
 from reachable.db import run, session, timed
+from reachable.http import get_json
 from reachable.ids import gid, safe_name
+from reachable.sources.github import API as API_GH
 
 HOST = os.environ.get("REACHABLE_API_HOST", "127.0.0.1")
 PORT = int(os.environ.get("REACHABLE_API_PORT", "8787"))
@@ -235,6 +237,71 @@ def list_services(s) -> list[dict]:
     return sorted(out, key=lambda x: x["key"])
 
 
+def find_victims(s, q) -> dict:
+    """Public GitHub repos whose package-lock.json pins an affected version of this advisory.
+
+    GitHub code search on the exact tarball name (`debug-4.4.2.tgz`) is the cheapest honest signal
+    that a repo resolved the version — it is what the lockfile literally contains. Nothing is
+    computed about them; the list is candidates to *watch*, and watching runs the real ingest.
+    Cache key includes the day so results refresh daily; needs GITHUB_TOKEN (code search is
+    authenticated-only, 10 requests/min)."""
+    from reachable.sources.github import _H
+
+    adv = _adv(q)
+    a = queries.q2_affected_versions(s, adv)
+    if not a.rows:
+        raise Bad(f"{adv} has no affected versions in the graph")
+    if not _H:
+        raise Bad("GITHUB_TOKEN is not set — code search is authenticated-only")
+    # removed (taken-down) versions first: those are the malicious ones; at most 3 searches.
+    ranked = sorted(a.rows, key=lambda r: (not r.get("removed"), r.get("published_at") or 0))
+    watched = {x["key"] for x in list_services(s)}
+    day = datetime.now(UTC).date().isoformat()
+    victims: dict[str, dict] = {}
+    searched, errors = [], []
+    for r in ranked[:3]:
+        name, _, ver = str(r["version"]).removeprefix("pkg:npm/").rpartition("@")
+        tarball = f"{name.rpartition('/')[2]}-{ver}.tgz"
+        # unquoted on purpose: the quoted form times out (408) on GitHub's side, unquoted answers in ~10 s
+        query = f"{tarball} filename:package-lock.json"
+        searched.append(query)
+        try:
+            res = get_json(
+                f"{API_GH}/search/code?q={quote(query)}&per_page=30&_d={day}",
+                headers={**_H, "Accept": "application/vnd.github+json"},
+            )
+        except Exception as e:  # noqa: BLE001 — a 403 rate-limit is a fact for the UI, not a crash
+            errors.append(str(e)[:200])
+            continue
+        for it in res.get("items", []):
+            slug = it["repository"]["full_name"]
+            v = victims.setdefault(
+                slug,
+                {
+                    "repo": slug,
+                    "url": it["repository"]["html_url"],
+                    "path": it["path"],
+                    "versions": [],
+                    "watched": f"svc:{slug}" in watched,
+                },
+            )
+            if r["version"] not in v["versions"]:
+                v["versions"].append(r["version"])
+    return {
+        "advisory": adv,
+        "searched": searched,
+        "rows": sorted(victims.values(), key=lambda v: (v["watched"], v["repo"])),
+        "errors": errors,
+        "limitations": [
+            (
+                "GitHub code search indexes default branches only and skips forks and files "
+                ">384 KB; a hit means the lockfile pins the version today, not when it was live "
+                "— watch the repo to get the timeline from HydraDB."
+            )
+        ],
+    }
+
+
 def graph_stats(s) -> dict:
     nodes = {}
     for label in ("Service", "Lockfile", "Package", "Version", "Advisory", "Maintainer", "File"):
@@ -394,6 +461,7 @@ ROUTES = {
     "/ask/maintainers": lambda s, q: ask_maintainers(s, q),
     "/ask/typosquats": lambda s, q: _res(queries.q5_typosquats(s, f"pkg:npm/{_pkg(q)}")),
     "/cypher": ask_cypher,
+    "/victims": find_victims,
     "/graph/sample": graph_sample,
 }
 
