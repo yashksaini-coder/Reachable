@@ -61,7 +61,8 @@ lint:
 
 test: lint
 	$(PY) -m pytest -q
-	@! grep -rn "NEXT_PUBLIC" web/ cli/ 2>/dev/null || (echo "NEXT_PUBLIC_ var found — token leak risk"; exit 1)
+	@! grep -rnE "process\.env\.NEXT_PUBLIC|NEXT_PUBLIC_[A-Z_]*(HYDRA|TOKEN)" web/app web/lib web/.env* 2>/dev/null \
+	  || (echo "NEXT_PUBLIC_ var found — token leak risk"; exit 1)
 
 web:
 	cd web && npm run dev
