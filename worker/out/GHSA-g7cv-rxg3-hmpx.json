@@ -1,0 +1,2208 @@
+{
+  "advisory": {
+    "key": "GHSA-g7cv-rxg3-hmpx",
+    "kind": "malware",
+    "published_at": 1778544769,
+    "published_at_iso": "2026-05-12T00:12:49+00:00",
+    "severity": "critical",
+    "summary": "Malware in @tanstack/* packages exfiltrates cloud credentials, GitHub tokens, and SSH keys"
+  },
+  "headline": {
+    "imported_L1": 0,
+    "lockfiles_exposed": 0,
+    "present_only_L0": 0,
+    "reachable_L2": 0,
+    "resolved_while_live": 0,
+    "services_exposed": 0,
+    "unscanned": 0
+  },
+  "provenance": {
+    "bolt_uri": "bolt://127.0.0.1:7687",
+    "generated_at": "2026-08-16T14:25:50.858859+00:00",
+    "graph": {
+      "Advisory": 657,
+      "Lockfile": 246,
+      "Maintainer": 3028,
+      "Package": 6446,
+      "Service": 13,
+      "Version": 55507
+    },
+    "hydradb_image": "ghcr.io/hydra-db/hydradb@sha256:db78309a233be54662db29744047e985a39b51c45a270d1a1f47c31a62cdb709",
+    "note": "All ms are wall-clock from the Python driver over loopback Bolt; cold = first run after the node was idle, warm = subsequent runs. Both are reported; neither is estimated.",
+    "platform": "Linux-7.1.8-arch1-3-x86_64-with-glibc2.44"
+  },
+  "q1_exposed": {
+    "cypher": [
+      "MATCH (bad:Version {id: 137018017096053})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 231396241830702})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 397692635454060})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 567561309870793})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 712686274846433})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 964668419889304})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 965262342525143})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 1448758791939381})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 1537169304090104})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 1599097965637154})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 1927678359844392})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 2349386367140813})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 3004394179732570})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 3151481333832665})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 3249251671657807})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 3614527982865538})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 3948164034591165})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 4333823390099162})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 4335369691398429})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 4468991814781147})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 1138132863106297})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 1163394107100951})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 1334099583694162})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 1454755746468606})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 1508237835865707})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 2311850994273223})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 3234359082941681})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 3338967816181868})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 4015830731068857})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 4140923659115341})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 1403582519474711})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 1852647781443135})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 2862023589828995})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 3233714060626352})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 3274922440417797})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 4396616151186103})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 488616902113090})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 1195572954832186})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 2506788086961629})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 3509221682769095})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 592642235537135})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 1477901855822502})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 33382893148185})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 1022510024594587})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 1276422233198127})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 1529386195209969})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 1605370960680482})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 1697229850861134})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 1939778592868051})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 2251918550729043})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 2634400736585263})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 2826827752004427})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 3298229733298731})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 3391910376610930})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 3939023045033773})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 4056136898491874})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 340688748952168})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 387652556882962})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 828107644029959})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 1225926029538320})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 1563623243327935})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 1957015533985304})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 1998709245907664})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 2024357099494472})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 2440550050864564})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 3005455292497174})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 3918206744887515})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 4148727376335481})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 4404044698794652})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 429403672175492})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 434741650471745})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 899193943390191})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 1396307204976670})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 1451441558629889})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 1601484339994643})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 3660803087010507})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 3859570602242890})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 4369174225359853})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 1051631377923064})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 1588189013349125})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 3357566552926603})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 22753100854510})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 1739240365286602})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "MATCH (bad:Version {id: 3657720674589130})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC"
+    ],
+    "limitations": [
+      "Membership is exact (RESOLVED = the lockfile's flattened install tree). Explanation paths are the 3 shortest per lockfile, not all of them."
+    ],
+    "lockfiles": 0,
+    "ms": 75.8,
+    "rows": [],
+    "services": [],
+    "timing": {
+      "cold_ms": 80.79,
+      "runs": 5,
+      "warm_p50_ms": 75.8,
+      "warm_p95_ms": 86.83
+    },
+    "truncated": false
+  },
+  "q1_mspaths": {
+    "cypher": [
+      "CALL algo.MSpaths({sourceLabel: 'Version', sourceProperty: 'key', sourceValues: ['pkg:npm/@tanstack/react-router-ssr-query@1.166.15', 'pkg:npm/@tanstack/router-utils@1.161.11', 'pkg:npm/@tanstack/history@1.161.9', 'pkg:npm/@tanstack/vue-router-ssr-query@1.166.15', 'pkg:npm/@tanstack/solid-start-client@1.166.50', 'pkg:npm/@tanstack/solid-router-ssr-query@1.166.15', 'pkg:npm/@tanstack/react-router-devtools@1.166.16', 'pkg:npm/@tanstack/vue-router-devtools@1.166.16', 'pkg:npm/@tanstack/react-start-client@1.166.51', 'pkg:npm/@tanstack/arktype-adapter@1.166.12', 'pkg:npm/@tanstack/valibot-adapter@1.166.12', 'pkg:npm/@tanstack/start-fn-stubs@1.161.9', 'pkg:npm/@tanstack/solid-start-server@1.166.54', 'pkg:npm/@tanstack/solid-router-devtools@1.166.16', 'pkg:npm/@tanstack/zod-adapter@1.166.12', 'pkg:npm/@tanstack/vue-start-client@1.166.46', 'pkg:npm/@tanstack/nitro-v2-vite-plugin@1.154.12', 'pkg:npm/@tanstack/start-storage-context@1.166.38', 'pkg:npm/@tanstack/router-vite-plugin@1.166.53', 'pkg:npm/@tanstack/router-devtools@1.166.16', 'pkg:npm/@tanstack/vue-start-server@1.166.50', 'pkg:npm/@tanstack/router-ssr-query-core@1.168.3', 'pkg:npm/@tanstack/virtual-file-routes@1.161.10', 'pkg:npm/@tanstack/vue-start@1.167.61', 'pkg:npm/@tanstack/start-server-core@1.167.33', 'pkg:npm/@tanstack/react-start-server@1.166.55', 'pkg:npm/@tanstack/router-devtools-core@1.167.6', 'pkg:npm/@tanstack/router-cli@1.166.46', 'pkg:npm/@tanstack/start-static-server-functions@1.166.44', 'pkg:npm/@tanstack/eslint-plugin-router@1.161.9', 'pkg:npm/@tanstack/solid-start@1.167.65', 'pkg:npm/@tanstack/react-start-rsc@0.0.47', 'pkg:npm/@tanstack/eslint-plugin-start@0.0.4', 'pkg:npm/@tanstack/router-generator@1.166.45', 'pkg:npm/@tanstack/router-plugin@1.167.38', 'pkg:npm/@tanstack/start-client-core@1.168.5', 'pkg:npm/@tanstack/react-start@1.167.68', 'pkg:npm/@tanstack/vue-router@1.169.5', 'pkg:npm/@tanstack/router-core@1.169.5', 'pkg:npm/@tanstack/react-router@1.169.5', 'pkg:npm/@tanstack/start-plugin-core@1.169.23', 'pkg:npm/@tanstack/solid-router@1.169.5', 'pkg:npm/@tanstack/history@1.161.12', 'pkg:npm/@tanstack/solid-router-ssr-query@1.166.18', 'pkg:npm/@tanstack/router-devtools@1.166.19', 'pkg:npm/@tanstack/start-fn-stubs@1.161.12', 'pkg:npm/@tanstack/router-vite-plugin@1.166.56', 'pkg:npm/@tanstack/vue-start-client@1.166.49', 'pkg:npm/@tanstack/start-static-server-functions@1.166.47', 'pkg:npm/@tanstack/start-storage-context@1.166.41', 'pkg:npm/@tanstack/arktype-adapter@1.166.15', 'pkg:npm/@tanstack/vue-router-ssr-query@1.166.18', 'pkg:npm/@tanstack/zod-adapter@1.166.15', 'pkg:npm/@tanstack/react-start-server@1.166.58', 'pkg:npm/@tanstack/vue-router-devtools@1.166.19', 'pkg:npm/@tanstack/react-router-ssr-query@1.166.18', 'pkg:npm/@tanstack/solid-start-server@1.166.57', 'pkg:npm/@tanstack/router-ssr-query-core@1.168.6', 'pkg:npm/@tanstack/router-utils@1.161.14', 'pkg:npm/@tanstack/solid-router-devtools@1.166.19', 'pkg:npm/@tanstack/nitro-v2-vite-plugin@1.154.15', 'pkg:npm/@tanstack/vue-start-server@1.166.53', 'pkg:npm/@tanstack/valibot-adapter@1.166.15', 'pkg:npm/@tanstack/router-cli@1.166.49', 'pkg:npm/@tanstack/vue-start@1.167.64', 'pkg:npm/@tanstack/react-router-devtools@1.166.19', 'pkg:npm/@tanstack/react-start-client@1.166.54', 'pkg:npm/@tanstack/virtual-file-routes@1.161.13', 'pkg:npm/@tanstack/solid-start-client@1.166.53', 'pkg:npm/@tanstack/eslint-plugin-start@0.0.7', 'pkg:npm/@tanstack/react-start@1.167.71', 'pkg:npm/@tanstack/start-server-core@1.167.36', 'pkg:npm/@tanstack/start-client-core@1.168.8', 'pkg:npm/@tanstack/eslint-plugin-router@1.161.12', 'pkg:npm/@tanstack/react-start-rsc@0.0.50', 'pkg:npm/@tanstack/router-devtools-core@1.167.9', 'pkg:npm/@tanstack/solid-start@1.167.68', 'pkg:npm/@tanstack/router-generator@1.166.48', 'pkg:npm/@tanstack/router-plugin@1.167.41', 'pkg:npm/@tanstack/react-router@1.169.8', 'pkg:npm/@tanstack/vue-router@1.169.8', 'pkg:npm/@tanstack/start-plugin-core@1.169.26', 'pkg:npm/@tanstack/solid-router@1.169.8', 'pkg:npm/@tanstack/router-core@1.169.8'], targetLabel: 'Service', targetProperty: 'key', targetValues: ['svc:ChrisTregaskis/ai-research-automation', 'svc:GoMake-ltd/n8n-node-gomake', 'svc:Kong/insomnia', 'svc:LVQT-ss/cakestory-api', 'svc:documenso/documenso', 'svc:koajs/koa', 'svc:louislam/uptime-kuma', 'svc:lperry65/Aider-Chat', 'svc:medplum/medplum', 'svc:socketio/socket.io', 'svc:twbs/bootstrap', 'svc:usebruno/bruno', 'svc:wagtail/wagtail'], relTypes: ['RESOLVED', 'HAS_LOCKFILE'], relDirection: 'incoming', maxLen: $maxlen, pathCount: $pathcount, resultLimit: $limit}) YIELD path RETURN path"
+    ],
+    "limitations": [
+      "Membership only (maxLen 2 over the RESOLVED closure); the DEPENDS_ON explanation chain is in q1_exposed. Longer maxLen expands the target frontier and times out on the real graph."
+    ],
+    "ms": 0.67,
+    "note": "One algo.MSpaths call: every compromised version \u00d7 every service, relDirection incoming.",
+    "paths": 0,
+    "rows": [],
+    "sources": 84,
+    "targets": 13,
+    "timing": {
+      "cold_ms": 698.18,
+      "runs": 5,
+      "warm_p50_ms": 0.74,
+      "warm_p95_ms": 1.07
+    },
+    "truncated": false
+  },
+  "q2_versions": {
+    "cypher": [
+      "MATCH (a:Advisory {id: 2334626364913177})-[:AFFECTS]->(v:Version) RETURN v.key AS version, v.published_at AS published_at ORDER BY v.published_at ASC LIMIT 1",
+      "MATCH (a:Advisory {id: 2334626364913177})-[af:AFFECTS]->(v:Version)-[:VERSION_OF]->(p:Package) RETURN p.key AS package, v.key AS version, v.published_at AS published_at, v.removed AS removed, af.live_from AS live_from, af.live_to AS live_to, af.live_to_kind AS live_to_kind ORDER BY v.published_at ASC"
+    ],
+    "first": {
+      "published_at": 1778527239,
+      "version": "pkg:npm/@tanstack/react-router-ssr-query@1.166.15"
+    },
+    "limitations": [
+      "live_to is an upper bound: npm publishes no takedown time; we use min(next surviving publish, advisory published)."
+    ],
+    "ms": 579.0,
+    "rows": [
+      {
+        "live_from": 1778527239,
+        "live_from_iso": "2026-05-11T19:20:39+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/react-router-ssr-query",
+        "published_at": 1778527239,
+        "published_at_iso": "2026-05-11T19:20:39+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/react-router-ssr-query@1.166.15"
+      },
+      {
+        "live_from": 1778527239,
+        "live_from_iso": "2026-05-11T19:20:39+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/router-utils",
+        "published_at": 1778527239,
+        "published_at_iso": "2026-05-11T19:20:39+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/router-utils@1.161.11"
+      },
+      {
+        "live_from": 1778527239,
+        "live_from_iso": "2026-05-11T19:20:39+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/history",
+        "published_at": 1778527239,
+        "published_at_iso": "2026-05-11T19:20:39+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/history@1.161.9"
+      },
+      {
+        "live_from": 1778527239,
+        "live_from_iso": "2026-05-11T19:20:39+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/vue-router-ssr-query",
+        "published_at": 1778527239,
+        "published_at_iso": "2026-05-11T19:20:39+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/vue-router-ssr-query@1.166.15"
+      },
+      {
+        "live_from": 1778527239,
+        "live_from_iso": "2026-05-11T19:20:39+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/solid-start-client",
+        "published_at": 1778527239,
+        "published_at_iso": "2026-05-11T19:20:39+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/solid-start-client@1.166.50"
+      },
+      {
+        "live_from": 1778527239,
+        "live_from_iso": "2026-05-11T19:20:39+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/solid-router-ssr-query",
+        "published_at": 1778527239,
+        "published_at_iso": "2026-05-11T19:20:39+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/solid-router-ssr-query@1.166.15"
+      },
+      {
+        "live_from": 1778527239,
+        "live_from_iso": "2026-05-11T19:20:39+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/react-router-devtools",
+        "published_at": 1778527239,
+        "published_at_iso": "2026-05-11T19:20:39+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/react-router-devtools@1.166.16"
+      },
+      {
+        "live_from": 1778527239,
+        "live_from_iso": "2026-05-11T19:20:39+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/vue-router-devtools",
+        "published_at": 1778527239,
+        "published_at_iso": "2026-05-11T19:20:39+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/vue-router-devtools@1.166.16"
+      },
+      {
+        "live_from": 1778527239,
+        "live_from_iso": "2026-05-11T19:20:39+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/react-start-client",
+        "published_at": 1778527239,
+        "published_at_iso": "2026-05-11T19:20:39+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/react-start-client@1.166.51"
+      },
+      {
+        "live_from": 1778527239,
+        "live_from_iso": "2026-05-11T19:20:39+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/arktype-adapter",
+        "published_at": 1778527239,
+        "published_at_iso": "2026-05-11T19:20:39+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/arktype-adapter@1.166.12"
+      },
+      {
+        "live_from": 1778527239,
+        "live_from_iso": "2026-05-11T19:20:39+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/valibot-adapter",
+        "published_at": 1778527239,
+        "published_at_iso": "2026-05-11T19:20:39+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/valibot-adapter@1.166.12"
+      },
+      {
+        "live_from": 1778527239,
+        "live_from_iso": "2026-05-11T19:20:39+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/start-fn-stubs",
+        "published_at": 1778527239,
+        "published_at_iso": "2026-05-11T19:20:39+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/start-fn-stubs@1.161.9"
+      },
+      {
+        "live_from": 1778527239,
+        "live_from_iso": "2026-05-11T19:20:39+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/solid-start-server",
+        "published_at": 1778527239,
+        "published_at_iso": "2026-05-11T19:20:39+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/solid-start-server@1.166.54"
+      },
+      {
+        "live_from": 1778527239,
+        "live_from_iso": "2026-05-11T19:20:39+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/solid-router-devtools",
+        "published_at": 1778527239,
+        "published_at_iso": "2026-05-11T19:20:39+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/solid-router-devtools@1.166.16"
+      },
+      {
+        "live_from": 1778527239,
+        "live_from_iso": "2026-05-11T19:20:39+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/zod-adapter",
+        "published_at": 1778527239,
+        "published_at_iso": "2026-05-11T19:20:39+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/zod-adapter@1.166.12"
+      },
+      {
+        "live_from": 1778527239,
+        "live_from_iso": "2026-05-11T19:20:39+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/vue-start-client",
+        "published_at": 1778527239,
+        "published_at_iso": "2026-05-11T19:20:39+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/vue-start-client@1.166.46"
+      },
+      {
+        "live_from": 1778527239,
+        "live_from_iso": "2026-05-11T19:20:39+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/nitro-v2-vite-plugin",
+        "published_at": 1778527239,
+        "published_at_iso": "2026-05-11T19:20:39+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/nitro-v2-vite-plugin@1.154.12"
+      },
+      {
+        "live_from": 1778527239,
+        "live_from_iso": "2026-05-11T19:20:39+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/start-storage-context",
+        "published_at": 1778527239,
+        "published_at_iso": "2026-05-11T19:20:39+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/start-storage-context@1.166.38"
+      },
+      {
+        "live_from": 1778527239,
+        "live_from_iso": "2026-05-11T19:20:39+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/router-vite-plugin",
+        "published_at": 1778527239,
+        "published_at_iso": "2026-05-11T19:20:39+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/router-vite-plugin@1.166.53"
+      },
+      {
+        "live_from": 1778527239,
+        "live_from_iso": "2026-05-11T19:20:39+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/router-devtools",
+        "published_at": 1778527239,
+        "published_at_iso": "2026-05-11T19:20:39+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/router-devtools@1.166.16"
+      },
+      {
+        "live_from": 1778527240,
+        "live_from_iso": "2026-05-11T19:20:40+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/vue-start-server",
+        "published_at": 1778527240,
+        "published_at_iso": "2026-05-11T19:20:40+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/vue-start-server@1.166.50"
+      },
+      {
+        "live_from": 1778527240,
+        "live_from_iso": "2026-05-11T19:20:40+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/router-ssr-query-core",
+        "published_at": 1778527240,
+        "published_at_iso": "2026-05-11T19:20:40+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/router-ssr-query-core@1.168.3"
+      },
+      {
+        "live_from": 1778527240,
+        "live_from_iso": "2026-05-11T19:20:40+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/virtual-file-routes",
+        "published_at": 1778527240,
+        "published_at_iso": "2026-05-11T19:20:40+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/virtual-file-routes@1.161.10"
+      },
+      {
+        "live_from": 1778527240,
+        "live_from_iso": "2026-05-11T19:20:40+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/vue-start",
+        "published_at": 1778527240,
+        "published_at_iso": "2026-05-11T19:20:40+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/vue-start@1.167.61"
+      },
+      {
+        "live_from": 1778527240,
+        "live_from_iso": "2026-05-11T19:20:40+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/start-server-core",
+        "published_at": 1778527240,
+        "published_at_iso": "2026-05-11T19:20:40+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/start-server-core@1.167.33"
+      },
+      {
+        "live_from": 1778527240,
+        "live_from_iso": "2026-05-11T19:20:40+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/react-start-server",
+        "published_at": 1778527240,
+        "published_at_iso": "2026-05-11T19:20:40+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/react-start-server@1.166.55"
+      },
+      {
+        "live_from": 1778527240,
+        "live_from_iso": "2026-05-11T19:20:40+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/router-devtools-core",
+        "published_at": 1778527240,
+        "published_at_iso": "2026-05-11T19:20:40+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/router-devtools-core@1.167.6"
+      },
+      {
+        "live_from": 1778527240,
+        "live_from_iso": "2026-05-11T19:20:40+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/router-cli",
+        "published_at": 1778527240,
+        "published_at_iso": "2026-05-11T19:20:40+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/router-cli@1.166.46"
+      },
+      {
+        "live_from": 1778527240,
+        "live_from_iso": "2026-05-11T19:20:40+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/start-static-server-functions",
+        "published_at": 1778527240,
+        "published_at_iso": "2026-05-11T19:20:40+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/start-static-server-functions@1.166.44"
+      },
+      {
+        "live_from": 1778527240,
+        "live_from_iso": "2026-05-11T19:20:40+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/eslint-plugin-router",
+        "published_at": 1778527240,
+        "published_at_iso": "2026-05-11T19:20:40+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/eslint-plugin-router@1.161.9"
+      },
+      {
+        "live_from": 1778527241,
+        "live_from_iso": "2026-05-11T19:20:41+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/solid-start",
+        "published_at": 1778527241,
+        "published_at_iso": "2026-05-11T19:20:41+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/solid-start@1.167.65"
+      },
+      {
+        "live_from": 1778527241,
+        "live_from_iso": "2026-05-11T19:20:41+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/react-start-rsc",
+        "published_at": 1778527241,
+        "published_at_iso": "2026-05-11T19:20:41+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/react-start-rsc@0.0.47"
+      },
+      {
+        "live_from": 1778527241,
+        "live_from_iso": "2026-05-11T19:20:41+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/eslint-plugin-start",
+        "published_at": 1778527241,
+        "published_at_iso": "2026-05-11T19:20:41+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/eslint-plugin-start@0.0.4"
+      },
+      {
+        "live_from": 1778527241,
+        "live_from_iso": "2026-05-11T19:20:41+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/router-generator",
+        "published_at": 1778527241,
+        "published_at_iso": "2026-05-11T19:20:41+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/router-generator@1.166.45"
+      },
+      {
+        "live_from": 1778527241,
+        "live_from_iso": "2026-05-11T19:20:41+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/router-plugin",
+        "published_at": 1778527241,
+        "published_at_iso": "2026-05-11T19:20:41+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/router-plugin@1.167.38"
+      },
+      {
+        "live_from": 1778527241,
+        "live_from_iso": "2026-05-11T19:20:41+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/start-client-core",
+        "published_at": 1778527241,
+        "published_at_iso": "2026-05-11T19:20:41+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/start-client-core@1.168.5"
+      },
+      {
+        "live_from": 1778527242,
+        "live_from_iso": "2026-05-11T19:20:42+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/react-start",
+        "published_at": 1778527242,
+        "published_at_iso": "2026-05-11T19:20:42+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/react-start@1.167.68"
+      },
+      {
+        "live_from": 1778527242,
+        "live_from_iso": "2026-05-11T19:20:42+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/vue-router",
+        "published_at": 1778527242,
+        "published_at_iso": "2026-05-11T19:20:42+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/vue-router@1.169.5"
+      },
+      {
+        "live_from": 1778527242,
+        "live_from_iso": "2026-05-11T19:20:42+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/router-core",
+        "published_at": 1778527242,
+        "published_at_iso": "2026-05-11T19:20:42+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/router-core@1.169.5"
+      },
+      {
+        "live_from": 1778527242,
+        "live_from_iso": "2026-05-11T19:20:42+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/react-router",
+        "published_at": 1778527242,
+        "published_at_iso": "2026-05-11T19:20:42+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/react-router@1.169.5"
+      },
+      {
+        "live_from": 1778527243,
+        "live_from_iso": "2026-05-11T19:20:43+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/start-plugin-core",
+        "published_at": 1778527243,
+        "published_at_iso": "2026-05-11T19:20:43+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/start-plugin-core@1.169.23"
+      },
+      {
+        "live_from": 1778527243,
+        "live_from_iso": "2026-05-11T19:20:43+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/solid-router",
+        "published_at": 1778527243,
+        "published_at_iso": "2026-05-11T19:20:43+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/solid-router@1.169.5"
+      },
+      {
+        "live_from": 1778527574,
+        "live_from_iso": "2026-05-11T19:26:14+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/history",
+        "published_at": 1778527574,
+        "published_at_iso": "2026-05-11T19:26:14+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/history@1.161.12"
+      },
+      {
+        "live_from": 1778527574,
+        "live_from_iso": "2026-05-11T19:26:14+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/solid-router-ssr-query",
+        "published_at": 1778527574,
+        "published_at_iso": "2026-05-11T19:26:14+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/solid-router-ssr-query@1.166.18"
+      },
+      {
+        "live_from": 1778527574,
+        "live_from_iso": "2026-05-11T19:26:14+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/router-devtools",
+        "published_at": 1778527574,
+        "published_at_iso": "2026-05-11T19:26:14+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/router-devtools@1.166.19"
+      },
+      {
+        "live_from": 1778527574,
+        "live_from_iso": "2026-05-11T19:26:14+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/start-fn-stubs",
+        "published_at": 1778527574,
+        "published_at_iso": "2026-05-11T19:26:14+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/start-fn-stubs@1.161.12"
+      },
+      {
+        "live_from": 1778527574,
+        "live_from_iso": "2026-05-11T19:26:14+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/router-vite-plugin",
+        "published_at": 1778527574,
+        "published_at_iso": "2026-05-11T19:26:14+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/router-vite-plugin@1.166.56"
+      },
+      {
+        "live_from": 1778527574,
+        "live_from_iso": "2026-05-11T19:26:14+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/vue-start-client",
+        "published_at": 1778527574,
+        "published_at_iso": "2026-05-11T19:26:14+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/vue-start-client@1.166.49"
+      },
+      {
+        "live_from": 1778527574,
+        "live_from_iso": "2026-05-11T19:26:14+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/start-static-server-functions",
+        "published_at": 1778527574,
+        "published_at_iso": "2026-05-11T19:26:14+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/start-static-server-functions@1.166.47"
+      },
+      {
+        "live_from": 1778527574,
+        "live_from_iso": "2026-05-11T19:26:14+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/start-storage-context",
+        "published_at": 1778527574,
+        "published_at_iso": "2026-05-11T19:26:14+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/start-storage-context@1.166.41"
+      },
+      {
+        "live_from": 1778527574,
+        "live_from_iso": "2026-05-11T19:26:14+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/arktype-adapter",
+        "published_at": 1778527574,
+        "published_at_iso": "2026-05-11T19:26:14+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/arktype-adapter@1.166.15"
+      },
+      {
+        "live_from": 1778527574,
+        "live_from_iso": "2026-05-11T19:26:14+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/vue-router-ssr-query",
+        "published_at": 1778527574,
+        "published_at_iso": "2026-05-11T19:26:14+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/vue-router-ssr-query@1.166.18"
+      },
+      {
+        "live_from": 1778527574,
+        "live_from_iso": "2026-05-11T19:26:14+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/zod-adapter",
+        "published_at": 1778527574,
+        "published_at_iso": "2026-05-11T19:26:14+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/zod-adapter@1.166.15"
+      },
+      {
+        "live_from": 1778527574,
+        "live_from_iso": "2026-05-11T19:26:14+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/react-start-server",
+        "published_at": 1778527574,
+        "published_at_iso": "2026-05-11T19:26:14+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/react-start-server@1.166.58"
+      },
+      {
+        "live_from": 1778527574,
+        "live_from_iso": "2026-05-11T19:26:14+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/vue-router-devtools",
+        "published_at": 1778527574,
+        "published_at_iso": "2026-05-11T19:26:14+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/vue-router-devtools@1.166.19"
+      },
+      {
+        "live_from": 1778527574,
+        "live_from_iso": "2026-05-11T19:26:14+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/react-router-ssr-query",
+        "published_at": 1778527574,
+        "published_at_iso": "2026-05-11T19:26:14+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/react-router-ssr-query@1.166.18"
+      },
+      {
+        "live_from": 1778527575,
+        "live_from_iso": "2026-05-11T19:26:15+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/solid-start-server",
+        "published_at": 1778527575,
+        "published_at_iso": "2026-05-11T19:26:15+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/solid-start-server@1.166.57"
+      },
+      {
+        "live_from": 1778527575,
+        "live_from_iso": "2026-05-11T19:26:15+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/router-ssr-query-core",
+        "published_at": 1778527575,
+        "published_at_iso": "2026-05-11T19:26:15+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/router-ssr-query-core@1.168.6"
+      },
+      {
+        "live_from": 1778527575,
+        "live_from_iso": "2026-05-11T19:26:15+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/router-utils",
+        "published_at": 1778527575,
+        "published_at_iso": "2026-05-11T19:26:15+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/router-utils@1.161.14"
+      },
+      {
+        "live_from": 1778527575,
+        "live_from_iso": "2026-05-11T19:26:15+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/solid-router-devtools",
+        "published_at": 1778527575,
+        "published_at_iso": "2026-05-11T19:26:15+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/solid-router-devtools@1.166.19"
+      },
+      {
+        "live_from": 1778527575,
+        "live_from_iso": "2026-05-11T19:26:15+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/nitro-v2-vite-plugin",
+        "published_at": 1778527575,
+        "published_at_iso": "2026-05-11T19:26:15+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/nitro-v2-vite-plugin@1.154.15"
+      },
+      {
+        "live_from": 1778527575,
+        "live_from_iso": "2026-05-11T19:26:15+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/vue-start-server",
+        "published_at": 1778527575,
+        "published_at_iso": "2026-05-11T19:26:15+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/vue-start-server@1.166.53"
+      },
+      {
+        "live_from": 1778527575,
+        "live_from_iso": "2026-05-11T19:26:15+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/valibot-adapter",
+        "published_at": 1778527575,
+        "published_at_iso": "2026-05-11T19:26:15+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/valibot-adapter@1.166.15"
+      },
+      {
+        "live_from": 1778527575,
+        "live_from_iso": "2026-05-11T19:26:15+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/router-cli",
+        "published_at": 1778527575,
+        "published_at_iso": "2026-05-11T19:26:15+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/router-cli@1.166.49"
+      },
+      {
+        "live_from": 1778527575,
+        "live_from_iso": "2026-05-11T19:26:15+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/vue-start",
+        "published_at": 1778527575,
+        "published_at_iso": "2026-05-11T19:26:15+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/vue-start@1.167.64"
+      },
+      {
+        "live_from": 1778527575,
+        "live_from_iso": "2026-05-11T19:26:15+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/react-router-devtools",
+        "published_at": 1778527575,
+        "published_at_iso": "2026-05-11T19:26:15+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/react-router-devtools@1.166.19"
+      },
+      {
+        "live_from": 1778527575,
+        "live_from_iso": "2026-05-11T19:26:15+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/react-start-client",
+        "published_at": 1778527575,
+        "published_at_iso": "2026-05-11T19:26:15+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/react-start-client@1.166.54"
+      },
+      {
+        "live_from": 1778527575,
+        "live_from_iso": "2026-05-11T19:26:15+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/virtual-file-routes",
+        "published_at": 1778527575,
+        "published_at_iso": "2026-05-11T19:26:15+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/virtual-file-routes@1.161.13"
+      },
+      {
+        "live_from": 1778527575,
+        "live_from_iso": "2026-05-11T19:26:15+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/solid-start-client",
+        "published_at": 1778527575,
+        "published_at_iso": "2026-05-11T19:26:15+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/solid-start-client@1.166.53"
+      },
+      {
+        "live_from": 1778527576,
+        "live_from_iso": "2026-05-11T19:26:16+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/eslint-plugin-start",
+        "published_at": 1778527576,
+        "published_at_iso": "2026-05-11T19:26:16+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/eslint-plugin-start@0.0.7"
+      },
+      {
+        "live_from": 1778527576,
+        "live_from_iso": "2026-05-11T19:26:16+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/react-start",
+        "published_at": 1778527576,
+        "published_at_iso": "2026-05-11T19:26:16+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/react-start@1.167.71"
+      },
+      {
+        "live_from": 1778527576,
+        "live_from_iso": "2026-05-11T19:26:16+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/start-server-core",
+        "published_at": 1778527576,
+        "published_at_iso": "2026-05-11T19:26:16+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/start-server-core@1.167.36"
+      },
+      {
+        "live_from": 1778527576,
+        "live_from_iso": "2026-05-11T19:26:16+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/start-client-core",
+        "published_at": 1778527576,
+        "published_at_iso": "2026-05-11T19:26:16+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/start-client-core@1.168.8"
+      },
+      {
+        "live_from": 1778527576,
+        "live_from_iso": "2026-05-11T19:26:16+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/eslint-plugin-router",
+        "published_at": 1778527576,
+        "published_at_iso": "2026-05-11T19:26:16+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/eslint-plugin-router@1.161.12"
+      },
+      {
+        "live_from": 1778527576,
+        "live_from_iso": "2026-05-11T19:26:16+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/react-start-rsc",
+        "published_at": 1778527576,
+        "published_at_iso": "2026-05-11T19:26:16+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/react-start-rsc@0.0.50"
+      },
+      {
+        "live_from": 1778527576,
+        "live_from_iso": "2026-05-11T19:26:16+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/router-devtools-core",
+        "published_at": 1778527576,
+        "published_at_iso": "2026-05-11T19:26:16+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/router-devtools-core@1.167.9"
+      },
+      {
+        "live_from": 1778527576,
+        "live_from_iso": "2026-05-11T19:26:16+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/solid-start",
+        "published_at": 1778527576,
+        "published_at_iso": "2026-05-11T19:26:16+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/solid-start@1.167.68"
+      },
+      {
+        "live_from": 1778527576,
+        "live_from_iso": "2026-05-11T19:26:16+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/router-generator",
+        "published_at": 1778527576,
+        "published_at_iso": "2026-05-11T19:26:16+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/router-generator@1.166.48"
+      },
+      {
+        "live_from": 1778527577,
+        "live_from_iso": "2026-05-11T19:26:17+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/router-plugin",
+        "published_at": 1778527577,
+        "published_at_iso": "2026-05-11T19:26:17+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/router-plugin@1.167.41"
+      },
+      {
+        "live_from": 1778527577,
+        "live_from_iso": "2026-05-11T19:26:17+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/react-router",
+        "published_at": 1778527577,
+        "published_at_iso": "2026-05-11T19:26:17+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/react-router@1.169.8"
+      },
+      {
+        "live_from": 1778527577,
+        "live_from_iso": "2026-05-11T19:26:17+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/vue-router",
+        "published_at": 1778527577,
+        "published_at_iso": "2026-05-11T19:26:17+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/vue-router@1.169.8"
+      },
+      {
+        "live_from": 1778527578,
+        "live_from_iso": "2026-05-11T19:26:18+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/start-plugin-core",
+        "published_at": 1778527578,
+        "published_at_iso": "2026-05-11T19:26:18+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/start-plugin-core@1.169.26"
+      },
+      {
+        "live_from": 1778527578,
+        "live_from_iso": "2026-05-11T19:26:18+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/solid-router",
+        "published_at": 1778527578,
+        "published_at_iso": "2026-05-11T19:26:18+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/solid-router@1.169.8"
+      },
+      {
+        "live_from": 1778527578,
+        "live_from_iso": "2026-05-11T19:26:18+00:00",
+        "live_to": 1778544769,
+        "live_to_iso": "2026-05-12T00:12:49+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/@tanstack/router-core",
+        "published_at": 1778527578,
+        "published_at_iso": "2026-05-11T19:26:18+00:00",
+        "removed": true,
+        "version": "pkg:npm/@tanstack/router-core@1.169.8"
+      }
+    ],
+    "truncated": false
+  },
+  "q3_while_live": {
+    "cypher": [
+      "MATCH (a:Advisory {id: 2334626364913177})-[af:AFFECTS]->(v:Version)<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) WHERE r.at >= af.live_from AND r.at <= af.live_to RETURN sv.key AS service, l.key AS lockfile, l.sha AS sha, r.at AS resolved_at, v.key AS version, v.removed AS removed, af.live_from AS live_from, af.live_to AS live_to, af.live_to_kind AS live_to_kind ORDER BY r.at ASC",
+      "MATCH (a:Advisory {id: 2334626364913177})-[af:AFFECTS]->(v:Version)<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) WHERE v.removed = true RETURN sv.key AS service, l.key AS lockfile, l.sha AS sha, r.at AS resolved_at, v.key AS version, v.removed AS removed, af.live_from AS live_from, af.live_to AS live_to, af.live_to_kind AS live_to_kind ORDER BY r.at ASC"
+    ],
+    "in_window": 0,
+    "limitations": [
+      "in_window: the pin was committed while the artifact was installable; it does not prove an install happened. pinned_removed: the lockfile pins a version npm has erased, which is only possible while it was live \u2014 commit time is irrelevant."
+    ],
+    "ms": 24.67,
+    "note": "live_from is exact (npm keeps the publish timestamp after erasing the version). live_to is an upper bound where marked \u2014 npm publishes no takedown time.",
+    "pinned_removed": 0,
+    "rows": [],
+    "services": [],
+    "truncated": false
+  },
+  "q4_maintainers": {
+    "cypher": [
+      "MATCH (bad:Version {id: 137018017096053})-[:VERSION_OF]->(p:Package)<-[:MAINTAINS]-(m:Maintainer)-[:MAINTAINS]->(other:Package) RETURN m.key AS maintainer, m.twofa AS twofa, m.account_created AS account_created, p.key AS bad_package, other.key AS package, other.id AS pid, other.downloads AS downloads",
+      "MATCH (p:Package {id: 3864975228705816})<-[:VERSION_OF]-(v:Version)<-[:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, count(*) AS n",
+      "MATCH (p:Package {id: 29054053954268})<-[:VERSION_OF]-(v:Version)<-[:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, count(*) AS n",
+      "MATCH (p:Package {id: 53994500743850})<-[:VERSION_OF]-(v:Version)<-[:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, count(*) AS n",
+      "MATCH (p:Package {id: 189356305022705})<-[:VERSION_OF]-(v:Version)<-[:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, count(*) AS n",
+      "MATCH (p:Package {id: 212835082363174})<-[:VERSION_OF]-(v:Version)<-[:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, count(*) AS n",
+      "MATCH (p:Package {id: 301755626990109})<-[:VERSION_OF]-(v:Version)<-[:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, count(*) AS n",
+      "MATCH (p:Package {id: 303599188287170})<-[:VERSION_OF]-(v:Version)<-[:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, count(*) AS n",
+      "MATCH (p:Package {id: 332871313945116})<-[:VERSION_OF]-(v:Version)<-[:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, count(*) AS n",
+      "MATCH (p:Package {id: 341505758813086})<-[:VERSION_OF]-(v:Version)<-[:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, count(*) AS n",
+      "MATCH (p:Package {id: 362425376099288})<-[:VERSION_OF]-(v:Version)<-[:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, count(*) AS n",
+      "MATCH (p:Package {id: 648172350326500})<-[:VERSION_OF]-(v:Version)<-[:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, count(*) AS n",
+      "MATCH (p:Package {id: 698147065014712})<-[:VERSION_OF]-(v:Version)<-[:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, count(*) AS n"
+    ],
+    "limitations": [
+      "49 co-maintained packages; exposure computed for the 12 most downloaded.",
+      "twofa / account_created are not exposed by the public npm registry; shown as unknown, never guessed.",
+      "'services at risk' = services resolving the co-maintained package today \u2014 the exposure IF that package is compromised next, not exposure to this incident."
+    ],
+    "maintainers": [
+      {
+        "account_created": null,
+        "login": "npm:alemtuzlak",
+        "twofa": null
+      },
+      {
+        "account_created": null,
+        "login": "npm:kevinvandy",
+        "twofa": null
+      },
+      {
+        "account_created": null,
+        "login": "npm:tannerlinsley",
+        "twofa": null
+      }
+    ],
+    "ms": 585.96,
+    "rows": [
+      {
+        "downloads": 8491458,
+        "maintainers": [
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/chart.js",
+        "services_at_risk": [
+          "svc:louislam/uptime-kuma",
+          "svc:medplum/medplum"
+        ]
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/react-table",
+        "services_at_risk": [
+          "svc:documenso/documenso"
+        ]
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/arktype-adapter",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/eslint-plugin-router",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/eslint-plugin-start",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/history",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/nitro-v2-vite-plugin",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/query-core",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/react-query",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/react-router",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/react-router-devtools",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/react-start",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/react-start-client",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/react-start-rsc",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/react-start-server",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/react-virtual",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/router-cli",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/router-core",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/router-devtools",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/router-devtools-core",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/router-generator",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/router-plugin",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/router-ssr-query-core",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/router-utils",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/router-vite-plugin",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/solid-router",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/solid-router-devtools",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/solid-router-ssr-query",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/solid-start",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/solid-start-client",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/solid-start-server",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/solid-virtual",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/start-client-core",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/start-fn-stubs",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/start-plugin-core",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/start-server-core",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/start-static-server-functions",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/start-storage-context",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/table-core",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/valibot-adapter",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/virtual-core",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/virtual-file-routes",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/vue-router",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/vue-router-devtools",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/vue-router-ssr-query",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/vue-start",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/vue-start-client",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/vue-start-server",
+        "services_at_risk": []
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:alemtuzlak",
+          "npm:kevinvandy",
+          "npm:tannerlinsley"
+        ],
+        "package": "pkg:npm/@tanstack/zod-adapter",
+        "services_at_risk": []
+      }
+    ],
+    "truncated": false
+  },
+  "q5_typosquats": {
+    "pkg:npm/@tanstack/arktype-adapter": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 301755626990109}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 0.97,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/eslint-plugin-router": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 1305024472178392}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 1.02,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/eslint-plugin-start": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 332871313945116}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 0.88,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/history": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 3116557575428265}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 1.07,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/nitro-v2-vite-plugin": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 4178907464829013}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 0.94,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/react-router": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 362425376099288}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 0.95,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/react-router-devtools": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 929511569428874}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 0.92,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/react-router-ssr-query": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 327967042099057}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 0.89,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/react-start": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 1179444934470942}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 0.8,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/react-start-client": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 53994500743850}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 0.56,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/react-start-rsc": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 2442775133129802}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 0.51,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/react-start-server": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 3896350939861800}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 0.63,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/router-cli": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 1445251765394910}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 0.77,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/router-core": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 2966877793968609}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 1.09,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/router-devtools": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 1504807061844081}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 1.05,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/router-devtools-core": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 3228597539975984}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 1.05,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/router-generator": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 1103126392052506}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 1.06,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/router-plugin": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 2665410266726668}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 1.15,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/router-ssr-query-core": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 4025887131903723}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 1.0,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/router-utils": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 1477211101209146}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 1.08,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/router-vite-plugin": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 189356305022705}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 1.0,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/solid-router": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 1375169177891121}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 0.86,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/solid-router-devtools": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 341505758813086}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 0.96,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/solid-router-ssr-query": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 2472647620243733}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 0.97,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/solid-start": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 736834747481874}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 0.85,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/solid-start-client": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 303599188287170}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 0.59,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/solid-start-server": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 2827440319816473}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 0.56,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/start-client-core": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 4098064125098976}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 0.72,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/start-fn-stubs": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 3329268394201129}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 0.97,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/start-plugin-core": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 2886600214762443}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 0.58,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/start-server-core": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 3083406667540772}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 0.63,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/start-static-server-functions": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 733416166363826}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 1.13,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/start-storage-context": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 2762962814628038}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 0.51,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/valibot-adapter": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 1029004199529681}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 0.53,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/virtual-file-routes": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 4180172914570538}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 0.66,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/vue-router": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 4324772390834932}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 0.98,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/vue-router-devtools": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 4168859840106631}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 1.06,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/vue-router-ssr-query": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 212835082363174}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 1.03,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/vue-start": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 3664514777716809}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 1.03,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/vue-start-client": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 698147065014712}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 0.73,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/vue-start-server": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 1989203103024493}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 1.04,
+      "rows": [],
+      "truncated": false
+    },
+    "pkg:npm/@tanstack/zod-adapter": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 648172350326500}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 0.96,
+      "rows": [],
+      "truncated": false
+    }
+  },
+  "q7_reachability": {},
+  "timing_ms": {
+    "q1": 75.8,
+    "q1_mspaths": 0.67,
+    "q2": 579.0,
+    "q3": 24.67,
+    "q4": 585.96,
+    "q5": 36.71,
+    "total": 4587.1
+  }
+}

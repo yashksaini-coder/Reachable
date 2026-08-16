@@ -1,0 +1,2629 @@
+{
+  "advisory": {
+    "key": "MAL-2025-46969",
+    "kind": "malware",
+    "published_at": 1757351479,
+    "published_at_iso": "2025-09-08T17:11:19+00:00",
+    "severity": "critical",
+    "summary": "Malicious code in chalk (npm)"
+  },
+  "headline": {
+    "imported_L1": 0,
+    "lockfiles_exposed": 1,
+    "present_only_L0": 1,
+    "reachable_L2": 0,
+    "resolved_while_live": 1,
+    "services_exposed": 1,
+    "unscanned": 0
+  },
+  "provenance": {
+    "bolt_uri": "bolt://127.0.0.1:7687",
+    "generated_at": "2026-08-16T14:29:04.975007+00:00",
+    "graph": {
+      "Advisory": 657,
+      "Lockfile": 246,
+      "Maintainer": 3028,
+      "Package": 6446,
+      "Service": 13,
+      "Version": 55507
+    },
+    "hydradb_image": "ghcr.io/hydra-db/hydradb@sha256:db78309a233be54662db29744047e985a39b51c45a270d1a1f47c31a62cdb709",
+    "note": "All ms are wall-clock from the Python driver over loopback Bolt; cold = first run after the node was idle, warm = subsequent runs. Both are reported; neither is estimated.",
+    "platform": "Linux-7.1.8-arch1-3-x86_64-with-glibc2.44"
+  },
+  "q1_exposed": {
+    "cypher": [
+      "MATCH (bad:Version {id: 875223170430277})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "CALL algo.SPpaths({sourceNode: $src, targetNode: $dst, relTypes: ['DEPENDS_ON', 'RESOLVED'], relDirection: 'incoming', maxLen: 9, pathCount: 3}) YIELD path RETURN path"
+    ],
+    "limitations": [
+      "Membership is exact (RESOLVED = the lockfile's flattened install tree). Explanation paths are the 3 shortest per lockfile, not all of them."
+    ],
+    "lockfiles": 1,
+    "ms": 2.22,
+    "rows": [
+      {
+        "bad_versions": [
+          "pkg:npm/chalk@5.6.1"
+        ],
+        "committed_at": 1757351904,
+        "hops": 0,
+        "lockfile": "lock:lperry65/Aider-Chat@b1d64b4d834e",
+        "paths": [
+          {
+            "bad": "pkg:npm/chalk@5.6.1",
+            "chain": [
+              "pkg:npm/chalk@5.6.1",
+              "RESOLVED",
+              "lock:lperry65/Aider-Chat@b1d64b4d834e"
+            ],
+            "hops": 0
+          },
+          {
+            "bad": "pkg:npm/chalk@5.6.1",
+            "chain": [
+              "pkg:npm/chalk@5.6.1",
+              "DEPENDS_ON",
+              "pkg:npm/lint-staged@16.1.6",
+              "RESOLVED",
+              "lock:lperry65/Aider-Chat@b1d64b4d834e"
+            ],
+            "hops": 1
+          }
+        ],
+        "resolved_at": 1757351904,
+        "service": "svc:lperry65/Aider-Chat",
+        "sha": "b1d64b4d834e198bde3006d0447394bbcbe93fc7",
+        "via": "pkg:npm/lint-staged@16.1.6"
+      }
+    ],
+    "services": [
+      "svc:lperry65/Aider-Chat"
+    ],
+    "timing": {
+      "cold_ms": 9.04,
+      "runs": 5,
+      "warm_p50_ms": 2.22,
+      "warm_p95_ms": 2.26
+    },
+    "truncated": false
+  },
+  "q1_mspaths": {
+    "cypher": [
+      "CALL algo.MSpaths({sourceLabel: 'Version', sourceProperty: 'key', sourceValues: ['pkg:npm/chalk@5.6.1'], targetLabel: 'Service', targetProperty: 'key', targetValues: ['svc:ChrisTregaskis/ai-research-automation', 'svc:GoMake-ltd/n8n-node-gomake', 'svc:Kong/insomnia', 'svc:LVQT-ss/cakestory-api', 'svc:documenso/documenso', 'svc:koajs/koa', 'svc:louislam/uptime-kuma', 'svc:lperry65/Aider-Chat', 'svc:medplum/medplum', 'svc:socketio/socket.io', 'svc:twbs/bootstrap', 'svc:usebruno/bruno', 'svc:wagtail/wagtail'], relTypes: ['RESOLVED', 'HAS_LOCKFILE'], relDirection: 'incoming', maxLen: $maxlen, pathCount: $pathcount, resultLimit: $limit}) YIELD path RETURN path"
+    ],
+    "limitations": [
+      "Membership only (maxLen 2 over the RESOLVED closure); the DEPENDS_ON explanation chain is in q1_exposed. Longer maxLen expands the target frontier and times out on the real graph."
+    ],
+    "ms": 0.7,
+    "note": "One algo.MSpaths call: every compromised version \u00d7 every service, relDirection incoming.",
+    "paths": 1,
+    "rows": [
+      {
+        "bad": "pkg:npm/chalk@5.6.1",
+        "chain": [
+          "pkg:npm/chalk@5.6.1",
+          "RESOLVED",
+          "lock:lperry65/Aider-Chat@b1d64b4d834e",
+          "HAS_LOCKFILE",
+          "svc:lperry65/Aider-Chat"
+        ],
+        "service": "svc:lperry65/Aider-Chat"
+      }
+    ],
+    "sources": 1,
+    "targets": 13,
+    "timing": {
+      "cold_ms": 0.85,
+      "runs": 5,
+      "warm_p50_ms": 0.7,
+      "warm_p95_ms": 0.78
+    },
+    "truncated": false
+  },
+  "q2_versions": {
+    "cypher": [
+      "MATCH (a:Advisory {id: 1145037850605809})-[:AFFECTS]->(v:Version) RETURN v.key AS version, v.published_at AS published_at ORDER BY v.published_at ASC LIMIT 1",
+      "MATCH (a:Advisory {id: 1145037850605809})-[af:AFFECTS]->(v:Version)-[:VERSION_OF]->(p:Package) RETURN p.key AS package, v.key AS version, v.published_at AS published_at, v.removed AS removed, af.live_from AS live_from, af.live_to AS live_to, af.live_to_kind AS live_to_kind ORDER BY v.published_at ASC"
+    ],
+    "first": {
+      "published_at": 1757337185,
+      "version": "pkg:npm/chalk@5.6.1"
+    },
+    "limitations": [
+      "live_to is an upper bound: npm publishes no takedown time; we use min(next surviving publish, advisory published)."
+    ],
+    "ms": 8.87,
+    "rows": [
+      {
+        "live_from": 1757337185,
+        "live_from_iso": "2025-09-08T13:13:05+00:00",
+        "live_to": 1757342874,
+        "live_to_iso": "2025-09-08T14:47:54+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/chalk",
+        "published_at": 1757337185,
+        "published_at_iso": "2025-09-08T13:13:05+00:00",
+        "removed": true,
+        "version": "pkg:npm/chalk@5.6.1"
+      }
+    ],
+    "truncated": false
+  },
+  "q3_while_live": {
+    "cypher": [
+      "MATCH (a:Advisory {id: 1145037850605809})-[af:AFFECTS]->(v:Version)<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) WHERE r.at >= af.live_from AND r.at <= af.live_to RETURN sv.key AS service, l.key AS lockfile, l.sha AS sha, r.at AS resolved_at, v.key AS version, v.removed AS removed, af.live_from AS live_from, af.live_to AS live_to, af.live_to_kind AS live_to_kind ORDER BY r.at ASC",
+      "MATCH (a:Advisory {id: 1145037850605809})-[af:AFFECTS]->(v:Version)<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) WHERE v.removed = true RETURN sv.key AS service, l.key AS lockfile, l.sha AS sha, r.at AS resolved_at, v.key AS version, v.removed AS removed, af.live_from AS live_from, af.live_to AS live_to, af.live_to_kind AS live_to_kind ORDER BY r.at ASC"
+    ],
+    "in_window": 0,
+    "limitations": [
+      "in_window: the pin was committed while the artifact was installable; it does not prove an install happened. pinned_removed: the lockfile pins a version npm has erased, which is only possible while it was live \u2014 commit time is irrelevant."
+    ],
+    "ms": 3.5,
+    "note": "live_from is exact (npm keeps the publish timestamp after erasing the version). live_to is an upper bound where marked \u2014 npm publishes no takedown time.",
+    "pinned_removed": 1,
+    "rows": [
+      {
+        "evidence": "pinned_removed",
+        "live_from": 1757337185,
+        "live_from_iso": "2025-09-08T13:13:05+00:00",
+        "live_to": 1757342874,
+        "live_to_iso": "2025-09-08T14:47:54+00:00",
+        "live_to_kind": "upper_bound",
+        "lockfile": "lock:lperry65/Aider-Chat@b1d64b4d834e",
+        "removed": true,
+        "resolved_at": 1757351904,
+        "resolved_at_iso": "2025-09-08T17:18:24+00:00",
+        "service": "svc:lperry65/Aider-Chat",
+        "sha": "b1d64b4d834e198bde3006d0447394bbcbe93fc7",
+        "version": "pkg:npm/chalk@5.6.1"
+      }
+    ],
+    "services": [
+      "svc:lperry65/Aider-Chat"
+    ],
+    "truncated": false
+  },
+  "q4_maintainers": {
+    "cypher": [
+      "MATCH (bad:Version {id: 875223170430277})-[:VERSION_OF]->(p:Package)<-[:MAINTAINS]-(m:Maintainer)-[:MAINTAINS]->(other:Package) RETURN m.key AS maintainer, m.twofa AS twofa, m.account_created AS account_created, p.key AS bad_package, other.key AS package, other.id AS pid, other.downloads AS downloads",
+      "MATCH (p:Package {id: 3523260637727776})<-[:VERSION_OF]-(v:Version)<-[:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, count(*) AS n",
+      "MATCH (p:Package {id: 3379968561082640})<-[:VERSION_OF]-(v:Version)<-[:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, count(*) AS n",
+      "MATCH (p:Package {id: 2243642477363762})<-[:VERSION_OF]-(v:Version)<-[:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, count(*) AS n",
+      "MATCH (p:Package {id: 3689491925101440})<-[:VERSION_OF]-(v:Version)<-[:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, count(*) AS n",
+      "MATCH (p:Package {id: 2630416607455485})<-[:VERSION_OF]-(v:Version)<-[:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, count(*) AS n",
+      "MATCH (p:Package {id: 2083228363501883})<-[:VERSION_OF]-(v:Version)<-[:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, count(*) AS n",
+      "MATCH (p:Package {id: 2023119227481576})<-[:VERSION_OF]-(v:Version)<-[:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, count(*) AS n",
+      "MATCH (p:Package {id: 2629769104181785})<-[:VERSION_OF]-(v:Version)<-[:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, count(*) AS n"
+    ],
+    "limitations": [
+      "283 co-maintained packages; exposure computed for the 8 most downloaded.",
+      "twofa / account_created are not exposed by the public npm registry; shown as unknown, never guessed.",
+      "'services at risk' = services resolving the co-maintained package today \u2014 the exposure IF that package is compromised next, not exposure to this incident."
+    ],
+    "maintainers": [
+      {
+        "account_created": null,
+        "login": "npm:sindresorhus",
+        "twofa": null
+      }
+    ],
+    "ms": 29689.83,
+    "rows": [
+      {
+        "downloads": 571691924,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/ansi-styles",
+        "services_at_risk": [
+          "svc:ChrisTregaskis/ai-research-automation",
+          "svc:GoMake-ltd/n8n-node-gomake",
+          "svc:Kong/insomnia",
+          "svc:LVQT-ss/cakestory-api",
+          "svc:documenso/documenso",
+          "svc:koajs/koa",
+          "svc:louislam/uptime-kuma",
+          "svc:lperry65/Aider-Chat",
+          "svc:medplum/medplum",
+          "svc:socketio/socket.io",
+          "svc:twbs/bootstrap",
+          "svc:usebruno/bruno",
+          "svc:wagtail/wagtail"
+        ]
+      },
+      {
+        "downloads": 432082533,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/strip-ansi",
+        "services_at_risk": [
+          "svc:ChrisTregaskis/ai-research-automation",
+          "svc:GoMake-ltd/n8n-node-gomake",
+          "svc:Kong/insomnia",
+          "svc:LVQT-ss/cakestory-api",
+          "svc:documenso/documenso",
+          "svc:koajs/koa",
+          "svc:louislam/uptime-kuma",
+          "svc:lperry65/Aider-Chat",
+          "svc:medplum/medplum",
+          "svc:socketio/socket.io",
+          "svc:twbs/bootstrap",
+          "svc:usebruno/bruno",
+          "svc:wagtail/wagtail"
+        ]
+      },
+      {
+        "downloads": 415333702,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/string-width",
+        "services_at_risk": [
+          "svc:ChrisTregaskis/ai-research-automation",
+          "svc:GoMake-ltd/n8n-node-gomake",
+          "svc:Kong/insomnia",
+          "svc:LVQT-ss/cakestory-api",
+          "svc:documenso/documenso",
+          "svc:koajs/koa",
+          "svc:louislam/uptime-kuma",
+          "svc:lperry65/Aider-Chat",
+          "svc:medplum/medplum",
+          "svc:socketio/socket.io",
+          "svc:twbs/bootstrap",
+          "svc:usebruno/bruno",
+          "svc:wagtail/wagtail"
+        ]
+      },
+      {
+        "downloads": 403212379,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/ansi-regex",
+        "services_at_risk": [
+          "svc:ChrisTregaskis/ai-research-automation",
+          "svc:GoMake-ltd/n8n-node-gomake",
+          "svc:Kong/insomnia",
+          "svc:LVQT-ss/cakestory-api",
+          "svc:documenso/documenso",
+          "svc:koajs/koa",
+          "svc:louislam/uptime-kuma",
+          "svc:lperry65/Aider-Chat",
+          "svc:medplum/medplum",
+          "svc:socketio/socket.io",
+          "svc:twbs/bootstrap",
+          "svc:usebruno/bruno",
+          "svc:wagtail/wagtail"
+        ]
+      },
+      {
+        "downloads": 360294876,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/wrap-ansi",
+        "services_at_risk": [
+          "svc:ChrisTregaskis/ai-research-automation",
+          "svc:GoMake-ltd/n8n-node-gomake",
+          "svc:Kong/insomnia",
+          "svc:LVQT-ss/cakestory-api",
+          "svc:documenso/documenso",
+          "svc:koajs/koa",
+          "svc:louislam/uptime-kuma",
+          "svc:lperry65/Aider-Chat",
+          "svc:medplum/medplum",
+          "svc:socketio/socket.io",
+          "svc:twbs/bootstrap",
+          "svc:usebruno/bruno",
+          "svc:wagtail/wagtail"
+        ]
+      },
+      {
+        "downloads": 332865084,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/supports-color",
+        "services_at_risk": [
+          "svc:ChrisTregaskis/ai-research-automation",
+          "svc:GoMake-ltd/n8n-node-gomake",
+          "svc:Kong/insomnia",
+          "svc:LVQT-ss/cakestory-api",
+          "svc:documenso/documenso",
+          "svc:koajs/koa",
+          "svc:louislam/uptime-kuma",
+          "svc:lperry65/Aider-Chat",
+          "svc:medplum/medplum",
+          "svc:socketio/socket.io",
+          "svc:twbs/bootstrap",
+          "svc:usebruno/bruno",
+          "svc:wagtail/wagtail"
+        ]
+      },
+      {
+        "downloads": 315194335,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/type-fest",
+        "services_at_risk": [
+          "svc:ChrisTregaskis/ai-research-automation",
+          "svc:GoMake-ltd/n8n-node-gomake",
+          "svc:Kong/insomnia",
+          "svc:documenso/documenso",
+          "svc:koajs/koa",
+          "svc:louislam/uptime-kuma",
+          "svc:lperry65/Aider-Chat",
+          "svc:medplum/medplum",
+          "svc:socketio/socket.io",
+          "svc:twbs/bootstrap",
+          "svc:usebruno/bruno",
+          "svc:wagtail/wagtail"
+        ]
+      },
+      {
+        "downloads": 298664858,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/escape-string-regexp",
+        "services_at_risk": [
+          "svc:ChrisTregaskis/ai-research-automation",
+          "svc:GoMake-ltd/n8n-node-gomake",
+          "svc:Kong/insomnia",
+          "svc:documenso/documenso",
+          "svc:koajs/koa",
+          "svc:louislam/uptime-kuma",
+          "svc:lperry65/Aider-Chat",
+          "svc:medplum/medplum",
+          "svc:socketio/socket.io",
+          "svc:twbs/bootstrap",
+          "svc:usebruno/bruno",
+          "svc:wagtail/wagtail"
+        ]
+      },
+      {
+        "downloads": 275763785,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/p-limit",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 271310344,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/find-up",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 268889263,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/has-flag",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 264631832,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/locate-path",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 263528764,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/p-locate",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 229214082,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/path-key",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 218280345,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/is-fullwidth-code-point",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 193331185,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/path-exists",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 182212706,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/globals",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 179290907,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/strip-json-comments",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 163524588,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/resolve-from",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 162072321,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/yocto-queue",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 161920790,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/is-stream",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 151980781,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/shebang-regex",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 151368134,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/camelcase",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 149944934,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/onetime",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 142030053,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/object-assign",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 135872185,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/execa",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 132656296,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/get-stream",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 122193986,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/npm-run-path",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 121165732,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/parent-module",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 120346406,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/make-dir",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 116132975,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/slash",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 115862004,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/open",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 113451072,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/parse-json",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 106012850,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/callsites",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 105937898,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/ansi-escapes",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 103731838,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/merge-descriptors",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 103726676,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/import-fresh",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 103584044,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/pify",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 103570931,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/is-plain-obj",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 100594391,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/strip-bom",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 99961479,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/cli-cursor",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 99929916,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/restore-cursor",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 99368842,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/is-docker",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 98209999,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/slice-ansi",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 92751902,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/mimic-fn",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 91750804,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/is-unicode-supported",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 87535642,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/indent-string",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 85917959,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/log-symbols",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 85070889,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/path-type",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 84762450,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/p-try",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 84630512,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/is-wsl",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 81802943,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/strip-final-newline",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 80425152,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/path-is-absolute",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 79998216,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/binary-extensions",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 79832971,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/error-ex",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 79422327,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/define-lazy-prop",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 75479006,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/strip-indent",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 75262673,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/pkg-dir",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 73286178,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/ora",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 70114413,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/env-paths",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 67944447,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/p-map",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 63096783,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/cli-spinners",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 61788754,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/globby",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 61447126,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/is-binary-path",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 61337260,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/get-east-asian-width",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 60436336,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/mimic-response",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 58443573,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/decamelize",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 56124893,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/is-interactive",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 53188736,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/leven",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 52564656,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/array-union",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 51580914,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/figures",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 48459616,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/is-obj",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 47120768,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/unicorn-magic",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 46526224,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/mz",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 46522412,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/thenify-all",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 46321862,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/file-type",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 45370289,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/redent",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 45352673,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/read-pkg",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 44847627,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/cli-truncate",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 44661095,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/is-path-inside",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 44621740,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/default-browser",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 43530824,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/defaults",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 43524924,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/decompress-response",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 42991656,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/bundle-name",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 42544581,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/dot-prop",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 41897417,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/arrify",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 41667812,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/import-local",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 41224058,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/p-retry",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 40656117,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/resolve-cwd",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 40252889,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/clean-stack",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 40068041,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/detect-newline",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 39651021,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/emittery",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 39411471,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/normalize-url",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 38223353,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/yn",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 38033045,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/log-update",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 37452678,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/quick-lru",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 35880522,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/wsl-utils",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 35392503,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/default-browser-id",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 34916790,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/run-applescript",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 34688801,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/string-length",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 34157741,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/aggregate-error",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 33519576,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/got",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 33381220,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/read-pkg-up",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 33288658,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/lowercase-keys",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 32591529,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/supports-hyperlinks",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 31355475,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/widest-line",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 31205699,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/p-timeout",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 30906936,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/find-cache-dir",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 30835562,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/min-indent",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 30529423,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/environment",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 29838719,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/mimic-function",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 28370701,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/p-queue",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 27596109,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/component-emitter",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 27571440,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/responselike",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 27569793,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/pretty-bytes",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 27517679,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/is-generator-fn",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 27480371,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/meow",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 26571555,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/cli-boxes",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 26131587,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/serialize-error",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 25588717,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/tagged-tag",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 25472192,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/pretty-ms",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 25449434,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/parse-ms",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 25210983,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/crypto-random-string",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 24873494,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/unique-string",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 24344242,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/boxen",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 24310528,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/p-cancelable",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 23827777,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/p-finally",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 23792364,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/stdin-discarder",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 23494541,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/http2-wrapper",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 23419575,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/map-obj",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 23338332,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/is-regexp",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 22945875,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/yoctocolors",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 22913387,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/uint8array-extras",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 22015339,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/detect-indent",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 21512372,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/load-json-file",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 20789248,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/os-tmpdir",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 20748457,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/debounce",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 20631857,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/stringify-object",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 20328572,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/get-port",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 19752531,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/is-installed-globally",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 18390950,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/camelcase-keys",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 17520780,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/builtin-modules",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 16989423,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/registry-url",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 16841143,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/global-dirs",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 16809474,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/is-inside-container",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 16200015,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/query-string",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 16078276,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/clone-response",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 15696418,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/to-fast-properties",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 15261066,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/import-lazy",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 15052497,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/untildify",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 15013583,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/configstore",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 14827365,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/split-on-first",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 14810923,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/is-network-error",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 14583492,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/temp-dir",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 14126707,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/filter-obj",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 14082092,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/gzip-size",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 13901945,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/tempy",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 13719444,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/terminal-link",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 13570872,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/sort-keys",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 13388702,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/xdg-basedir",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 12729691,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/pkg-up",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 12582307,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/html-tags",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 12533521,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/trim-newlines",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 12327016,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/throttleit",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 11559584,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/escape-goat",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 11407896,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/del",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 11294687,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/global-directory",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 11159128,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/hard-rejection",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 11116817,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/ip-regex",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 11054267,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/get-stdin",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 10592174,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/find-up-simple",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 10159348,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/is-npm",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 10042194,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/has-ansi",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 9852759,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/hasha",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 9792956,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/filenamify",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 9652882,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/matcher",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 9610645,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/chalk-template",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 9310190,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/semver-diff",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 9284876,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/decamelize-keys",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 9248824,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/convert-hrtime",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 9123172,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/os-homedir",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 9017082,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/time-span",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 9000702,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/package-json",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 8694677,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/index-to-position",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 8639887,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/dargs",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 8599608,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/semver-regex",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 8570738,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/is-builtin-module",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 8349245,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/text-extensions",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 8319565,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/strip-eof",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 8177755,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/is-path-cwd",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 8155942,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/markdown-extensions",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 8155772,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/import-from",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 8139381,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/number-is-nan",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 7926367,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/p-filter",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 7897722,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/exit-hook",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 7686159,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/yocto-spinner",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 7674620,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/filename-reserved-regex",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 7583199,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/latest-version",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 7512198,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/array-uniq",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 7452018,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/conf",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 7315458,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/debounce-fn",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 7087651,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/append-transform",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 7048218,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/pupa",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 7025340,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/clipboardy",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 6745273,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/find-versions",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 6657275,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/is-absolute-url",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 6558706,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/update-notifier",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 6538104,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/caching-transform",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 6513859,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/skin-tone",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 6098880,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/is-text-path",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 6081416,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/eslint-plugin-unicorn",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 6073492,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/code-point-at",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 5971452,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/delay",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 5905950,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/ky",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 5881379,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/super-regex",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 5873631,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/function-timeout",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 5543692,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/p-is-promise",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 5524185,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/default-require-extensions",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 5506754,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/stream-to-array",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 5413721,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/has-yarn",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 5373318,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/is-finite",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 5272003,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/caller-callsite",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 4987368,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/caller-path",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 4471258,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/is-path-in-cwd",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 4385589,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/is-root",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 4259633,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/into-stream",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 4190014,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/tildify",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 4154596,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/is-url-superb",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 4153281,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/semver-truncate",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 4065521,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/junk",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 4044612,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/hex-rgb",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 3872948,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/nano-spawn",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 3736415,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/bin-version-check",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 3719990,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/bin-version",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 3534273,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/array-find-index",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 3516624,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/pkg-conf",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 3380749,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/screenfull",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 3364844,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/has-own-prop",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 3143258,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/env-editor",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 3035076,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/reserved-identifiers",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 2963878,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/is-observable",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 2851906,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/git-remote-origin-url",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 2851074,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/clone-regexp",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 2845907,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/resolve-global",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 2601310,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/to-valid-identifier",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 2437933,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/import-cwd",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 2149177,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/plur",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 2130005,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/internal-ip",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 1978377,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/irregular-plurals",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 1912463,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/srcset",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 1824590,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/titleize",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 1803983,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/is-ip",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 1768691,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/component-type",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 1528737,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/system-architecture",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 1300639,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/is-safe-filename",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 1220759,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/is64bit",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 1111100,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/copy-text-to-clipboard",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 1058001,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/electron-store",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 598783,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/eslint-formatter-pretty",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 461112,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/emitter-component",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 390519,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/tsd",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 368075,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/eslint-config-xo",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 329105,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/new-github-issue-url",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 287727,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/default-shell",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 285726,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/electron-is-dev",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 278518,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/shell-env",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 250702,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/replace-string",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 178319,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/github-markdown-css",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 174240,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/unused-filename",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 163633,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/electron-dl",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 135652,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/package-config",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 134347,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/remote-git-tags",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 105424,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/modify-filename",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 102701,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/electron-context-menu",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 65908,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/unlimited-timeout",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 61417,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/shell-path",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 57024,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/hash-obj",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 30196,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/electron-util",
+        "services_at_risk": null
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/@sindresorhus/base62",
+        "services_at_risk": null
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/@sindresorhus/is",
+        "services_at_risk": null
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/@sindresorhus/merge-streams",
+        "services_at_risk": null
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/@sindresorhus/slugify",
+        "services_at_risk": null
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:sindresorhus"
+        ],
+        "package": "pkg:npm/@sindresorhus/transliterate",
+        "services_at_risk": null
+      }
+    ],
+    "truncated": false
+  },
+  "q5_typosquats": {
+    "pkg:npm/chalk": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 2017984160464120}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 1.32,
+      "rows": [],
+      "truncated": false
+    }
+  },
+  "q7_reachability": {
+    "svc:lperry65/Aider-Chat": {
+      "cypher": [
+        "MATCH (sv:Service {id: 3231015420632546})-[:CONTAINS]->(f:File) RETURN count(*) AS n",
+        "MATCH (a:Advisory {id: 1145037850605809})-[:AFFECTS]->(v:Version)-[:VERSION_OF]->(p:Package)<-[i:IMPORTS]-(f:File)<-[:CONTAINS]-(sv:Service {id: 3231015420632546}) RETURN f.path AS path, i.line AS line, p.key AS package",
+        "MATCH (a:Advisory {id: 1145037850605809})-[vs:VULNERABLE_SYMBOL]->(sym:Symbol)<-[u:USES_SYMBOL]-(f:File)<-[:CONTAINS]-(sv:Service {id: 3231015420632546}) RETURN f.path AS path, u.line AS line, sym.name AS symbol, vs.inferred AS inferred"
+      ],
+      "files_scanned": 14,
+      "imports": [],
+      "level": "L0",
+      "limitations": [
+        "Import-level scan of first-party JS/TS at the exposed commit (regex, not a parser); symbol-level (L2) needs tree-sitter and is only present in the fixture."
+      ],
+      "ms": 12.18,
+      "symbols": []
+    }
+  },
+  "timing_ms": {
+    "q1": 2.22,
+    "q1_mspaths": 0.7,
+    "q2": 8.87,
+    "q3": 3.5,
+    "q4": 29689.83,
+    "q5": 1.32,
+    "total": 30992.6
+  }
+}

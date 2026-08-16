@@ -67,7 +67,7 @@ export type MaintainerRow = {
   package: string;
   downloads: number | null;
   maintainers: string[];
-  services_at_risk: string[];
+  services_at_risk: string[] | null; // null = beyond the computed cap (Q4 bounds fan-out to the most-downloaded packages)
 };
 
 export type Maintainer = { login: string; twofa: boolean | null; account_created: number | null };

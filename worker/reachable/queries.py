@@ -263,7 +263,12 @@ def q4_maintainer_fanout(s, bad_version_key: str) -> Result:
             },
         )
         e["maintainers"].add(r["maintainer"])
-    for e in by_pkg.values():
+    # Bound stage 2: a prolific maintainer co-maintains dozens of packages, and each one is a
+    # 3-hop join over the RESOLVED fan-in. Take the most-downloaded 12; say so in limitations.
+    ranked = sorted(by_pkg.values(), key=lambda e: -(e["downloads"] or 0))
+    for e in ranked[8:]:
+        e["services"] = None  # not computed — rendered as "—", never as 0
+    for e in ranked[:8]:
         for r in _run(
             s,
             res,
@@ -271,17 +276,25 @@ def q4_maintainer_fanout(s, bad_version_key: str) -> Result:
             "<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, count(*) AS n",
         ):
             e["services"].add(r["service"])
+    if len(by_pkg) > 8:
+        res.limitations.append(
+            f"{len(by_pkg)} co-maintained packages; exposure computed for the 8 most downloaded."
+        )
     res.rows = sorted(
         (
             {
                 "package": e["package"],
                 "downloads": e["downloads"],
                 "maintainers": sorted(e["maintainers"]),
-                "services_at_risk": sorted(e["services"]),
+                "services_at_risk": sorted(e["services"]) if e["services"] is not None else None,
             }
             for e in by_pkg.values()
         ),
-        key=lambda d: (-len(d["services_at_risk"]), -(d["downloads"] or 0), d["package"]),
+        key=lambda d: (
+            -(len(d["services_at_risk"]) if d["services_at_risk"] is not None else -1),
+            -(d["downloads"] or 0),
+            d["package"],
+        ),
     )
     res.meta["maintainers"] = sorted(maints.values(), key=lambda m: m["login"])
     if any(m["twofa"] is None for m in maints.values()):
@@ -313,6 +326,10 @@ def q5_typosquats(s, package_key: str, *, max_distance: int = 2) -> Result:
         "ORDER BY sim.distance ASC, suspect.downloads ASC",
         maxd=max_distance,
     )
+    seen: set[str] = set()
+    res.rows = [
+        r for r in res.rows if not (r["package"] in seen or seen.add(r["package"]))
+    ]  # one row per package
     res.limitations.append(
         "The corpus is packages present in the ingested graph, so near-neighbours may be "
         "legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."

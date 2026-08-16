@@ -57,7 +57,7 @@ export function sentence(ask: Ask, data: AskData): string {
       return `${ask.advisory} affects ${plural(rows.length, "version")}${removed ? `, ${removed} since removed from the registry` : ""}; earliest ${short(String(rows[0]?.version))}.`;
     }
     case "maintainers": {
-      const at = rows.filter((r) => ((r.services_at_risk as string[] | undefined) ?? []).length > 0).length;
+      const at = rows.filter((r) => ((r.services_at_risk as string[] | null | undefined) ?? []).length > 0).length;
       const m = (data.meta?.maintainers as unknown[] | undefined)?.length ?? 0;
       return `${plural(m, "maintainer")} co-maintain ${plural(rows.length, "other package")}, ${at} of them resolved by watched services.`;
     }
@@ -219,8 +219,8 @@ export function Answer({ ask, data }: { ask: Ask; data: AskData }) {
                   <tr key={i}>
                     <td className="font-mono">{short(String(r.package))}</td>
                     <td className="font-mono text-muted-foreground">
-                      <span className="num mr-2">{((r.services_at_risk as string[] | undefined) ?? []).length}</span>
-                      {((r.services_at_risk as string[] | undefined) ?? []).map(svcSlug).join(", ")}
+                      <span className="num mr-2">{((r.services_at_risk as string[] | null | undefined) ?? []).length}</span>
+                      {((r.services_at_risk as string[] | null | undefined) ?? []).map(svcSlug).join(", ")}
                     </td>
                   </tr>
                 ))}

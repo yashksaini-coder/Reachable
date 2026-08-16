@@ -1,0 +1,993 @@
+{
+  "advisory": {
+    "key": "MAL-2025-46974",
+    "kind": "malware",
+    "published_at": 1757341611,
+    "published_at_iso": "2025-09-08T14:26:51+00:00",
+    "severity": "critical",
+    "summary": "Malicious code in debug (npm)"
+  },
+  "headline": {
+    "imported_L1": 0,
+    "lockfiles_exposed": 6,
+    "present_only_L0": 3,
+    "reachable_L2": 0,
+    "resolved_while_live": 3,
+    "services_exposed": 3,
+    "unscanned": 0
+  },
+  "provenance": {
+    "bolt_uri": "bolt://127.0.0.1:7687",
+    "generated_at": "2026-08-16T14:28:33.848965+00:00",
+    "graph": {
+      "Advisory": 657,
+      "Lockfile": 246,
+      "Maintainer": 3028,
+      "Package": 6446,
+      "Service": 13,
+      "Version": 55507
+    },
+    "hydradb_image": "ghcr.io/hydra-db/hydradb@sha256:db78309a233be54662db29744047e985a39b51c45a270d1a1f47c31a62cdb709",
+    "note": "All ms are wall-clock from the Python driver over loopback Bolt; cold = first run after the node was idle, warm = subsequent runs. Both are reported; neither is estimated.",
+    "platform": "Linux-7.1.8-arch1-3-x86_64-with-glibc2.44"
+  },
+  "q1_exposed": {
+    "cypher": [
+      "MATCH (bad:Version {id: 4277814107888805})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+      "CALL algo.SPpaths({sourceNode: $src, targetNode: $dst, relTypes: ['DEPENDS_ON', 'RESOLVED'], relDirection: 'incoming', maxLen: 9, pathCount: 3}) YIELD path RETURN path",
+      "CALL algo.SPpaths({sourceNode: $src, targetNode: $dst, relTypes: ['DEPENDS_ON', 'RESOLVED'], relDirection: 'incoming', maxLen: 9, pathCount: 3}) YIELD path RETURN path",
+      "CALL algo.SPpaths({sourceNode: $src, targetNode: $dst, relTypes: ['DEPENDS_ON', 'RESOLVED'], relDirection: 'incoming', maxLen: 9, pathCount: 3}) YIELD path RETURN path",
+      "CALL algo.SPpaths({sourceNode: $src, targetNode: $dst, relTypes: ['DEPENDS_ON', 'RESOLVED'], relDirection: 'incoming', maxLen: 9, pathCount: 3}) YIELD path RETURN path",
+      "CALL algo.SPpaths({sourceNode: $src, targetNode: $dst, relTypes: ['DEPENDS_ON', 'RESOLVED'], relDirection: 'incoming', maxLen: 9, pathCount: 3}) YIELD path RETURN path",
+      "CALL algo.SPpaths({sourceNode: $src, targetNode: $dst, relTypes: ['DEPENDS_ON', 'RESOLVED'], relDirection: 'incoming', maxLen: 9, pathCount: 3}) YIELD path RETURN path"
+    ],
+    "limitations": [
+      "Membership is exact (RESOLVED = the lockfile's flattened install tree). Explanation paths are the 3 shortest per lockfile, not all of them."
+    ],
+    "lockfiles": 6,
+    "ms": 6.34,
+    "rows": [
+      {
+        "bad_versions": [
+          "pkg:npm/debug@4.4.2"
+        ],
+        "committed_at": 1757433276,
+        "hops": 0,
+        "lockfile": "lock:ChrisTregaskis/ai-research-automation@6681e8783be0",
+        "paths": [
+          {
+            "bad": "pkg:npm/debug@4.4.2",
+            "chain": [
+              "pkg:npm/debug@4.4.2",
+              "RESOLVED",
+              "lock:ChrisTregaskis/ai-research-automation@6681e8783be0"
+            ],
+            "hops": 0
+          },
+          {
+            "bad": "pkg:npm/debug@4.4.2",
+            "chain": [
+              "pkg:npm/debug@4.4.2",
+              "DEPENDS_ON",
+              "pkg:npm/eslint@8.57.1",
+              "RESOLVED",
+              "lock:ChrisTregaskis/ai-research-automation@6681e8783be0"
+            ],
+            "hops": 1
+          },
+          {
+            "bad": "pkg:npm/debug@4.4.2",
+            "chain": [
+              "pkg:npm/debug@4.4.2",
+              "DEPENDS_ON",
+              "pkg:npm/@typescript-eslint/type-utils@7.18.0",
+              "RESOLVED",
+              "lock:ChrisTregaskis/ai-research-automation@6681e8783be0"
+            ],
+            "hops": 1
+          }
+        ],
+        "resolved_at": 1757433276,
+        "service": "svc:ChrisTregaskis/ai-research-automation",
+        "sha": "6681e8783be0af7dd52b0e3acd75e036170c0ba9",
+        "via": "pkg:npm/eslint@8.57.1"
+      },
+      {
+        "bad_versions": [
+          "pkg:npm/debug@4.4.2"
+        ],
+        "committed_at": 1757350524,
+        "hops": 0,
+        "lockfile": "lock:ChrisTregaskis/ai-research-automation@5b74cd6a0b0a",
+        "paths": [
+          {
+            "bad": "pkg:npm/debug@4.4.2",
+            "chain": [
+              "pkg:npm/debug@4.4.2",
+              "RESOLVED",
+              "lock:ChrisTregaskis/ai-research-automation@5b74cd6a0b0a"
+            ],
+            "hops": 0
+          },
+          {
+            "bad": "pkg:npm/debug@4.4.2",
+            "chain": [
+              "pkg:npm/debug@4.4.2",
+              "DEPENDS_ON",
+              "pkg:npm/eslint@8.57.1",
+              "RESOLVED",
+              "lock:ChrisTregaskis/ai-research-automation@5b74cd6a0b0a"
+            ],
+            "hops": 1
+          },
+          {
+            "bad": "pkg:npm/debug@4.4.2",
+            "chain": [
+              "pkg:npm/debug@4.4.2",
+              "DEPENDS_ON",
+              "pkg:npm/@typescript-eslint/type-utils@7.18.0",
+              "RESOLVED",
+              "lock:ChrisTregaskis/ai-research-automation@5b74cd6a0b0a"
+            ],
+            "hops": 1
+          }
+        ],
+        "resolved_at": 1757350524,
+        "service": "svc:ChrisTregaskis/ai-research-automation",
+        "sha": "5b74cd6a0b0a45b788c0cc81588e83c2d967c2a3",
+        "via": "pkg:npm/eslint@8.57.1"
+      },
+      {
+        "bad_versions": [
+          "pkg:npm/debug@4.4.2"
+        ],
+        "committed_at": 1757343899,
+        "hops": 0,
+        "lockfile": "lock:ChrisTregaskis/ai-research-automation@80fc6d09d6c0",
+        "paths": [
+          {
+            "bad": "pkg:npm/debug@4.4.2",
+            "chain": [
+              "pkg:npm/debug@4.4.2",
+              "RESOLVED",
+              "lock:ChrisTregaskis/ai-research-automation@80fc6d09d6c0"
+            ],
+            "hops": 0
+          },
+          {
+            "bad": "pkg:npm/debug@4.4.2",
+            "chain": [
+              "pkg:npm/debug@4.4.2",
+              "DEPENDS_ON",
+              "pkg:npm/eslint@8.57.1",
+              "RESOLVED",
+              "lock:ChrisTregaskis/ai-research-automation@80fc6d09d6c0"
+            ],
+            "hops": 1
+          },
+          {
+            "bad": "pkg:npm/debug@4.4.2",
+            "chain": [
+              "pkg:npm/debug@4.4.2",
+              "DEPENDS_ON",
+              "pkg:npm/@typescript-eslint/type-utils@7.18.0",
+              "RESOLVED",
+              "lock:ChrisTregaskis/ai-research-automation@80fc6d09d6c0"
+            ],
+            "hops": 1
+          }
+        ],
+        "resolved_at": 1757343899,
+        "service": "svc:ChrisTregaskis/ai-research-automation",
+        "sha": "80fc6d09d6c0b6824ae4dc1dbe65b36ef9d64eba",
+        "via": "pkg:npm/eslint@8.57.1"
+      },
+      {
+        "bad_versions": [
+          "pkg:npm/debug@4.4.2"
+        ],
+        "committed_at": 1757340558,
+        "hops": 0,
+        "lockfile": "lock:GoMake-ltd/n8n-node-gomake@c361ccfc9030",
+        "paths": [
+          {
+            "bad": "pkg:npm/debug@4.4.2",
+            "chain": [
+              "pkg:npm/debug@4.4.2",
+              "RESOLVED",
+              "lock:GoMake-ltd/n8n-node-gomake@c361ccfc9030"
+            ],
+            "hops": 0
+          },
+          {
+            "bad": "pkg:npm/debug@4.4.2",
+            "chain": [
+              "pkg:npm/debug@4.4.2",
+              "DEPENDS_ON",
+              "pkg:npm/eslint@8.57.1",
+              "RESOLVED",
+              "lock:GoMake-ltd/n8n-node-gomake@c361ccfc9030"
+            ],
+            "hops": 1
+          },
+          {
+            "bad": "pkg:npm/debug@4.4.2",
+            "chain": [
+              "pkg:npm/debug@4.4.2",
+              "DEPENDS_ON",
+              "pkg:npm/@typescript-eslint/typescript-estree@8.32.1",
+              "RESOLVED",
+              "lock:GoMake-ltd/n8n-node-gomake@c361ccfc9030"
+            ],
+            "hops": 1
+          }
+        ],
+        "resolved_at": 1757340558,
+        "service": "svc:GoMake-ltd/n8n-node-gomake",
+        "sha": "c361ccfc9030e22338f1e265261021ae5c9d3345",
+        "via": "pkg:npm/eslint@8.57.1"
+      },
+      {
+        "bad_versions": [
+          "pkg:npm/debug@4.4.2"
+        ],
+        "committed_at": 1757738262,
+        "hops": 0,
+        "lockfile": "lock:LVQT-ss/cakestory-api@5789d2081dbb",
+        "paths": [
+          {
+            "bad": "pkg:npm/debug@4.4.2",
+            "chain": [
+              "pkg:npm/debug@4.4.2",
+              "RESOLVED",
+              "lock:LVQT-ss/cakestory-api@5789d2081dbb"
+            ],
+            "hops": 0
+          },
+          {
+            "bad": "pkg:npm/debug@4.4.2",
+            "chain": [
+              "pkg:npm/debug@4.4.2",
+              "DEPENDS_ON",
+              "pkg:npm/agent-base@6.0.2",
+              "RESOLVED",
+              "lock:LVQT-ss/cakestory-api@5789d2081dbb"
+            ],
+            "hops": 1
+          },
+          {
+            "bad": "pkg:npm/debug@4.4.2",
+            "chain": [
+              "pkg:npm/debug@4.4.2",
+              "DEPENDS_ON",
+              "pkg:npm/http-proxy-agent@5.0.0",
+              "RESOLVED",
+              "lock:LVQT-ss/cakestory-api@5789d2081dbb"
+            ],
+            "hops": 1
+          }
+        ],
+        "resolved_at": 1757738262,
+        "service": "svc:LVQT-ss/cakestory-api",
+        "sha": "5789d2081dbbca1dce345bf5d1ae5bc525b9c1c7",
+        "via": "pkg:npm/agent-base@6.0.2"
+      },
+      {
+        "bad_versions": [
+          "pkg:npm/debug@4.4.2"
+        ],
+        "committed_at": 1757340312,
+        "hops": 0,
+        "lockfile": "lock:LVQT-ss/cakestory-api@458e59eb9f7b",
+        "paths": [
+          {
+            "bad": "pkg:npm/debug@4.4.2",
+            "chain": [
+              "pkg:npm/debug@4.4.2",
+              "RESOLVED",
+              "lock:LVQT-ss/cakestory-api@458e59eb9f7b"
+            ],
+            "hops": 0
+          },
+          {
+            "bad": "pkg:npm/debug@4.4.2",
+            "chain": [
+              "pkg:npm/debug@4.4.2",
+              "DEPENDS_ON",
+              "pkg:npm/agent-base@6.0.2",
+              "RESOLVED",
+              "lock:LVQT-ss/cakestory-api@458e59eb9f7b"
+            ],
+            "hops": 1
+          },
+          {
+            "bad": "pkg:npm/debug@4.4.2",
+            "chain": [
+              "pkg:npm/debug@4.4.2",
+              "DEPENDS_ON",
+              "pkg:npm/http-proxy-agent@5.0.0",
+              "RESOLVED",
+              "lock:LVQT-ss/cakestory-api@458e59eb9f7b"
+            ],
+            "hops": 1
+          }
+        ],
+        "resolved_at": 1757340312,
+        "service": "svc:LVQT-ss/cakestory-api",
+        "sha": "458e59eb9f7b58b2ee282a2af6fa47e123c9749c",
+        "via": "pkg:npm/agent-base@6.0.2"
+      }
+    ],
+    "services": [
+      "svc:ChrisTregaskis/ai-research-automation",
+      "svc:GoMake-ltd/n8n-node-gomake",
+      "svc:LVQT-ss/cakestory-api"
+    ],
+    "timing": {
+      "cold_ms": 888.2,
+      "runs": 5,
+      "warm_p50_ms": 7.06,
+      "warm_p95_ms": 7.18
+    },
+    "truncated": false
+  },
+  "q1_mspaths": {
+    "cypher": [
+      "CALL algo.MSpaths({sourceLabel: 'Version', sourceProperty: 'key', sourceValues: ['pkg:npm/debug@4.4.2'], targetLabel: 'Service', targetProperty: 'key', targetValues: ['svc:ChrisTregaskis/ai-research-automation', 'svc:GoMake-ltd/n8n-node-gomake', 'svc:Kong/insomnia', 'svc:LVQT-ss/cakestory-api', 'svc:documenso/documenso', 'svc:koajs/koa', 'svc:louislam/uptime-kuma', 'svc:lperry65/Aider-Chat', 'svc:medplum/medplum', 'svc:socketio/socket.io', 'svc:twbs/bootstrap', 'svc:usebruno/bruno', 'svc:wagtail/wagtail'], relTypes: ['RESOLVED', 'HAS_LOCKFILE'], relDirection: 'incoming', maxLen: $maxlen, pathCount: $pathcount, resultLimit: $limit}) YIELD path RETURN path"
+    ],
+    "limitations": [
+      "Membership only (maxLen 2 over the RESOLVED closure); the DEPENDS_ON explanation chain is in q1_exposed. Longer maxLen expands the target frontier and times out on the real graph."
+    ],
+    "ms": 0.68,
+    "note": "One algo.MSpaths call: every compromised version \u00d7 every service, relDirection incoming.",
+    "paths": 3,
+    "rows": [
+      {
+        "bad": "pkg:npm/debug@4.4.2",
+        "chain": [
+          "pkg:npm/debug@4.4.2",
+          "RESOLVED",
+          "lock:ChrisTregaskis/ai-research-automation@6681e8783be0",
+          "HAS_LOCKFILE",
+          "svc:ChrisTregaskis/ai-research-automation"
+        ],
+        "service": "svc:ChrisTregaskis/ai-research-automation"
+      },
+      {
+        "bad": "pkg:npm/debug@4.4.2",
+        "chain": [
+          "pkg:npm/debug@4.4.2",
+          "RESOLVED",
+          "lock:GoMake-ltd/n8n-node-gomake@c361ccfc9030",
+          "HAS_LOCKFILE",
+          "svc:GoMake-ltd/n8n-node-gomake"
+        ],
+        "service": "svc:GoMake-ltd/n8n-node-gomake"
+      },
+      {
+        "bad": "pkg:npm/debug@4.4.2",
+        "chain": [
+          "pkg:npm/debug@4.4.2",
+          "RESOLVED",
+          "lock:LVQT-ss/cakestory-api@5789d2081dbb",
+          "HAS_LOCKFILE",
+          "svc:LVQT-ss/cakestory-api"
+        ],
+        "service": "svc:LVQT-ss/cakestory-api"
+      }
+    ],
+    "sources": 1,
+    "targets": 13,
+    "timing": {
+      "cold_ms": 699.07,
+      "runs": 5,
+      "warm_p50_ms": 0.72,
+      "warm_p95_ms": 0.91
+    },
+    "truncated": false
+  },
+  "q2_versions": {
+    "cypher": [
+      "MATCH (a:Advisory {id: 2971413083072216})-[:AFFECTS]->(v:Version) RETURN v.key AS version, v.published_at AS published_at ORDER BY v.published_at ASC LIMIT 1",
+      "MATCH (a:Advisory {id: 2971413083072216})-[af:AFFECTS]->(v:Version)-[:VERSION_OF]->(p:Package) RETURN p.key AS package, v.key AS version, v.published_at AS published_at, v.removed AS removed, af.live_from AS live_from, af.live_to AS live_to, af.live_to_kind AS live_to_kind ORDER BY v.published_at ASC"
+    ],
+    "first": {
+      "published_at": 1757337159,
+      "version": "pkg:npm/debug@4.4.2"
+    },
+    "limitations": [
+      "live_to is an upper bound: npm publishes no takedown time; we use min(next surviving publish, advisory published)."
+    ],
+    "ms": 9.05,
+    "rows": [
+      {
+        "live_from": 1757337159,
+        "live_from_iso": "2025-09-08T13:12:39+00:00",
+        "live_to": 1757341611,
+        "live_to_iso": "2025-09-08T14:26:51+00:00",
+        "live_to_kind": "upper_bound",
+        "package": "pkg:npm/debug",
+        "published_at": 1757337159,
+        "published_at_iso": "2025-09-08T13:12:39+00:00",
+        "removed": true,
+        "version": "pkg:npm/debug@4.4.2"
+      }
+    ],
+    "truncated": false
+  },
+  "q3_while_live": {
+    "cypher": [
+      "MATCH (a:Advisory {id: 2971413083072216})-[af:AFFECTS]->(v:Version)<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) WHERE r.at >= af.live_from AND r.at <= af.live_to RETURN sv.key AS service, l.key AS lockfile, l.sha AS sha, r.at AS resolved_at, v.key AS version, v.removed AS removed, af.live_from AS live_from, af.live_to AS live_to, af.live_to_kind AS live_to_kind ORDER BY r.at ASC",
+      "MATCH (a:Advisory {id: 2971413083072216})-[af:AFFECTS]->(v:Version)<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) WHERE v.removed = true RETURN sv.key AS service, l.key AS lockfile, l.sha AS sha, r.at AS resolved_at, v.key AS version, v.removed AS removed, af.live_from AS live_from, af.live_to AS live_to, af.live_to_kind AS live_to_kind ORDER BY r.at ASC"
+    ],
+    "in_window": 2,
+    "limitations": [
+      "in_window: the pin was committed while the artifact was installable; it does not prove an install happened. pinned_removed: the lockfile pins a version npm has erased, which is only possible while it was live \u2014 commit time is irrelevant."
+    ],
+    "ms": 4.81,
+    "note": "live_from is exact (npm keeps the publish timestamp after erasing the version). live_to is an upper bound where marked \u2014 npm publishes no takedown time.",
+    "pinned_removed": 6,
+    "rows": [
+      {
+        "evidence": "in_window+pinned_removed",
+        "live_from": 1757337159,
+        "live_from_iso": "2025-09-08T13:12:39+00:00",
+        "live_to": 1757341611,
+        "live_to_iso": "2025-09-08T14:26:51+00:00",
+        "live_to_kind": "upper_bound",
+        "lockfile": "lock:LVQT-ss/cakestory-api@458e59eb9f7b",
+        "removed": true,
+        "resolved_at": 1757340312,
+        "resolved_at_iso": "2025-09-08T14:05:12+00:00",
+        "service": "svc:LVQT-ss/cakestory-api",
+        "sha": "458e59eb9f7b58b2ee282a2af6fa47e123c9749c",
+        "version": "pkg:npm/debug@4.4.2"
+      },
+      {
+        "evidence": "in_window+pinned_removed",
+        "live_from": 1757337159,
+        "live_from_iso": "2025-09-08T13:12:39+00:00",
+        "live_to": 1757341611,
+        "live_to_iso": "2025-09-08T14:26:51+00:00",
+        "live_to_kind": "upper_bound",
+        "lockfile": "lock:GoMake-ltd/n8n-node-gomake@c361ccfc9030",
+        "removed": true,
+        "resolved_at": 1757340558,
+        "resolved_at_iso": "2025-09-08T14:09:18+00:00",
+        "service": "svc:GoMake-ltd/n8n-node-gomake",
+        "sha": "c361ccfc9030e22338f1e265261021ae5c9d3345",
+        "version": "pkg:npm/debug@4.4.2"
+      },
+      {
+        "evidence": "pinned_removed",
+        "live_from": 1757337159,
+        "live_from_iso": "2025-09-08T13:12:39+00:00",
+        "live_to": 1757341611,
+        "live_to_iso": "2025-09-08T14:26:51+00:00",
+        "live_to_kind": "upper_bound",
+        "lockfile": "lock:ChrisTregaskis/ai-research-automation@80fc6d09d6c0",
+        "removed": true,
+        "resolved_at": 1757343899,
+        "resolved_at_iso": "2025-09-08T15:04:59+00:00",
+        "service": "svc:ChrisTregaskis/ai-research-automation",
+        "sha": "80fc6d09d6c0b6824ae4dc1dbe65b36ef9d64eba",
+        "version": "pkg:npm/debug@4.4.2"
+      },
+      {
+        "evidence": "pinned_removed",
+        "live_from": 1757337159,
+        "live_from_iso": "2025-09-08T13:12:39+00:00",
+        "live_to": 1757341611,
+        "live_to_iso": "2025-09-08T14:26:51+00:00",
+        "live_to_kind": "upper_bound",
+        "lockfile": "lock:ChrisTregaskis/ai-research-automation@5b74cd6a0b0a",
+        "removed": true,
+        "resolved_at": 1757350524,
+        "resolved_at_iso": "2025-09-08T16:55:24+00:00",
+        "service": "svc:ChrisTregaskis/ai-research-automation",
+        "sha": "5b74cd6a0b0a45b788c0cc81588e83c2d967c2a3",
+        "version": "pkg:npm/debug@4.4.2"
+      },
+      {
+        "evidence": "pinned_removed",
+        "live_from": 1757337159,
+        "live_from_iso": "2025-09-08T13:12:39+00:00",
+        "live_to": 1757341611,
+        "live_to_iso": "2025-09-08T14:26:51+00:00",
+        "live_to_kind": "upper_bound",
+        "lockfile": "lock:ChrisTregaskis/ai-research-automation@6681e8783be0",
+        "removed": true,
+        "resolved_at": 1757433276,
+        "resolved_at_iso": "2025-09-09T15:54:36+00:00",
+        "service": "svc:ChrisTregaskis/ai-research-automation",
+        "sha": "6681e8783be0af7dd52b0e3acd75e036170c0ba9",
+        "version": "pkg:npm/debug@4.4.2"
+      },
+      {
+        "evidence": "pinned_removed",
+        "live_from": 1757337159,
+        "live_from_iso": "2025-09-08T13:12:39+00:00",
+        "live_to": 1757341611,
+        "live_to_iso": "2025-09-08T14:26:51+00:00",
+        "live_to_kind": "upper_bound",
+        "lockfile": "lock:LVQT-ss/cakestory-api@5789d2081dbb",
+        "removed": true,
+        "resolved_at": 1757738262,
+        "resolved_at_iso": "2025-09-13T04:37:42+00:00",
+        "service": "svc:LVQT-ss/cakestory-api",
+        "sha": "5789d2081dbbca1dce345bf5d1ae5bc525b9c1c7",
+        "version": "pkg:npm/debug@4.4.2"
+      }
+    ],
+    "services": [
+      "svc:ChrisTregaskis/ai-research-automation",
+      "svc:GoMake-ltd/n8n-node-gomake",
+      "svc:LVQT-ss/cakestory-api"
+    ],
+    "truncated": false
+  },
+  "q4_maintainers": {
+    "cypher": [
+      "MATCH (bad:Version {id: 4277814107888805})-[:VERSION_OF]->(p:Package)<-[:MAINTAINS]-(m:Maintainer)-[:MAINTAINS]->(other:Package) RETURN m.key AS maintainer, m.twofa AS twofa, m.account_created AS account_created, p.key AS bad_package, other.key AS package, other.id AS pid, other.downloads AS downloads",
+      "MATCH (p:Package {id: 4380943100042017})<-[:VERSION_OF]-(v:Version)<-[:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, count(*) AS n",
+      "MATCH (p:Package {id: 2155802479278732})<-[:VERSION_OF]-(v:Version)<-[:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, count(*) AS n",
+      "MATCH (p:Package {id: 2857034762624845})<-[:VERSION_OF]-(v:Version)<-[:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, count(*) AS n",
+      "MATCH (p:Package {id: 2996606650714712})<-[:VERSION_OF]-(v:Version)<-[:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, count(*) AS n",
+      "MATCH (p:Package {id: 1723152998288652})<-[:VERSION_OF]-(v:Version)<-[:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, count(*) AS n",
+      "MATCH (p:Package {id: 3688734141769757})<-[:VERSION_OF]-(v:Version)<-[:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, count(*) AS n",
+      "MATCH (p:Package {id: 117786138360580})<-[:VERSION_OF]-(v:Version)<-[:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, count(*) AS n",
+      "MATCH (p:Package {id: 3127339569977186})<-[:VERSION_OF]-(v:Version)<-[:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) RETURN sv.key AS service, count(*) AS n"
+    ],
+    "limitations": [
+      "32 co-maintained packages; exposure computed for the 8 most downloaded.",
+      "twofa / account_created are not exposed by the public npm registry; shown as unknown, never guessed.",
+      "'services at risk' = services resolving the co-maintained package today \u2014 the exposure IF that package is compromised next, not exposure to this incident."
+    ],
+    "maintainers": [
+      {
+        "account_created": null,
+        "login": "npm:qix",
+        "twofa": null
+      },
+      {
+        "account_created": null,
+        "login": "npm:tootallnate",
+        "twofa": null
+      }
+    ],
+    "ms": 13600.74,
+    "rows": [
+      {
+        "downloads": 287659317,
+        "maintainers": [
+          "npm:qix"
+        ],
+        "package": "pkg:npm/color-convert",
+        "services_at_risk": [
+          "svc:ChrisTregaskis/ai-research-automation",
+          "svc:GoMake-ltd/n8n-node-gomake",
+          "svc:Kong/insomnia",
+          "svc:LVQT-ss/cakestory-api",
+          "svc:documenso/documenso",
+          "svc:koajs/koa",
+          "svc:louislam/uptime-kuma",
+          "svc:lperry65/Aider-Chat",
+          "svc:medplum/medplum",
+          "svc:socketio/socket.io",
+          "svc:twbs/bootstrap",
+          "svc:usebruno/bruno",
+          "svc:wagtail/wagtail"
+        ]
+      },
+      {
+        "downloads": 123634143,
+        "maintainers": [
+          "npm:tootallnate"
+        ],
+        "package": "pkg:npm/util-deprecate",
+        "services_at_risk": [
+          "svc:GoMake-ltd/n8n-node-gomake",
+          "svc:Kong/insomnia",
+          "svc:LVQT-ss/cakestory-api",
+          "svc:documenso/documenso",
+          "svc:koajs/koa",
+          "svc:louislam/uptime-kuma",
+          "svc:lperry65/Aider-Chat",
+          "svc:medplum/medplum",
+          "svc:socketio/socket.io",
+          "svc:twbs/bootstrap",
+          "svc:usebruno/bruno",
+          "svc:wagtail/wagtail"
+        ]
+      },
+      {
+        "downloads": 218048895,
+        "maintainers": [
+          "npm:tootallnate"
+        ],
+        "package": "pkg:npm/agent-base",
+        "services_at_risk": [
+          "svc:Kong/insomnia",
+          "svc:LVQT-ss/cakestory-api",
+          "svc:documenso/documenso",
+          "svc:louislam/uptime-kuma",
+          "svc:lperry65/Aider-Chat",
+          "svc:medplum/medplum",
+          "svc:socketio/socket.io",
+          "svc:twbs/bootstrap",
+          "svc:usebruno/bruno",
+          "svc:wagtail/wagtail"
+        ]
+      },
+      {
+        "downloads": 164323294,
+        "maintainers": [
+          "npm:tootallnate"
+        ],
+        "package": "pkg:npm/https-proxy-agent",
+        "services_at_risk": [
+          "svc:Kong/insomnia",
+          "svc:LVQT-ss/cakestory-api",
+          "svc:documenso/documenso",
+          "svc:louislam/uptime-kuma",
+          "svc:lperry65/Aider-Chat",
+          "svc:medplum/medplum",
+          "svc:socketio/socket.io",
+          "svc:twbs/bootstrap",
+          "svc:usebruno/bruno",
+          "svc:wagtail/wagtail"
+        ]
+      },
+      {
+        "downloads": 103734318,
+        "maintainers": [
+          "npm:qix"
+        ],
+        "package": "pkg:npm/is-arrayish",
+        "services_at_risk": [
+          "svc:Kong/insomnia",
+          "svc:LVQT-ss/cakestory-api",
+          "svc:documenso/documenso",
+          "svc:koajs/koa",
+          "svc:louislam/uptime-kuma",
+          "svc:medplum/medplum",
+          "svc:socketio/socket.io",
+          "svc:twbs/bootstrap",
+          "svc:usebruno/bruno",
+          "svc:wagtail/wagtail"
+        ]
+      },
+      {
+        "downloads": 116242737,
+        "maintainers": [
+          "npm:tootallnate"
+        ],
+        "package": "pkg:npm/http-proxy-agent",
+        "services_at_risk": [
+          "svc:Kong/insomnia",
+          "svc:LVQT-ss/cakestory-api",
+          "svc:documenso/documenso",
+          "svc:louislam/uptime-kuma",
+          "svc:lperry65/Aider-Chat",
+          "svc:medplum/medplum",
+          "svc:socketio/socket.io",
+          "svc:usebruno/bruno",
+          "svc:wagtail/wagtail"
+        ]
+      },
+      {
+        "downloads": 79832971,
+        "maintainers": [
+          "npm:qix"
+        ],
+        "package": "pkg:npm/error-ex",
+        "services_at_risk": [
+          "svc:Kong/insomnia",
+          "svc:documenso/documenso",
+          "svc:koajs/koa",
+          "svc:louislam/uptime-kuma",
+          "svc:medplum/medplum",
+          "svc:socketio/socket.io",
+          "svc:twbs/bootstrap",
+          "svc:usebruno/bruno",
+          "svc:wagtail/wagtail"
+        ]
+      },
+      {
+        "downloads": 79532327,
+        "maintainers": [
+          "npm:tootallnate"
+        ],
+        "package": "pkg:npm/data-uri-to-buffer",
+        "services_at_risk": [
+          "svc:Kong/insomnia",
+          "svc:documenso/documenso",
+          "svc:louislam/uptime-kuma",
+          "svc:medplum/medplum",
+          "svc:socketio/socket.io"
+        ]
+      },
+      {
+        "downloads": 43984374,
+        "maintainers": [
+          "npm:qix"
+        ],
+        "package": "pkg:npm/color-string",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 38234480,
+        "maintainers": [
+          "npm:tootallnate"
+        ],
+        "package": "pkg:npm/socks-proxy-agent",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 34051424,
+        "maintainers": [
+          "npm:qix"
+        ],
+        "package": "pkg:npm/color",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 25876284,
+        "maintainers": [
+          "npm:qix"
+        ],
+        "package": "pkg:npm/simple-swizzle",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 24531177,
+        "maintainers": [
+          "npm:tootallnate"
+        ],
+        "package": "pkg:npm/proxy-agent",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 23982124,
+        "maintainers": [
+          "npm:tootallnate"
+        ],
+        "package": "pkg:npm/get-uri",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 23844963,
+        "maintainers": [
+          "npm:tootallnate"
+        ],
+        "package": "pkg:npm/pac-proxy-agent",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 23433970,
+        "maintainers": [
+          "npm:tootallnate"
+        ],
+        "package": "pkg:npm/pac-resolver",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 22660329,
+        "maintainers": [
+          "npm:tootallnate"
+        ],
+        "package": "pkg:npm/bindings",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 18789500,
+        "maintainers": [
+          "npm:tootallnate"
+        ],
+        "package": "pkg:npm/file-uri-to-path",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 18521699,
+        "maintainers": [
+          "npm:tootallnate"
+        ],
+        "package": "pkg:npm/degenerator",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 15137727,
+        "maintainers": [
+          "npm:tootallnate"
+        ],
+        "package": "pkg:npm/plist",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 12143324,
+        "maintainers": [
+          "npm:tootallnate"
+        ],
+        "package": "pkg:npm/is-module",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 6938373,
+        "maintainers": [
+          "npm:tootallnate"
+        ],
+        "package": "pkg:npm/canvas",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 5972843,
+        "maintainers": [
+          "npm:tootallnate"
+        ],
+        "package": "pkg:npm/stat-mode",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 5196737,
+        "maintainers": [
+          "npm:tootallnate"
+        ],
+        "package": "pkg:npm/ent",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 4872612,
+        "maintainers": [
+          "npm:tootallnate"
+        ],
+        "package": "pkg:npm/bcrypt",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 4798479,
+        "maintainers": [
+          "npm:tootallnate"
+        ],
+        "package": "pkg:npm/tlds",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 2687123,
+        "maintainers": [
+          "npm:tootallnate"
+        ],
+        "package": "pkg:npm/dom-serialize",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 2331329,
+        "maintainers": [
+          "npm:tootallnate"
+        ],
+        "package": "pkg:npm/custom-event",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 1384753,
+        "maintainers": [
+          "npm:tootallnate"
+        ],
+        "package": "pkg:npm/has-cors",
+        "services_at_risk": null
+      },
+      {
+        "downloads": 473227,
+        "maintainers": [
+          "npm:tootallnate"
+        ],
+        "package": "pkg:npm/component-bind",
+        "services_at_risk": null
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:tootallnate"
+        ],
+        "package": "pkg:npm/@tootallnate/once",
+        "services_at_risk": null
+      },
+      {
+        "downloads": null,
+        "maintainers": [
+          "npm:tootallnate"
+        ],
+        "package": "pkg:npm/@tootallnate/quickjs-emscripten",
+        "services_at_risk": null
+      }
+    ],
+    "truncated": false
+  },
+  "q5_typosquats": {
+    "pkg:npm/debug": {
+      "cypher": [
+        "MATCH (suspect:Package)-[sim:NAME_SIMILAR_TO]->(popular:Package {id: 171969907551371}) WHERE sim.distance <= $maxd MATCH (suspect)<-[:MAINTAINS]-(m:Maintainer) RETURN suspect.key AS package, suspect.downloads AS downloads, sim.distance AS distance, sim.kind AS kind, m.key AS maintainer, m.account_created AS account_created, m.twofa AS twofa ORDER BY sim.distance ASC, suspect.downloads ASC"
+      ],
+      "limitations": [
+        "The corpus is packages present in the ingested graph, so near-neighbours may be legitimate look-alikes; distance and kind are facts, 'typosquat' is a hypothesis."
+      ],
+      "ms": 2.6,
+      "rows": [
+        {
+          "account_created": null,
+          "distance": 1,
+          "downloads": null,
+          "kind": "scope",
+          "maintainer": "npm:wmadden-prisma",
+          "package": "pkg:npm/@prisma/debug",
+          "twofa": null
+        },
+        {
+          "account_created": null,
+          "distance": 1,
+          "downloads": null,
+          "kind": "scope",
+          "maintainer": "npm:types",
+          "package": "pkg:npm/@types/debug",
+          "twofa": null
+        }
+      ],
+      "truncated": false
+    }
+  },
+  "q7_reachability": {
+    "svc:ChrisTregaskis/ai-research-automation": {
+      "cypher": [
+        "MATCH (sv:Service {id: 1565782285208736})-[:CONTAINS]->(f:File) RETURN count(*) AS n",
+        "MATCH (a:Advisory {id: 2971413083072216})-[:AFFECTS]->(v:Version)-[:VERSION_OF]->(p:Package)<-[i:IMPORTS]-(f:File)<-[:CONTAINS]-(sv:Service {id: 1565782285208736}) RETURN f.path AS path, i.line AS line, p.key AS package",
+        "MATCH (a:Advisory {id: 2971413083072216})-[vs:VULNERABLE_SYMBOL]->(sym:Symbol)<-[u:USES_SYMBOL]-(f:File)<-[:CONTAINS]-(sv:Service {id: 1565782285208736}) RETURN f.path AS path, u.line AS line, sym.name AS symbol, vs.inferred AS inferred"
+      ],
+      "files_scanned": 8,
+      "imports": [],
+      "level": "L0",
+      "limitations": [
+        "Import-level scan of first-party JS/TS at the exposed commit (regex, not a parser); symbol-level (L2) needs tree-sitter and is only present in the fixture."
+      ],
+      "ms": 11.9,
+      "symbols": []
+    },
+    "svc:GoMake-ltd/n8n-node-gomake": {
+      "cypher": [
+        "MATCH (sv:Service {id: 3384623523579249})-[:CONTAINS]->(f:File) RETURN count(*) AS n",
+        "MATCH (a:Advisory {id: 2971413083072216})-[:AFFECTS]->(v:Version)-[:VERSION_OF]->(p:Package)<-[i:IMPORTS]-(f:File)<-[:CONTAINS]-(sv:Service {id: 3384623523579249}) RETURN f.path AS path, i.line AS line, p.key AS package",
+        "MATCH (a:Advisory {id: 2971413083072216})-[vs:VULNERABLE_SYMBOL]->(sym:Symbol)<-[u:USES_SYMBOL]-(f:File)<-[:CONTAINS]-(sv:Service {id: 3384623523579249}) RETURN f.path AS path, u.line AS line, sym.name AS symbol, vs.inferred AS inferred"
+      ],
+      "files_scanned": 7,
+      "imports": [],
+      "level": "L0",
+      "limitations": [
+        "Import-level scan of first-party JS/TS at the exposed commit (regex, not a parser); symbol-level (L2) needs tree-sitter and is only present in the fixture."
+      ],
+      "ms": 4.7,
+      "symbols": []
+    },
+    "svc:LVQT-ss/cakestory-api": {
+      "cypher": [
+        "MATCH (sv:Service {id: 2458304280562061})-[:CONTAINS]->(f:File) RETURN count(*) AS n",
+        "MATCH (a:Advisory {id: 2971413083072216})-[:AFFECTS]->(v:Version)-[:VERSION_OF]->(p:Package)<-[i:IMPORTS]-(f:File)<-[:CONTAINS]-(sv:Service {id: 2458304280562061}) RETURN f.path AS path, i.line AS line, p.key AS package",
+        "MATCH (a:Advisory {id: 2971413083072216})-[vs:VULNERABLE_SYMBOL]->(sym:Symbol)<-[u:USES_SYMBOL]-(f:File)<-[:CONTAINS]-(sv:Service {id: 2458304280562061}) RETURN f.path AS path, u.line AS line, sym.name AS symbol, vs.inferred AS inferred"
+      ],
+      "files_scanned": 83,
+      "imports": [],
+      "level": "L0",
+      "limitations": [
+        "Import-level scan of first-party JS/TS at the exposed commit (regex, not a parser); symbol-level (L2) needs tree-sitter and is only present in the fixture."
+      ],
+      "ms": 13.31,
+      "symbols": []
+    }
+  },
+  "timing_ms": {
+    "q1": 6.34,
+    "q1_mspaths": 0.68,
+    "q2": 9.05,
+    "q3": 4.81,
+    "q4": 13600.74,
+    "q5": 2.6,
+    "total": 16450.1
+  }
+}

@@ -52,7 +52,7 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
   const l2 = services.filter((s) => level(s) === "L2");
   const watched = inc.q1_mspaths.targets ?? inc.provenance.graph.Service;
   const q5Total = q5.reduce((n, [, s]) => n + s.rows.length, 0);
-  const q4Max = Math.max(1, ...q4.rows.map((r) => r.services_at_risk.length));
+  const q4Max = Math.max(1, ...q4.rows.map((r) => r.services_at_risk?.length ?? 0));
   const liveBySvc = new Map<string, NonNullable<typeof q3>["rows"][number]>();
   for (const r of q3?.rows ?? []) if (!liveBySvc.has(r.service)) liveBySvc.set(r.service, r);
 
@@ -337,13 +337,17 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
                       <TableCell className="font-mono">{short(r.package)}</TableCell>
                       <TableCell className="num text-right text-xs text-muted-foreground">{r.downloads?.toLocaleString() ?? "—"}</TableCell>
                       <TableCell className="font-mono text-xs">
-                        <div className="flex items-center gap-2">
-                          <span className="num w-5 text-right">{r.services_at_risk.length}</span>
-                          <span className="h-1.5 w-24 shrink-0 overflow-hidden rounded-full bg-border" aria-hidden>
-                            <span className="block h-full rounded-full bg-signal/80" style={{ width: `${(r.services_at_risk.length / q4Max) * 100}%` }} />
-                          </span>
-                          <span className="min-w-0 truncate text-muted-foreground">{r.services_at_risk.map(svcSlug).join(", ")}</span>
-                        </div>
+                        {r.services_at_risk === null ? (
+                          <span className="text-muted-foreground/70">— not computed</span>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <span className="num w-5 text-right">{r.services_at_risk.length}</span>
+                            <span className="h-1.5 w-24 shrink-0 overflow-hidden rounded-full bg-border" aria-hidden>
+                              <span className="block h-full rounded-full bg-signal/80" style={{ width: `${(r.services_at_risk.length / q4Max) * 100}%` }} />
+                            </span>
+                            <span className="min-w-0 truncate text-muted-foreground">{r.services_at_risk.map(svcSlug).join(", ")}</span>
+                          </div>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}

@@ -1,0 +1,48 @@
+{
+  "advisory": "GHSA-g7cv-rxg3-hmpx",
+  "headline": {
+    "imported_L1": 0,
+    "lockfiles_exposed": 0,
+    "present_only_L0": 0,
+    "reachable_L2": 0,
+    "resolved_while_live": 0,
+    "services_exposed": 0,
+    "unscanned": 0
+  },
+  "provenance": {
+    "bolt_uri": "bolt://127.0.0.1:7687",
+    "generated_at": "2026-08-16T14:25:50.858859+00:00",
+    "graph": {
+      "Advisory": 657,
+      "Lockfile": 246,
+      "Maintainer": 3028,
+      "Package": 6446,
+      "Service": 13,
+      "Version": 55507
+    },
+    "hydradb_image": "ghcr.io/hydra-db/hydradb@sha256:db78309a233be54662db29744047e985a39b51c45a270d1a1f47c31a62cdb709",
+    "note": "All ms are wall-clock from the Python driver over loopback Bolt; cold = first run after the node was idle, warm = subsequent runs. Both are reported; neither is estimated.",
+    "platform": "Linux-7.1.8-arch1-3-x86_64-with-glibc2.44"
+  },
+  "q1_exposed": {
+    "cold_ms": 80.79,
+    "runs": 5,
+    "warm_p50_ms": 75.8,
+    "warm_p95_ms": 86.83
+  },
+  "q1_mspaths": {
+    "cold_ms": 698.18,
+    "runs": 5,
+    "warm_p50_ms": 0.74,
+    "warm_p95_ms": 1.07
+  },
+  "timing_ms": {
+    "q1": 75.8,
+    "q1_mspaths": 0.67,
+    "q2": 579.0,
+    "q3": 24.67,
+    "q4": 585.96,
+    "q5": 36.71,
+    "total": 4587.1
+  }
+}

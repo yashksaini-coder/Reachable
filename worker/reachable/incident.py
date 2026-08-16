@@ -104,7 +104,17 @@ def compose(s, advisory_key: str, *, runs: int = 1) -> dict:
     t0 = time.perf_counter()
     a = advisory(s, advisory_key)
     if a is None:
-        raise SystemExit(f"advisory not in graph: {advisory_key}")
+        # A fresh advisory: pull it from OSV now (Advisory + AFFECTS with the temporal window,
+        # stub versions/packages), then answer. This is the "an advisory just dropped" path.
+        from reachable import pipeline
+
+        print(f"advisory {advisory_key} not in graph — ingesting from OSV", file=sys.stderr)
+        pipeline.ingest_advisories(
+            s, [], pipeline.LazyKnown(pipeline.graph_packages(s)), ids={advisory_key}
+        )
+        a = advisory(s, advisory_key)
+        if a is None:
+            raise SystemExit(f"advisory not found in OSV or affects no npm package: {advisory_key}")
 
     q2 = queries.q2_affected_versions(s, advisory_key)
     bad = [r["version"] for r in q2.rows]
