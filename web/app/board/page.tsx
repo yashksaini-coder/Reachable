@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { listIncidents, short, svcSlug, fmtUtc } from "@/lib/incident";
-import { Chip, Level } from "@/app/ui";
+import { KanbanSquare } from "lucide-react";
+import { Lane } from "./lane";
 
 export const dynamic = "force-static";
 
@@ -66,52 +66,39 @@ export default async function Board() {
   for (const list of byState.values()) list.sort((a, b) => b.latestAt - a.latestAt);
 
   return (
-    <div className="space-y-4">
-      <header className="flex flex-wrap items-baseline gap-4">
-        <h1 className="text-xl font-semibold tracking-tight">Triage board</h1>
-        <span className="text-[13px] text-muted-foreground">
-          {cards.length} exposures across {incidents.length} incident{incidents.length === 1 ? "" : "s"} · states are computed from the graph, not assigned
+    <div className="space-y-5">
+      <header className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+        <h1 className="text-xl font-semibold tracking-tight text-balance">Triage board</h1>
+        <span className="text-[13px] text-muted-foreground text-pretty">
+          <span className="num">{cards.length}</span> exposures across <span className="num">{incidents.length}</span> incident{incidents.length === 1 ? "" : "s"} · states are computed from the graph, not assigned
         </span>
       </header>
       {cards.length === 0 && (
-        <div className="rounded-lg border border-border bg-card px-5 py-8 text-center text-[13px] text-muted-foreground">No incidents composed yet.</div>
+        <div className="elev flex flex-col items-center gap-3 rounded-xl border border-border bg-card px-5 py-10 text-center">
+          <span className="grid size-10 place-items-center rounded-full bg-muted text-muted-foreground">
+            <KanbanSquare className="size-4" strokeWidth={1.75} />
+          </span>
+          <p className="text-[13px] text-muted-foreground text-pretty">No incidents composed yet — cards appear once an advisory is run against the graph.</p>
+        </div>
       )}
-      <div className="grid gap-3 lg:grid-cols-5">
-        {COLUMNS.map((col) => {
-          const list = byState.get(col.key)!;
-          return (
-            <section key={col.key} className={`rounded-lg border border-border border-t-2 bg-card ${col.tone} p-2`}>
-              <div className="flex items-baseline justify-between px-1 pb-2">
-                <div>
-                  <div className="text-[13px] font-medium">{col.title}</div>
-                  <div className="text-[10.5px] text-muted-foreground">{col.hint}</div>
-                </div>
-                <div className="num text-lg text-muted-foreground">{list.length}</div>
-              </div>
-              <div className="space-y-2">
-                {list.map((c) => (
-                  <Link
-                    key={`${c.advisory}:${c.service}`}
-                    href={`/incident/${c.advisory}/${svcSlug(c.service)}`}
-                    className="block rounded-md border border-border bg-background/70 px-3 py-2 transition-colors hover:border-signal/50"
-                  >
-                    <div className="truncate font-mono text-[12.5px]">{svcSlug(c.service)}</div>
-                    <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                      <Level level={c.level} />
-                      {c.whileLive && <Chip tone="border-l1/40 text-l1">while live</Chip>}
-                      <Chip>{c.advisory}</Chip>
-                    </div>
-                    <div className="mt-1.5 font-mono text-[10.5px] text-muted-foreground">
-                      {c.latestSha.slice(0, 10)} · {fmtUtc(new Date(c.latestAt * 1000).toISOString())}
-                      {c.via ? ` · via ${short(c.via)}` : " · direct"} · {c.lockfiles} lockfile{c.lockfiles === 1 ? "" : "s"}
-                    </div>
-                  </Link>
-                ))}
-                {list.length === 0 && <div className="px-1 py-4 text-center text-[11px] text-muted-foreground">—</div>}
-              </div>
-            </section>
-          );
-        })}
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+        {COLUMNS.map((col, i) => (
+          <Lane
+            key={col.key}
+            index={i}
+            title={col.title}
+            hint={col.hint}
+            tone={col.tone}
+            cards={byState.get(col.key)!.map((c) => ({
+              href: `/incident/${c.advisory}/${svcSlug(c.service)}`,
+              slug: svcSlug(c.service),
+              advisory: c.advisory,
+              level: c.level,
+              whileLive: c.whileLive,
+              meta: `${c.latestSha.slice(0, 10)} · ${fmtUtc(new Date(c.latestAt * 1000).toISOString())}${c.via ? ` · via ${short(c.via)}` : " · direct"} · ${c.lockfiles} lockfile${c.lockfiles === 1 ? "" : "s"}`,
+            }))}
+          />
+        ))}
       </div>
     </div>
   );

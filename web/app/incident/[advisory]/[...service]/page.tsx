@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink, FileCode2, GitCommitHorizontal } from "lucide-react";
 import { readIncident, listIncidents, short, svcSlug, fmtUtc } from "@/lib/incident";
-import { HydraCard, Level, Limits, Chip } from "@/app/ui";
+import { HydraCard, Level, Limits, Chip, ELEV } from "@/app/ui";
+import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 
 export const dynamic = "force-static";
@@ -36,9 +37,9 @@ export default async function ServicePage({ params }: PageProps<"/incident/[advi
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap items-center gap-2 text-[12px] text-muted-foreground">
-        <Link href="/" className="hover:text-foreground">incidents</Link>
+        <Link href="/" className="inline-flex min-h-10 items-center rounded-md transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50">incidents</Link>
         <span>/</span>
-        <Link href={`/incident/${inc.advisory.key}`} className="inline-flex items-center gap-1 font-mono hover:text-foreground">
+        <Link href={`/incident/${inc.advisory.key}`} className="inline-flex min-h-10 items-center gap-1 rounded-md font-mono transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50">
           <ArrowLeft className="size-3.5" /> {inc.advisory.key}
         </Link>
         <span>/</span>
@@ -48,23 +49,23 @@ export default async function ServicePage({ params }: PageProps<"/incident/[advi
       <header className="space-y-3">
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="font-mono text-2xl">{slug}</h1>
-          <a href={`https://github.com/${slug}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+          <a href={`https://github.com/${slug}`} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center gap-1 rounded-md text-xs text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50">
             github <ExternalLink className="size-3" />
           </a>
         </div>
-        <Card className={`border-l-4 ${level === "L2" ? "border-l-l2" : level === "L1" ? "border-l-l1" : level === "L0" ? "border-l-l0" : "border-l-unknown"}`}>
+        <Card className={cn("border-l-4", ELEV, level === "L2" ? "border-l-l2" : level === "L1" ? "border-l-l1" : level === "L0" ? "border-l-l0" : "border-l-unknown")}>
           <CardContent className="flex flex-wrap items-center gap-3 p-4">
             <Level level={level} />
-            <span className="text-[14px] text-foreground/90">{VERDICT[level]}</span>
+            <span className="text-pretty text-[14px] text-foreground/90">{VERDICT[level]}</span>
           </CardContent>
         </Card>
       </header>
 
       <section>
-        <h2 className="mb-2 text-[13px] font-medium">Why this service is exposed</h2>
+        <h2 className="mb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">why this service is exposed</h2>
         <div className="space-y-3">
           {rows.map((r) => (
-            <Card key={r.lockfile}>
+            <Card key={r.lockfile} className={ELEV}>
               <CardContent className="p-4">
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-xs text-muted-foreground">
                   <span className="inline-flex items-center gap-1 text-foreground/90">
@@ -82,14 +83,18 @@ export default async function ServicePage({ params }: PageProps<"/incident/[advi
                         j % 2 === 0 ? (
                           <span
                             key={j}
-                            className={`rounded px-1.5 py-0.5 ${
-                              j === 0 ? "bg-l2/15 text-l2" : j === p.chain.length - 1 ? "bg-secondary text-foreground" : "bg-secondary/70 text-muted-foreground"
-                            }`}
+                            style={{ animationDelay: `${j * 40}ms` }}
+                            className={cn(
+                              "animate-in fade-in slide-in-from-left-1 fill-mode-backwards rounded-md px-1.5 py-0.5 duration-300",
+                              j === 0 ? "bg-l2/15 text-l2" : j === p.chain.length - 1 ? "bg-secondary text-foreground" : "bg-secondary/70 text-muted-foreground",
+                            )}
                           >
                             {short(el)}
                           </span>
                         ) : (
-                          <span key={j} className="text-muted-foreground">←{el}←</span>
+                          <span key={j} style={{ animationDelay: `${j * 40}ms` }} className="animate-in fade-in fill-mode-backwards text-muted-foreground duration-300">
+                            ←{el}←
+                          </span>
                         ),
                       )}
                       <span className="ml-2 text-muted-foreground">{p.hops === 0 ? "direct dependency" : `${p.hops} hop${p.hops === 1 ? "" : "s"}`}</span>
@@ -105,8 +110,8 @@ export default async function ServicePage({ params }: PageProps<"/incident/[advi
 
       {reach && (
         <section>
-          <h2 className="mb-2 text-[13px] font-medium">Reachability</h2>
-          <Card>
+          <h2 className="mb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">reachability</h2>
+          <Card className={ELEV}>
             <CardContent className="p-4 text-sm">
               <div className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
                 <FileCode2 className="size-3.5" /> {reach.files_scanned} first-party files scanned
@@ -139,10 +144,10 @@ export default async function ServicePage({ params }: PageProps<"/incident/[advi
 
       {live.length > 0 && (
         <section>
-          <h2 className="mb-2 text-[13px] font-medium">Resolved while live</h2>
+          <h2 className="mb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">resolved while live</h2>
           <ul className="space-y-1.5 font-mono text-xs">
             {live.map((l, i) => (
-              <li key={i} className="rounded-lg border border-border bg-card px-3 py-2">
+              <li key={i} className={cn("rounded-lg border border-border bg-card px-3 py-2", ELEV)}>
                 {l.sha.slice(0, 12)} · committed {fmtUtc(l.resolved_at_iso)} · {short(l.version)} ·{" "}
                 <span className={l.evidence.includes("in_window") ? "text-l1" : "text-l2"}>{l.evidence.replace("+", " + ")}</span>
                 <span className="text-muted-foreground"> · window {fmtUtc(l.live_from_iso)} → {fmtUtc(l.live_to_iso)} ({l.live_to_kind.replace("_", " ")})</span>

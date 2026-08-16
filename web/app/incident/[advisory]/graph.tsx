@@ -1,4 +1,7 @@
+import type { ReactNode } from "react";
 import { short, svcSlug, type Incident } from "@/lib/incident";
+import { cn } from "@/lib/utils";
+import { ELEV } from "@/app/ui";
 
 // Blast radius, drawn from the JSON paths HydraDB returned (algo.SPpaths chains + the
 // lockfile→service edge). Layered left→right: affected versions · intermediate dependency
@@ -112,16 +115,23 @@ export function BlastGraph({ inc }: { inc: Incident }) {
   };
 
   return (
-    <section className="rounded-lg border border-border bg-card/70 p-3">
+    <section className={cn("rounded-lg border border-border bg-card/70 p-3", ELEV)} aria-label="blast radius">
       <div className="mb-1 flex flex-wrap justify-between gap-x-4 font-mono text-[10px] text-muted-foreground">
         <span>blast radius · from the paths HydraDB returned</span>
-        <span>
+        <span className="num">
           {nodes.size} nodes · {edges.size} edges
           {shown < services.length && ` · showing ${shown} of ${services.length} services (worst verdicts first)`}
         </span>
       </div>
       <div className="overflow-x-auto">
-        <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} className="max-w-none" role="img" aria-label="blast radius graph">
+        <svg
+          viewBox={`0 0 ${W} ${H}`}
+          width={W}
+          height={H}
+          className="max-w-none"
+          role="img"
+          aria-label={`blast radius graph: ${nodes.size} nodes, ${edges.size} edges, ${shown} services`}
+        >
           {heads.map((h, i) => (
             <text key={i} x={padX + i * colW} y={11} fill={GREY} fontSize="9" fontFamily="ui-monospace, monospace" letterSpacing="0.1em">
               {h.toUpperCase()}
@@ -134,7 +144,7 @@ export function BlastGraph({ inc }: { inc: Incident }) {
             const x1 = x(s) + 6;
             const x2 = x(t) - 6;
             const mx = (x1 + x2) / 2;
-            return <path key={e} d={`M${x1},${s.y} C${mx},${s.y} ${mx},${t.y} ${x2},${t.y}`} fill="none" stroke={t.tone} strokeOpacity={0.55} strokeWidth={1.25} />;
+            return <path key={e} d={`M${x1},${s.y} C${mx},${s.y} ${mx},${t.y} ${x2},${t.y}`} fill="none" stroke={t.tone} strokeOpacity={0.4} strokeWidth={1.25} />;
           })}
           {[...nodes.values()].map((n) => (
             <g key={n.key}>
@@ -144,16 +154,51 @@ export function BlastGraph({ inc }: { inc: Incident }) {
               ) : (
                 <circle cx={x(n)} cy={n.y} r={n.kind === "bad" ? 5 : 4} fill={n.tone} />
               )}
-              <text x={x(n) + 10} y={n.y + 3.5} fill="var(--color-foreground)" fontSize="10.5" fontFamily="ui-monospace, monospace">
+              <text
+                x={x(n) + 10}
+                y={n.y + 3.5}
+                fill="var(--color-foreground)"
+                fontSize="10.5"
+                fontFamily="ui-monospace, monospace"
+                paintOrder="stroke"
+                stroke="var(--color-card)"
+                strokeWidth={4}
+                strokeLinejoin="round"
+              >
                 {label(n)}
               </text>
             </g>
           ))}
         </svg>
       </div>
-      <div className="mt-1 font-mono text-[10px] text-muted-foreground">
-        red = affected version · grey = intermediate dependency / lockfile · amber lockfile = committed while the artifact was live · service square = reachability verdict (red L2, amber L1, green L0, grey unscanned)
-      </div>
+      <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 font-mono text-[10px] text-muted-foreground" aria-label="legend">
+        <Key swatch={<span className="block size-2.5 rounded-full bg-l2" />}>affected version</Key>
+        <Key swatch={<span className="block size-2 rounded-full bg-muted-foreground" />}>dependency / lockfile</Key>
+        <Key swatch={<span className="block size-2 rounded-full bg-l1" />}>lockfile committed while live</Key>
+        <Key
+          swatch={
+            <span className="flex gap-0.5">
+              <span className="block size-2 rounded-[2px] bg-l2" />
+              <span className="block size-2 rounded-[2px] bg-l1" />
+              <span className="block size-2 rounded-[2px] bg-l0" />
+              <span className="block size-2 rounded-[2px] bg-unknown" />
+            </span>
+          }
+        >
+          service · verdict L2 / L1 / L0 / unscanned
+        </Key>
+      </ul>
     </section>
+  );
+}
+
+function Key({ swatch, children }: { swatch: ReactNode; children: ReactNode }) {
+  return (
+    <li className="inline-flex items-center gap-1.5">
+      <span className="inline-flex items-center justify-center" aria-hidden>
+        {swatch}
+      </span>
+      {children}
+    </li>
   );
 }

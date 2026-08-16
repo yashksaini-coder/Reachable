@@ -25,13 +25,26 @@ const LABEL: Record<string, { fill: string; text: string; r: number }> = {
 const short = (k: string) =>
   k.startsWith("lock:") ? "@" + (k.split("@").pop() ?? "").slice(0, 10) : k.replace(/^(pkg:npm\/|svc:|npm:|file:)/, "");
 
-export function ForceGraph({ nodes, edges, height = 480 }: { nodes: GNode[]; edges: GEdge[]; height?: number }) {
+export function ForceGraph({
+  nodes,
+  edges,
+  height = 480,
+  selected = null,
+  onSelect,
+}: {
+  nodes: GNode[];
+  edges: GEdge[];
+  height?: number;
+  selected?: string | null;
+  onSelect?: (n: GNode | null) => void;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(960);
   const [pos, setPos] = useState<{ n: SimNode[]; l: SimLink[] }>({ n: [], l: [] });
   const [hover, setHover] = useState<string | null>(null);
   const [view, setView] = useState({ x: 0, y: 0, k: 1 });
   const drag = useRef<{ x: number; y: number; vx: number; vy: number } | null>(null);
+  const moved = useRef(false); // click vs pan: >4px of movement is a pan, not a select
 
   const svgRef = useRef<SVGSVGElement>(null);
   useEffect(() => {
@@ -109,18 +122,26 @@ export function ForceGraph({ nodes, edges, height = 480 }: { nodes: GNode[]; edg
     const k = Math.min(5, Math.max(0.3, Math.min(width / (maxX - minX), height / (maxY - minY))));
     setView({ k, x: (width - (minX + maxX) * k) / 2, y: (height - (minY + maxY) * k) / 2 });
   };
-  const onDown = (e: React.MouseEvent) => (drag.current = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y });
+  const onDown = (e: React.MouseEvent) => {
+    moved.current = false;
+    drag.current = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y };
+  };
   const onMove = (e: React.MouseEvent) => {
     if (!drag.current) return;
+    if (Math.abs(e.clientX - drag.current.x) + Math.abs(e.clientY - drag.current.y) > 4) moved.current = true;
     setView((v) => ({ ...v, x: drag.current!.vx + (e.clientX - drag.current!.x), y: drag.current!.vy + (e.clientY - drag.current!.y) }));
   };
   const onUp = () => (drag.current = null);
+  const pick = (n: GNode | null) => {
+    if (!moved.current) onSelect?.(n);
+  };
 
-  const dim = (id: string) => hover !== null && hover !== id && !neighbours.get(hover)?.has(id);
+  const focus = hover ?? selected;
+  const dim = (id: string) => focus != null && focus !== id && !neighbours.get(focus)?.has(id);
   const labels = [...new Set(nodes.map((n) => n.label))].filter((l) => LABEL[l]);
 
   return (
-    <div ref={ref} className="relative overflow-hidden rounded-lg border border-border bg-card">
+    <div ref={ref} className="relative overflow-hidden rounded-xl border border-border bg-card elev">
       <svg
         ref={svgRef}
         width={width}
@@ -132,6 +153,7 @@ export function ForceGraph({ nodes, edges, height = 480 }: { nodes: GNode[]; edg
         onMouseMove={onMove}
         onMouseUp={onUp}
         onMouseLeave={onUp}
+        onClick={() => pick(null)}
       >
         <g transform={`translate(${view.x},${view.y}) scale(${view.k})`}>
           {pos.l.map((l, i) => {
@@ -154,9 +176,21 @@ export function ForceGraph({ nodes, edges, height = 480 }: { nodes: GNode[]; edg
           {pos.n.map((n) => {
             const c = LABEL[n.label] ?? LABEL.Version;
             const off = dim(n.id);
-            const showLabel = hover === n.id || n.label === "Service" || n.label === "Advisory" || (n.label === "Lockfile" && pos.n.length < 60) || neighbours.get(hover ?? "")?.has(n.id);
+            const isSel = selected === n.id;
+            const showLabel = focus === n.id || n.label === "Service" || n.label === "Advisory" || (n.label === "Lockfile" && pos.n.length < 60) || neighbours.get(focus ?? "")?.has(n.id);
             return (
-              <g key={n.id} transform={`translate(${n.x},${n.y})`} onMouseEnter={() => setHover(n.id)} onMouseLeave={() => setHover(null)} className="cursor-pointer">
+              <g
+                key={n.id}
+                transform={`translate(${n.x},${n.y})`}
+                onMouseEnter={() => setHover(n.id)}
+                onMouseLeave={() => setHover(null)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  pick(isSel ? null : n);
+                }}
+                className="cursor-pointer"
+              >
+                {isSel && <circle r={n.r + 5} fill="none" stroke="#ff6a1a" strokeWidth={1.5} strokeOpacity={0.9} />}
                 <circle r={n.r} fill={c.fill} fillOpacity={off ? 0.15 : 0.95} stroke="#0b0c0f" strokeWidth={1.2} />
                 {showLabel && (
                   <text x={n.r + 4} y={3.5} fontSize={n.label === "Service" ? 11 : 10} fontFamily="var(--font-jet), ui-monospace, monospace" fill={off ? "#3a3f4d" : "#e6e8ee"}>
@@ -180,15 +214,15 @@ export function ForceGraph({ nodes, edges, height = 480 }: { nodes: GNode[]; edg
             {LABEL[l].text}
           </span>
         ))}
-        <span className="ml-2 opacity-70">scroll to zoom · drag to pan · hover to focus</span>
+        <span className="ml-2 opacity-70">scroll to zoom · drag to pan · click to select</span>
       </div>
       <div className="pointer-events-none absolute right-3 top-2 num text-[10.5px] text-muted-foreground">
         {nodes.length} nodes · {edges.length} edges
       </div>
       <div className="absolute right-2 bottom-2 flex overflow-hidden rounded-md border border-border bg-background/90 backdrop-blur" role="group" aria-label="zoom">
-        <button type="button" onClick={() => zoomBy(1.25)} className="grid size-9 place-items-center text-muted-foreground transition-colors hover:bg-card hover:text-foreground" aria-label="zoom in">+</button>
-        <button type="button" onClick={() => zoomBy(0.8)} className="grid size-9 place-items-center border-l border-border text-muted-foreground transition-colors hover:bg-card hover:text-foreground" aria-label="zoom out">−</button>
-        <button type="button" onClick={fit} className="grid h-9 place-items-center border-l border-border px-2 text-[10.5px] text-muted-foreground transition-colors hover:bg-card hover:text-foreground" aria-label="fit to view">fit</button>
+        <button type="button" onClick={() => zoomBy(1.25)} className="grid size-9 place-items-center text-muted-foreground transition-colors hover:bg-card hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-signal/50" aria-label="zoom in">+</button>
+        <button type="button" onClick={() => zoomBy(0.8)} className="grid size-9 place-items-center border-l border-border text-muted-foreground transition-colors hover:bg-card hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-signal/50" aria-label="zoom out">−</button>
+        <button type="button" onClick={fit} className="grid h-9 min-w-9 place-items-center border-l border-border px-2 text-[10.5px] text-muted-foreground transition-colors hover:bg-card hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-signal/50" aria-label="fit to view">fit</button>
       </div>
     </div>
   );

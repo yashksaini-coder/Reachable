@@ -68,8 +68,9 @@ export function sentence(ask: Ask, data: AskData): string {
   }
 }
 
+// Row hover + sticky first column (the identifying cell stays put when the table scrolls sideways).
 const TABLE =
-  "w-full text-[13px] [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_th]:text-[11px] [&_th]:font-medium [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-muted-foreground [&_td]:border-t [&_td]:border-border [&_td]:px-3 [&_td]:py-2 [&_td]:align-top [&_td]:whitespace-nowrap";
+  "w-full text-[13px] [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_th]:text-[11px] [&_th]:font-medium [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-muted-foreground [&_td]:border-t [&_td]:border-border [&_td]:px-3 [&_td]:py-2 [&_td]:align-top [&_td]:whitespace-nowrap [&_td]:transition-colors [&_tbody_tr:hover_td]:bg-accent/40 [&_th:first-child]:sticky [&_th:first-child]:left-0 [&_th:first-child]:bg-card [&_td:first-child]:sticky [&_td:first-child]:left-0 [&_td:first-child]:bg-card [&_tbody_tr:hover_td:first-child]:bg-accent";
 
 
 export function Answer({ ask, data }: { ask: Ask; data: AskData }) {

@@ -111,6 +111,16 @@
     @apply bg-background text-foreground;
     font-feature-settings: "tnum" 1, "cv11" 1, "ss01" 1;
     text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  h1,
+  h2 {
+    text-wrap: balance;
+  }
+  /* one icon weight everywhere (CSS beats the SVG presentation attribute, so per-icon strokeWidth props are ignored on purpose) */
+  svg.lucide {
+    stroke-width: 1.75;
   }
   ::selection {
     background: color-mix(in oklab, var(--color-signal) 40%, transparent);
@@ -120,15 +130,31 @@
     *::before,
     *::after {
       animation-duration: 0.01ms !important;
+      animation-delay: 0s !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
+      transition-delay: 0s !important;
       scroll-behavior: auto !important;
     }
   }
 }
 
 /* utilities that carry meaning */
-.num {
+@utility num {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
+}
+/* depth: hairline ring + contact shadow + soft ambient. Borders alone read flat. */
+@utility elev {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.03),
+    0 1px 2px rgba(0, 0, 0, 0.6),
+    0 16px 40px -24px rgba(0, 0, 0, 0.9);
+}
+/* raised state for hovered cards that are links */
+@utility elev-2 {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 2px 4px rgba(0, 0, 0, 0.6),
+    0 24px 48px -24px rgba(0, 0, 0, 0.9);
 }
