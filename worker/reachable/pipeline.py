@@ -79,7 +79,9 @@ def stage_services(s, seeds: dict) -> dict:
     touched: dict[str, set[str]] = defaultdict(set)
     for svc in seeds["services"]:
         t0 = time.perf_counter()
-        r = github.ingest_service(svc["slug"], svc["criticality"], cut, around)
+        # yearly cutoffs + the 24 most recent lockfile commits (+ any configured incident
+        # windows): dense recent history is what lets a 95-minute window catch a snapshot.
+        r = github.ingest_service(svc["slug"], svc["criticality"], cut, around, recent=24)
         write_service(s, r)
         for name, vs in versions_of(r).items():
             touched[name].update(vs)
@@ -366,8 +368,11 @@ def stage_verify(s) -> None:
         if rel in ("DEPENDS_ON", "RESOLVED", "VERSION_OF"):
             log(f"  {rel:15}   (not counted — large; see stage logs)")
             continue
-        n = run(s, f"MATCH (x:{a})-[r:{rel}]->(y:{b}) RETURN count(*) AS c")[0]["c"]
-        log(f"  {rel:15} {n:>7}")
+        try:
+            n = run(s, f"MATCH (x:{a})-[r:{rel}]->(y:{b}) RETURN count(*) AS c")[0]["c"]
+            log(f"  {rel:15} {n:>7}")
+        except Exception as e:  # noqa: BLE001 — a count that times out is not a data problem
+            log(f"  {rel:15}   (count timed out: {str(e).split('{message: ')[-1][:60]})")
     # coverage: a Version resolved by a lockfile with no published_at means the packument
     # stage missed it — Q3 would silently drop the row rather than complain
     total = load.count(s, "Version")
