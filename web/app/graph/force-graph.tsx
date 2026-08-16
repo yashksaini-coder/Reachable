@@ -33,11 +33,30 @@ export function ForceGraph({ nodes, edges, height = 480 }: { nodes: GNode[]; edg
   const [view, setView] = useState({ x: 0, y: 0, k: 1 });
   const drag = useRef<{ x: number; y: number; vx: number; vy: number } | null>(null);
 
+  const svgRef = useRef<SVGSVGElement>(null);
   useEffect(() => {
     if (!ref.current) return;
     const ro = new ResizeObserver(([e]) => setWidth(Math.max(320, e.contentRect.width)));
     ro.observe(ref.current);
     return () => ro.disconnect();
+  }, []);
+  // Wheel-zoom must be a NON-passive native listener: React's onWheel is passive, so the page
+  // scrolls under the graph. Zoom is anchored on the cursor and confined to the SVG.
+  useEffect(() => {
+    const el = svgRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const rect = el.getBoundingClientRect();
+      const px = e.clientX - rect.left;
+      const py = e.clientY - rect.top;
+      setView((v) => {
+        const k = Math.min(5, Math.max(0.3, v.k * (e.deltaY < 0 ? 1.12 : 0.89)));
+        return { k, x: px - ((px - v.x) * k) / v.k, y: py - ((py - v.y) * k) / v.k };
+      });
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
   }, []);
 
   const key = useMemo(() => nodes.map((n) => n.id).join("|") + "#" + edges.length, [nodes, edges]);
@@ -56,7 +75,13 @@ export function ForceGraph({ nodes, edges, height = 480 }: { nodes: GNode[]; edg
       .stop();
     for (let i = 0; i < 260; i++) sim.tick();
     setPos({ n: sn, l: sl });
-    setView({ x: 0, y: 0, k: 1 });
+    // fit to view after layout
+    const xs = sn.map((n) => n.x ?? 0), ys = sn.map((n) => n.y ?? 0);
+    if (sn.length) {
+      const minX = Math.min(...xs) - 60, maxX = Math.max(...xs) + 140, minY = Math.min(...ys) - 30, maxY = Math.max(...ys) + 30;
+      const k = Math.min(1.6, Math.max(0.3, Math.min(width / (maxX - minX), height / (maxY - minY))));
+      setView({ k, x: (width - (minX + maxX) * k) / 2, y: (height - (minY + maxY) * k) / 2 });
+    } else setView({ x: 0, y: 0, k: 1 });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, width, height]);
 
@@ -69,10 +94,20 @@ export function ForceGraph({ nodes, edges, height = 480 }: { nodes: GNode[]; edg
     return m;
   }, [edges]);
 
-  const onWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    const k = Math.min(4, Math.max(0.4, view.k * (e.deltaY < 0 ? 1.1 : 0.9)));
-    setView((v) => ({ ...v, k }));
+  const zoomBy = (f: number) =>
+    setView((v) => {
+      const k = Math.min(5, Math.max(0.3, v.k * f));
+      const cx = width / 2;
+      const cy = height / 2;
+      return { k, x: cx - ((cx - v.x) * k) / v.k, y: cy - ((cy - v.y) * k) / v.k };
+    });
+  const fit = () => {
+    if (!pos.n.length) return;
+    const xs = pos.n.map((n) => n.x ?? 0);
+    const ys = pos.n.map((n) => n.y ?? 0);
+    const minX = Math.min(...xs) - 60, maxX = Math.max(...xs) + 140, minY = Math.min(...ys) - 30, maxY = Math.max(...ys) + 30;
+    const k = Math.min(5, Math.max(0.3, Math.min(width / (maxX - minX), height / (maxY - minY))));
+    setView({ k, x: (width - (minX + maxX) * k) / 2, y: (height - (minY + maxY) * k) / 2 });
   };
   const onDown = (e: React.MouseEvent) => (drag.current = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y });
   const onMove = (e: React.MouseEvent) => {
@@ -87,12 +122,12 @@ export function ForceGraph({ nodes, edges, height = 480 }: { nodes: GNode[]; edg
   return (
     <div ref={ref} className="relative overflow-hidden rounded-lg border border-border bg-card">
       <svg
+        ref={svgRef}
         width={width}
         height={height}
         role="img"
         aria-label="graph neighbourhood"
-        className="block cursor-grab select-none active:cursor-grabbing"
-        onWheel={onWheel}
+        className="block cursor-grab touch-none select-none overscroll-contain active:cursor-grabbing"
         onMouseDown={onDown}
         onMouseMove={onMove}
         onMouseUp={onUp}
@@ -149,6 +184,11 @@ export function ForceGraph({ nodes, edges, height = 480 }: { nodes: GNode[]; edg
       </div>
       <div className="pointer-events-none absolute right-3 top-2 num text-[10.5px] text-muted-foreground">
         {nodes.length} nodes · {edges.length} edges
+      </div>
+      <div className="absolute right-2 bottom-2 flex overflow-hidden rounded-md border border-border bg-background/90 backdrop-blur" role="group" aria-label="zoom">
+        <button type="button" onClick={() => zoomBy(1.25)} className="grid size-9 place-items-center text-muted-foreground transition-colors hover:bg-card hover:text-foreground" aria-label="zoom in">+</button>
+        <button type="button" onClick={() => zoomBy(0.8)} className="grid size-9 place-items-center border-l border-border text-muted-foreground transition-colors hover:bg-card hover:text-foreground" aria-label="zoom out">−</button>
+        <button type="button" onClick={fit} className="grid h-9 place-items-center border-l border-border px-2 text-[10.5px] text-muted-foreground transition-colors hover:bg-card hover:text-foreground" aria-label="fit to view">fit</button>
       </div>
     </div>
   );
