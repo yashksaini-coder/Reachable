@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { Activity, Info } from "lucide-react";
@@ -77,9 +78,7 @@ export default async function Services() {
 
       {empty ? (
         <div className="elev mt-3.5 flex flex-col items-center gap-3 rounded-xl border border-border bg-card px-5 py-10 text-center">
-          <span className="grid size-8 place-items-center rounded-full border border-border text-dim">
-            <Activity className="size-3.5" />
-          </span>
+          <Image src="/art/reachable-path-512.png" alt="" width={256} height={256} className="pixel opacity-90" unoptimized />
           <p className="max-w-[44ch] font-mono text-[11.5px] leading-[1.6] text-dim text-pretty">nothing is watched yet · add a repository above and its lockfile history becomes the first service in the graph.</p>
         </div>
       ) : (

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Search, Unplug, type LucideIcon } from "lucide-react";
 
 // Designed empty / missing / error states: a 44px muted icon circle, one sentence in --mut
@@ -37,8 +38,21 @@ export function StateView({
   );
 }
 
+// 404 carries the one piece of art the product allows on an empty surface: a chain of nodes that
+// breaks into nothing (asset pack, pixel art — served at half its source width, never filtered).
 export function NotFoundView() {
-  return <StateView icon={Search} sentence="No page at that address — the advisory or service may not be tracked yet." action={{ href: "/incidents", label: "Back to incidents" }} />;
+  return (
+    <div className="flex min-h-[70vh] flex-col items-center justify-center gap-[18px] p-10 text-center">
+      <Image src="/art/404-strip.png" alt="" width={512} height={115} className="pixel max-w-full opacity-90" unoptimized priority />
+      <p className="max-w-[44ch] text-pretty text-[13.5px] text-mut">No page at that address — the advisory or service may not be tracked yet.</p>
+      <Link
+        href="/incidents"
+        className="inline-flex min-h-10 items-center rounded-lg border border-signal/40 px-[15px] text-[12px] font-medium leading-none text-signal transition-[background-color,transform] duration-[180ms] ease-[var(--ease)] hover:bg-sigfill active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50"
+      >
+        Back to incidents
+      </Link>
+    </div>
+  );
 }
 
 export { Unplug };

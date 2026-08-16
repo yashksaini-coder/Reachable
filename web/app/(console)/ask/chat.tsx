@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/console/toast";
@@ -80,6 +82,8 @@ export function Chat({ initialQ, healthy: initialHealthy }: { initialQ: string; 
 
       {empty ? (
         <div className={EN}>
+          {/* cold state only: the thesis image (inert stack, one traced route) — never next to data */}
+          <Image src="/art/reachable-path-512.png" alt="" width={256} height={256} className="pixel -ml-3 mb-2 opacity-90" unoptimized />
           <h1 className="text-balance text-[24px] font-medium leading-[1.3] tracking-[-0.02em] text-fg">Ask the graph.</h1>
           <p className="mt-2.5 text-[13px] text-mut">One sentence back, then the rows it came from.</p>
         </div>

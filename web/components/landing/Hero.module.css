@@ -14,6 +14,32 @@
   pointer-events: none;
 }
 
+.top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 512px;
+  gap: 40px;
+  align-items: end;
+}
+.copy {
+  min-width: 0;
+}
+.art {
+  justify-self: end;
+  line-height: 0;
+}
+.art img {
+  max-width: 100%;
+  height: auto;
+}
+@media (max-width: 1100px) {
+  .top {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .art {
+    display: none;
+  }
+}
+
 .eyebrowRow {
   display: flex;
   align-items: center;

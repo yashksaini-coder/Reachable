@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { readIncident, listIncidents, short, svcSlug, fmtMs, fmtUtc, type Incident } from "@/lib/incident";
 import { LEVEL } from "@/lib/level";
@@ -428,9 +429,13 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
                   );
                 })}
               {q5Total === 0 && (
-                <p className="m-0 font-mono text-[11.5px] text-dim">
-                  no near-names in the ingested corpus{q5.length > 1 ? ` across ${plural(q5.length, "package")}` : q5[0] ? ` for ${short(q5[0][0])}` : ""}
-                </p>
+                <div className="flex flex-wrap items-center gap-5">
+                  {/* the report carries no art except this hole: Q5 with nothing to show */}
+                  <Image src="/art/typosquat-pair.png" alt="" width={256} height={140} className="pixel opacity-90" unoptimized />
+                  <p className="m-0 font-mono text-[11.5px] text-dim">
+                    no near-names in the ingested corpus{q5.length > 1 ? ` across ${plural(q5.length, "package")}` : q5[0] ? ` for ${short(q5[0][0])}` : ""}
+                  </p>
+                </div>
               )}
             </div>
             <div className="mt-4 flex flex-col gap-2">

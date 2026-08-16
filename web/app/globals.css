@@ -440,3 +440,8 @@
   border-top: 1px solid var(--color-line);
   margin: 24px 0;
 }
+
+/* pixel art: never bilinear-filter; serve at integer fractions of the source width */
+@utility pixel {
+  image-rendering: pixelated;
+}

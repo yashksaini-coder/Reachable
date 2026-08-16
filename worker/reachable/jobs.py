@@ -42,6 +42,7 @@ class Job:
     started_at: int | None = None
     ended_at: int | None = None
     step: str | None = None
+    error: str | None = None  # the failure reason, verbatim — the console shows it next to "failed"
     steps: list[dict] = field(default_factory=list)
     log: list[str] = field(default_factory=list)
     edges: dict[str, int] = field(default_factory=dict)
@@ -149,6 +150,7 @@ def _run(job: Job) -> None:
         if job.steps and job.steps[-1]["status"] == "running":
             job.steps[-1].update(status="failed", detail=str(e)[:400])
         job.status = "failed"
+        job.error = f"{e!s:.400}"
         job.say(f"failed: {e!s:.400}")
     job.ended_at = int(time.time())
     _persist(job)
@@ -160,7 +162,9 @@ def step_lockfiles(s, job: Job, ctx: dict) -> str:
     r = github.ingest_service(job.repo, job.criticality, pipeline.yearly_cutoffs(), [], recent=24)
     if not r["lockfiles"]:
         raise RuntimeError(
-            f"no package-lock.json v3 snapshot found ({len(r['skipped_snapshots'])} skipped)"
+            "no package-lock.json with lockfileVersion 3 in this repository's history — "
+            "Reachable reads npm v7+ lockfiles (yarn/pnpm are not supported yet); "
+            f"{len(r['skipped_snapshots'])} older snapshots skipped"
         )
     r["service"]["added_at"] = int(time.time())
     for k, n in pipeline.write_service(s, r).items():

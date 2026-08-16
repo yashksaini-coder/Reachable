@@ -1,45 +1,78 @@
-import { LINKS, type LandingModel } from '@/lib/landing-data';
-import { ArrowRight } from './Mark';
-import { HeroConsole } from './HeroConsole';
-import styles from './Hero.module.css';
+import Image from "next/image";
+import { LINKS, type LandingModel } from "@/lib/landing-data";
+import { ArrowRight } from "./Mark";
+import { HeroConsole } from "./HeroConsole";
+import styles from "./Hero.module.css";
 
-const TRUST = ['every answer carries its statement', 'numbers are measured, never estimated', 'dark, read-only console'];
+const TRUST = [
+  "every answer carries its statement",
+  "numbers are measured, never estimated",
+  "dark, read-only console",
+];
 
 export function Hero({ m }: { m: LandingModel }) {
   return (
     <section className={`container ${styles.hero}`}>
       <div className={styles.glow} aria-hidden="true" />
 
-      <div className={`enter ${styles.eyebrowRow}`}>
-        <span className={styles.liveDot} aria-hidden="true" />
-        <span className={styles.eyebrow}>supply-chain incident console</span>
+      <div className={styles.top}>
+        <div className={styles.copy}>
+          <div className={`enter ${styles.eyebrowRow}`}>
+            <span className={styles.liveDot} aria-hidden="true" />
+            <span className={styles.eyebrow}>
+              supply-chain incident console
+            </span>
+          </div>
+
+          <h1 className={`enter ${styles.d1} ${styles.h1}`}>
+            A compromised package. One page of answers.
+          </h1>
+
+          <p className={`enter ${styles.d2} ${styles.lead}`}>
+            Reachable reads your lockfiles and commit history and tells you
+            which services are exposed, which pulled the package in while it was
+            still installable, and what the same maintainers could reach next —
+            with the statement that produced every number.
+          </p>
+
+          <div className={`enter ${styles.d3} ${styles.actions}`}>
+            <a className="btn btnPrimary" href={LINKS.connect}>
+              Connect a repository
+            </a>
+            <a className="btn btnOutline" href="#answers">
+              See a report
+              <ArrowRight />
+            </a>
+          </div>
+
+          <div className={`enter ${styles.d4} ${styles.trust}`}>
+            {TRUST.map((line) => (
+              <span key={line}>{line}</span>
+            ))}
+          </div>
+        </div>
+        {/* the thesis, drawn: a stack of inert packages, one traced route, one target. Pixel art,
+          served at exactly half its source width; decorative, so alt is empty. */}
+        <div className={`enter ${styles.d2} ${styles.art}`} aria-hidden="true">
+          <Image
+            src="/art/reachable-path.png"
+            alt=""
+            width={512}
+            height={253}
+            className="pixel"
+            unoptimized
+            priority
+          />
+        </div>
       </div>
 
-      <h1 className={`enter ${styles.d1} ${styles.h1}`}>A compromised package. One page of answers.</h1>
-
-      <p className={`enter ${styles.d2} ${styles.lead}`}>
-        Reachable reads your lockfiles and commit history and tells you which services are exposed,
-        which pulled the package in while it was still installable, and what the same maintainers
-        could reach next — with the statement that produced every number.
-      </p>
-
-      <div className={`enter ${styles.d3} ${styles.actions}`}>
-        <a className="btn btnPrimary" href={LINKS.connect}>
-          Connect a repository
-        </a>
-        <a className="btn btnOutline" href="#answers">
-          See a report
-          <ArrowRight />
-        </a>
-      </div>
-
-      <div className={`enter ${styles.d4} ${styles.trust}`}>
-        {TRUST.map((line) => (
-          <span key={line}>{line}</span>
-        ))}
-      </div>
-
-      <HeroConsole advisory={m.advisory} level={m.headLevel} meta={m.headMeta} strip={m.strip} blast={m.blast} />
+      <HeroConsole
+        advisory={m.advisory}
+        level={m.headLevel}
+        meta={m.headMeta}
+        strip={m.strip}
+        blast={m.blast}
+      />
     </section>
   );
 }

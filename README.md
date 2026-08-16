@@ -1,3 +1,5 @@
+![Reachable](docs/assets/readme-banner.png)
+
 # Reachable
 
 **Supply-chain incident response on a graph.** When an npm package is compromised,
@@ -173,6 +175,7 @@ demo/               services.txt · incidents.txt               AGENTS.md  sourc
 - [neo4j Python driver](https://github.com/neo4j/neo4j-python-driver) (Bolt) · [httpx](https://www.python-httpx.org/) · [mcp](https://github.com/modelcontextprotocol/python-sdk) · pytest · ruff
 - [Next.js](https://nextjs.org/) · [Tailwind CSS](https://tailwindcss.com/) · [shadcn/ui](https://ui.shadcn.com/) on Base UI · [lucide](https://lucide.dev/) · [motion](https://motion.dev/) · [d3-force](https://github.com/d3/d3-force) · IBM Plex Sans / JetBrains Mono
 - Data: GitHub REST API · npm registry · api.npmjs.org · [OSV](https://osv.dev/) · [deps.dev](https://deps.dev/)
+- Artwork (banner, social card, icon, empty-state illustrations, `docs/assets/propagation.gif`) generated with AI, colour-quantised to the project palette
 
 ## Licence
 
