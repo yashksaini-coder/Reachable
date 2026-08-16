@@ -117,7 +117,8 @@ traversal, not a scan.
 ## Ingest rules the engine forces
 
 - All writes are `UNWIND $rows AS row …`, ≤ 1000 rows per statement (hard cap 1024).
-- `MERGE (n:Label {id: row.id}) SET n.key = row.key, …` — every `SET` value from the row.
+- `MERGE (n {id: row.id}) SET n:Label, n.key = row.key, …` — the MERGE pattern
+  matches on id only, the label is applied in `SET`, every value from the row.
 - Edge writes: `MATCH (a:LabelA {id: row.src}), (b:LabelB {id: row.dst}) MERGE (a)-[r:TYPE {id: row.rid}]->(b) SET r.eid = row.rid, …` — exactly one label per endpoint.
 - No `CREATE INDEX` — graph-indexer indexes properties on write.
 - Every timestamp coerced to int at the source boundary; ingest asserts non-null
