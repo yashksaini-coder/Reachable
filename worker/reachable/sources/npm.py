@@ -5,6 +5,7 @@ from `versions`. So removed = in time and not in versions. No takedown timestamp
 is published anywhere; `next_surviving_publish` is the live_to upper-bound proxy.
 """
 
+import functools
 import re
 import time
 from datetime import datetime
@@ -27,8 +28,11 @@ def epoch(s: str) -> int:
 _ts = epoch
 
 
+@functools.lru_cache(maxsize=4096)
 def fetch_packument(name: str) -> dict | None:
-    """Full packument (has the `time` map). None on 404 or on a name safe_name rejects."""
+    """Full packument (has the `time` map). None on 404 or on a name safe_name rejects.
+    Memoised per process: a packument can be 10 MB and the advisory stage asks for the same
+    ones hundreds of times."""
     try:
         name = safe_name(name)
     except ValueError as e:
