@@ -108,7 +108,7 @@ docs/
   hack-hydra-participant-guide.pdf   the official rules (source for §13)
 worker/
   reachable/
-    db.py              driver + env; the only place HYDRA_TOKEN is read (os.environ only — .env is not auto-loaded)
+    db.py              driver + env; the only place HYDRA_TOKEN is read (env, with .env auto-loaded)
     http.py            cached HTTP GET/POST for the sources
     ids.py             gid()/eid() integer ids, safe_purl() allowlist
     fixture.py         ~30-node hand-verified test graph, loaded via UNWIND
@@ -116,8 +116,12 @@ worker/
                        depsdev.py (present, NOT used by the pipeline — DEPENDS_ON comes from lockfiles)
     typosquat.py       materialises NAME_SIMILAR_TO edges
     load.py            UNWIND MERGE write primitives, idempotent by deterministic id
-    pipeline.py        seeds.json -> graph, six resumable stages (services, packages,
-                       advisories, reach, typosquats, verify)
+    pipeline.py        bulk ingest (--seeds demo/services.txt, six resumable stages: services,
+                       packages, advisories, reach, typosquats, verify) and --repo owner/repo
+    jobs.py            per-repo ingest jobs: one worker thread + queue, steps lockfiles ·
+                       packages · advisories · reach; history in .cache/jobs.jsonl
+    api.py             loopback HTTP api: /ask/*, /cypher, /services, /services/add (job),
+                       /jobs, /graph/stats
     queries.py         Q1–Q7, one function each, typed results
     incident.py        composes the six answers into one payload
   tests/               golden-file tests against the fixture (test_queries.py)
@@ -127,7 +131,9 @@ scripts/               probe.py, roundtrip.py — Phase 0 harnesses, kept
 web/
   app/                 / · /incident/[advisory] · /incident/[advisory]/[service] · /badge/[owner]/[repo] · /api/health
   lib/                 env.ts (server-only) · incident.ts (loads worker/out JSON)
-seeds.json             12 seed repos in two disclosed cohorts: 8 core + 4 real victims
+demo/services.txt      12 demo repos in two disclosed cohorts (8 core + 4 real victims), replayed by
+                       `make demo` as `make add` jobs — not configuration the code reads
+demo/incidents.txt     the demo advisory ids, replayed as `make incident … --out`
 requirements.txt       pinned worker deps · pyproject.toml holds only ruff/pytest config
 .env.example           copy to .env / web/.env.local; both are gitignored
 ```
@@ -148,11 +154,17 @@ make node-stop   # docker stop the node          make node-logs   # follow its l
 make roundtrip   # write + read one node over Bolt (node health check)
 make probe       # run the Cypher feature probe against the node
 make fixture     # (re)load the hand-verified fixture graph (fx/acme keys; wipes only its own edges)
-make ingest      # full pipeline from seeds.json; ARGS="--only <stage>" for one stage
+make up          # api (:8787, background, pid .cache/api.pid) + web build + web (:3000); needs the node
+make down        # stop the background api
+make add REPO=owner/repo   # one ingest job via the api (waits, prints step timings); inline if api is down
+make demo        # replay demo/services.txt as jobs, then demo/incidents.txt as reports
+make reset       # docker stop the node, archive .hydradb/{store,cache} -> *.old-<time>; then make node
+make ingest      # bulk pipeline over demo/services.txt; ARGS="--only <stage>" for one stage (typosquats/verify live here)
 make incident ID=GHSA-xxxx-yyyy-zzzz              # print the report
 make incident ID=… ARGS="--out --runs 5"          # + write worker/out/<id>.json and benchmarks/results/
 make lint        # ruff
 make test        # lint + pytest against fixture (needs a running node) + NEXT_PUBLIC leak check
+make api         # worker api in the foreground
 make web         # next dev
 make web-build   # npm ci && next build
 ```

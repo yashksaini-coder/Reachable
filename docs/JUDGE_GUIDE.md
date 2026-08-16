@@ -61,19 +61,25 @@ store: cold vs warm) · whole-type edge counts and node deletes are full scans.
 - Reachability is **L0/L1** (import-level). L2 (symbol-level, tree-sitter) was cut for time.
 - `Version.removed` proves *a* removal, not *why*; `malicious` is set only when an advisory says so.
 - Typosquat candidates come from the ingested corpus; distance and kind are facts, “typosquat” is a hypothesis.
-- Seed cohorts are disclosed in `seeds.json`: 8 well-maintained repos + 4 real victims of the
-  2025-09-08 incident found by code-searching the malicious tarball names.
+- The demo cohorts are disclosed in `demo/services.txt`: 8 well-maintained repos + 4 real victims of
+  the 2025-09-08 incident found by code-searching the malicious tarball names.
 
 ## Reproduce
 
 ```bash
 make venv && make node          # terminal 1: HydraDB (Docker), stays in the foreground — leave it running
-make fixture && make test       # terminal 2 (node up): 11 hand-verified golden tests reload the fixture themselves
-make ingest                     # seeds.json -> graph (network-bound first time; disk-cached after; `export GITHUB_TOKEN=…` first — the worker reads env vars, not .env)
+make fixture && make test       # terminal 2 (node up): hand-verified golden tests reload the fixture themselves
+make up                         # terminal 2: worker api (:8787, background) + web build + web (:3000)
+make add REPO=owner/repo        # terminal 3: one ingest job (lockfiles · packages · advisories · reach); waits, prints step timings
+make demo                       # replays demo/services.txt (12 repos, as jobs) then demo/incidents.txt (reports)
 make incident ID=<advisory> ARGS="--out --runs 5"   # ARGS=, not a bare --out (make eats it as --output-sync)
-make web-build && cd web && npm start               # renders from the committed worker/out/*.json
+make reset                      # stop the node, archive .hydradb/store + cache, then `make node` again
+make down                       # stop the background api
 ```
 
-`make test`, `make fixture`, `make ingest` and `make incident` all need the node from terminal 1
+`GITHUB_TOKEN` (and `HYDRA_TOKEN`) are read from `.env` — copy `.env.example`. HTTP responses are
+disk-cached under `.cache/`, so a re-run is write-bound, not network-bound.
+
+`make test`, `make fixture`, `make add` and `make incident` all need the node from terminal 1
 on `7687`. The fixture lives under its own `pkg:fx/` / `svc:acme/` keys and its wipe deletes only
 its own edges, so it coexists with the ingested graph in either order.

@@ -51,11 +51,18 @@ def lockfile_commits(
     ]
 
 
-def snapshot_shas(slug: str, cutoffs: list[str], around: list[tuple[str, int]] = ()) -> list[dict]:
-    """Last lockfile commit at/before each cutoff + every commit within +-days of each incident date."""
+def snapshot_shas(
+    slug: str, cutoffs: list[str], around: list[tuple[str, int]] = (), recent: int = 0
+) -> list[dict]:
+    """Last lockfile commit at/before each cutoff + every commit within +-days of each incident
+    date + the `recent` most recent commits (dense recent history is what makes narrow
+    incident windows answerable without knowing the incident in advance)."""
     seen: dict[str, int] = {}
     for c in cutoffs:
         for row in lockfile_commits(slug, until=_day(c, end=True)):
+            seen[row["sha"]] = row["committed_at"]
+    if recent:
+        for row in lockfile_commits(slug, per_page=min(recent, 100)):
             seen[row["sha"]] = row["committed_at"]
     for date, days in around:
         since, until = _day(date, -days), _day(date, days, end=True)
@@ -209,7 +216,11 @@ def _dedupe(rows: list[dict], *keys: str) -> list[dict]:
 
 
 def ingest_service(
-    slug: str, criticality: int, cutoffs: list[str], around: list[tuple[str, int]]
+    slug: str,
+    criticality: int,
+    cutoffs: list[str],
+    around: list[tuple[str, int]],
+    recent: int = 0,
 ) -> dict:
     out = {
         "service": service_row(slug, criticality),
@@ -222,7 +233,7 @@ def ingest_service(
         "version_of": [],
         "skipped_snapshots": [],
     }
-    for snap in snapshot_shas(slug, cutoffs, around):
+    for snap in snapshot_shas(slug, cutoffs, around, recent=recent):
         doc = fetch_lockfile(slug, snap["sha"])
         if doc is None:
             log(f"warn: {slug}@{snap['sha'][:12]}: no package-lock.json at ref")

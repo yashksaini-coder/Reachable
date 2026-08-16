@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { HydraCard, Kind, Level, Limits, SectionTitle, Stat, Chip } from "@/app/ui";
 import { Timeline } from "./timeline";
+import { BlastGraph } from "./graph";
 
 export const dynamic = "force-static";
 export async function generateStaticParams() {
@@ -57,6 +58,8 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
           <Stat n={h.unscanned} label="unscanned" tone="text-unknown" />
         </div>
       </header>
+
+      <BlastGraph inc={inc} />
 
       <section>
         <SectionTitle n="1" title="Which services are transitively exposed?" />
@@ -298,9 +301,9 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
 function Provenance({ inc }: { inc: Incident }) {
   const p = inc.provenance;
   return (
-    <section className="rounded-lg border border-border bg-card/60 p-4 text-xs text-muted-foreground">
+    <section className="rounded-lg border border-border bg-card/60 p-4 text-xs text-muted-foreground [overflow-wrap:anywhere]">
       <div className="mb-2 font-medium text-foreground">Provenance</div>
-      <div className="grid gap-x-6 gap-y-1 md:grid-cols-2">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-x-6 gap-y-1 md:grid-cols-[repeat(2,minmax(0,1fr))]">
         <div>generated {fmtUtc(p.generated_at)}</div>
         <div>engine {p.hydradb_image ?? "ghcr.io/hydra-db/hydradb (digest not recorded)"}</div>
         <div>bolt {p.bolt_uri}</div>

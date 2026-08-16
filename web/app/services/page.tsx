@@ -1,77 +1,81 @@
-import { promises as fs } from "node:fs";
-import path from "node:path";
 import Link from "next/link";
 import { listIncidents, svcSlug } from "@/lib/incident";
-import { Chip } from "@/app/ui";
+import { services, jobs, type Service } from "@/lib/api";
+import { AddRepository } from "./add-repository";
 
-export const dynamic = "force-static";
+// Services live in the graph; this page reads them from the worker API and degrades honestly
+// when it is unreachable (list nothing, form disabled). Incident counts come from committed JSON.
+export const dynamic = "force-dynamic";
 
-type Seed = { slug: string; criticality: number; cohort: string; lockfile_commits?: number; history_from?: string; note?: string };
-
-// The watched services come from seeds.json (disclosed dataset). Adding a service is an
-// ingest step today: add it to seeds.json and run `make ingest ARGS="--only services"`.
-async function seeds(): Promise<Seed[]> {
-  try {
-    const raw = await fs.readFile(path.resolve(process.cwd(), "..", "seeds.json"), "utf8");
-    return (JSON.parse(raw) as { services: Seed[] }).services;
-  } catch {
-    return [];
-  }
-}
+const sha = (c: Service["latest_commit"]) => (typeof c === "string" ? c : (c?.sha ?? null));
+const shortSha = (sha?: string | null) => (sha ? sha.slice(0, 7) : "—");
+const day = (v?: string | number | null) => {
+  if (v == null || v === "") return "—";
+  const d = typeof v === "number" ? new Date(v > 1e12 ? v : v * 1000) : new Date(v);
+  return isNaN(d.getTime()) ? String(v) : d.toISOString().slice(0, 10);
+};
 
 export default async function Services() {
-  const [svcs, incidents] = await Promise.all([seeds(), listIncidents()]);
-  const exposure = new Map<string, { incidents: number; worst: string; whileLive: number }>();
+  const [svcs, recent, incidents] = await Promise.all([services(), jobs(), listIncidents()]);
+  const exposure = new Map<string, { incidents: number; whileLive: number }>();
   for (const inc of incidents) {
     for (const svc of inc.q1_exposed.services) {
-      const e = exposure.get(svc) ?? { incidents: 0, worst: "unscanned", whileLive: 0 };
+      const e = exposure.get(svc) ?? { incidents: 0, whileLive: 0 };
       e.incidents += 1;
-      const lv = inc.q7_reachability[svc]?.level ?? "unscanned";
-      const rank: Record<string, number> = { L2: 3, L1: 2, unscanned: 1, L0: 0 };
-      if ((rank[lv] ?? 0) > (rank[e.worst] ?? 0)) e.worst = lv;
       if (inc.q3_while_live?.services.includes(svc)) e.whileLive += 1;
       exposure.set(svc, e);
     }
   }
+  const live = svcs !== null;
+  const list = svcs ?? [];
+
   return (
     <div className="space-y-5">
       <header className="flex flex-wrap items-baseline gap-4">
         <h1 className="text-xl font-semibold tracking-tight">Services</h1>
         <span className="text-[13px] text-muted-foreground">
-          {svcs.length} repositories watched · lockfile history ingested per commit · badge per repo
+          {live ? `${list.length} repositories watched · lockfile history ingested per commit · badge per repo` : "live API unavailable — the registry lives in the graph and cannot be read right now"}
         </span>
       </header>
-      <div className="overflow-hidden rounded-lg border border-border">
-        <table className="w-full text-[13px] [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_th]:text-[11px] [&_th]:font-medium [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-muted-foreground [&_td]:border-t [&_td]:border-border [&_td]:px-3 [&_td]:py-2 [&_td]:align-top">
+
+      <div className="overflow-x-auto rounded-lg border border-border">
+        <table className="w-full min-w-[820px] text-[13px] [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_th]:text-[11px] [&_th]:font-medium [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-muted-foreground [&_td]:h-11 [&_td]:border-t [&_td]:border-border [&_td]:px-3 [&_td]:py-0 [&_td]:align-middle [&_td]:whitespace-nowrap">
           <thead>
             <tr>
               <th>repository</th>
-              <th>cohort</th>
-              <th>lockfile history</th>
-              <th>incidents</th>
-              <th>while live</th>
+              <th className="text-right">lockfiles</th>
+              <th>latest commit</th>
+              <th className="text-right">incidents</th>
+              <th className="text-right">while live</th>
               <th>badge</th>
             </tr>
           </thead>
           <tbody>
-            {svcs.map((s) => {
-              const key = `svc:${s.slug}`;
-              const e = exposure.get(key);
+            {list.length === 0 && (
+              <tr>
+                <td colSpan={6} className="text-center text-muted-foreground">
+                  {live ? "No repositories yet — add one below." : "—"}
+                </td>
+              </tr>
+            )}
+            {list.map((s) => {
+              const slug = svcSlug(s.key);
+              const e = exposure.get(s.key);
               return (
-                <tr key={s.slug}>
-                  <td className="font-mono">
-                    <a href={`https://github.com/${s.slug}`} className="hover:text-signal-2" target="_blank" rel="noreferrer">
-                      {s.slug}
+                <tr key={s.key}>
+                  <td className="font-mono" title={s.note ?? undefined}>
+                    <a href={s.repo_url || `https://github.com/${slug}`} className="hover:text-signal-2" target="_blank" rel="noreferrer">
+                      {slug}
                     </a>
-                    {s.note && <div className="mt-0.5 max-w-md font-sans text-[11px] text-muted-foreground">{s.note}</div>}
                   </td>
-                  <td>
-                    <Chip tone={s.cohort === "victim" ? "border-signal/40 text-signal-2" : ""}>{s.cohort}</Chip>
-                  </td>
+                  <td className="num text-right text-muted-foreground">{s.lockfiles}</td>
                   <td className="num text-muted-foreground">
-                    {s.lockfile_commits ?? "—"} commits{s.history_from ? ` since ${s.history_from}` : ""}
+                    <span className="font-mono text-foreground/80" title={sha(s.latest_commit) ?? undefined}>{shortSha(sha(s.latest_commit))}</span>
+                    {typeof s.latest_commit === "object" && s.latest_commit && (
+                      <span> · {day(s.latest_commit.committed_at_iso ?? s.latest_commit.committed_at)}</span>
+                    )}
                   </td>
-                  <td className="num">
+                  <td className="num text-right">
                     {e ? (
                       <Link href="/board" className="hover:text-signal-2">
                         {e.incidents}
@@ -80,10 +84,10 @@ export default async function Services() {
                       <span className="text-muted-foreground">0</span>
                     )}
                   </td>
-                  <td className="num">{e?.whileLive ? <span className="text-l1">{e.whileLive}</span> : <span className="text-muted-foreground">0</span>}</td>
+                  <td className="num text-right">{e?.whileLive ? <span className="text-l1">{e.whileLive}</span> : <span className="text-muted-foreground">0</span>}</td>
                   <td>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={`/badge/${s.slug}.svg`} alt={`reachable badge for ${svcSlug(key)}`} height={20} />
+                    <img src={`/badge/${slug}.svg`} alt={`reachable badge for ${slug}`} height={20} className="block" />
                   </td>
                 </tr>
               );
@@ -91,12 +95,8 @@ export default async function Services() {
           </tbody>
         </table>
       </div>
-      <section className="rounded-lg border border-border bg-card/70 px-4 py-3 text-[12.5px] text-muted-foreground">
-        <div className="mb-1 font-medium text-foreground">Add a repository</div>
-        Add it to <code>seeds.json</code> and run <code>make ingest ARGS=&quot;--only services --only packages --only advisories --only reach&quot;</code>.
-        The pipeline is idempotent and disk-cached: re-running it never duplicates anything and only fetches what is new.
-        Then <code>make incident ID=&lt;advisory&gt; ARGS=&quot;--out&quot;</code> refreshes the incident pages and this board.
-      </section>
+
+      <AddRepository disabled={!live} recent={[...(recent ?? [])].sort((a, b) => Number(b.started_at ?? 0) - Number(a.started_at ?? 0)).slice(0, 5)} />
     </div>
   );
 }

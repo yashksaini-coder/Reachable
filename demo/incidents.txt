@@ -1,0 +1,5 @@
+# Demo incidents — one advisory id per line. Replayed by `make demo` as
+# `make incident ID=… ARGS="--out --runs 5"` (writes worker/out/<id>.json + benchmarks/results/).
+MAL-2025-46974      # debug@4.4.2 — the 2025-09-08 chalk/debug compromise, 806k dependents on debug alone
+MAL-2025-46969      # chalk@5.6.1 — same incident, live 13:13Z -> 14:47Z (95 min); real victims in demo/services.txt
+GHSA-g7cv-rxg3-hmpx # TanStack worm (Mini Shai-Hulud, 2026-05-11): 42 packages / 84 versions under ONE advisory id

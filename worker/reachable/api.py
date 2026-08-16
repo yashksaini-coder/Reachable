@@ -1,9 +1,14 @@
-"""Tiny read-only HTTP API over the query layer, for the console's live "Ask" feature.
+"""Tiny HTTP API over the query layer and the job runner, for the console.
 
     make api            (python -m reachable.api, http://127.0.0.1:8787)
 
-Endpoints (GET, JSON):
-  /health
+Endpoints (JSON):
+  GET  /health
+  GET  /services                       Service nodes + lockfile count (anchored per service)
+  POST /services/add  {"repo": ...}    -> 202 {job_id}; 400 bad slug; 409 already queued/running
+  GET  /jobs · /jobs/<id>              ingest job records (jobs.py)
+  GET  /graph/stats                    node counts per label (null when admission control refuses)
+                                       + edge counts summed from job records (never scanned)
   /ask/exposed?advisory=<id>[&service=<owner/repo>]      Q1 membership + proving paths
   /ask/pulls?package=<name>&service=<owner/repo>          what pulls a package into a service
   /ask/while-live?advisory=<id>                            Q3
@@ -13,9 +18,11 @@ Endpoints (GET, JSON):
   /ask/typosquats?package=<name>                           Q5
   /cypher?q=<statement>                                    read-only console: MATCH/CALL only
 
-Stdlib only, single-threaded, loopback by default. Not a public surface: the deployed
-console runs from committed JSON and shows live features as unavailable when this is
-not reachable. Every response carries the executed statements and measured ms.
+Stdlib only, loopback by default. Requests are served on threads so a running job never
+blocks /health; graph writes happen only on the single job worker thread. Not a public
+surface: the deployed console runs from committed JSON and shows live features as
+unavailable when this is not reachable. Every ask response carries the executed
+statements and measured ms.
 """
 
 import json
@@ -24,11 +31,12 @@ import re
 import sys
 import time
 from dataclasses import asdict
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from datetime import UTC, datetime
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
-from reachable import queries
-from reachable.db import session, timed
+from reachable import jobs, queries
+from reachable.db import run, session, timed
 from reachable.ids import gid, safe_name
 
 HOST = os.environ.get("REACHABLE_API_HOST", "127.0.0.1")
@@ -179,6 +187,65 @@ def ask_cypher(s, q):
     }
 
 
+def _repo_slug(raw: str) -> str:
+    """'owner/repo' or a github URL -> 'owner/repo'; raises Bad on anything else."""
+    s = raw.strip()
+    for prefix in ("https://github.com/", "http://github.com/", "github.com/"):
+        if s.lower().startswith(prefix):
+            s = s[len(prefix) :]
+    s = s.strip("/").removesuffix(".git")
+    if not _SLUG.match(s) or s.count("/") != 1:
+        raise Bad("repo must be owner/repo or https://github.com/owner/repo")
+    return s
+
+
+def list_services(s) -> list[dict]:
+    rows = run(
+        s,
+        "MATCH (sv:Service) RETURN sv.id AS id, sv.key AS key, sv.name AS name, "
+        "sv.repo_url AS repo_url, sv.criticality AS criticality, sv.added_at AS added_at",
+    )
+    out = []
+    for r in rows:
+        lfs = run(
+            s,
+            f"MATCH (sv:Service {{id: {r['id']}}})-[:HAS_LOCKFILE]->(l:Lockfile) "
+            "RETURN l.sha AS sha, l.committed_at AS at",
+        )
+        latest = max(lfs, key=lambda x: x["at"], default=None)
+        out.append(
+            {
+                "key": r["key"],
+                "name": r["name"],
+                "repo_url": r["repo_url"],
+                "criticality": r["criticality"],
+                "lockfiles": len(lfs),
+                "latest_commit": (
+                    {
+                        "sha": latest["sha"],
+                        "committed_at": latest["at"],
+                        "committed_at_iso": datetime.fromtimestamp(latest["at"], UTC).isoformat(),
+                    }
+                    if latest
+                    else None
+                ),
+                "added_at": r.get("added_at"),
+            }
+        )
+    return sorted(out, key=lambda x: x["key"])
+
+
+def graph_stats(s) -> dict:
+    nodes = {}
+    for label in ("Service", "Lockfile", "Package", "Version", "Advisory", "Maintainer", "File"):
+        try:
+            nodes[label] = run(s, f"MATCH (n:{label}) RETURN count(*) AS c")[0]["c"]
+        except Exception:  # noqa: BLE001 — admission control refuses whole-label counts past 250k
+            nodes[label] = None
+    edges, last = jobs.edges_written()
+    return {"nodes": nodes, "edges_written": edges, "last_ingest": last}
+
+
 ROUTES = {
     "/ask/exposed": ask_exposed,
     "/ask/pulls": ask_pulls,
@@ -205,6 +272,29 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
 
+    def do_POST(self):
+        u = urlparse(self.path)
+        if u.path != "/services/add":
+            return self._json(404, {"error": "unknown route"})
+        try:
+            n = int(self.headers.get("Content-Length") or 0)
+            body = json.loads(self.rfile.read(n) or b"{}")
+            repo = _repo_slug(str(body.get("repo", "")))
+            crit = int(body.get("criticality", 1))
+            if crit not in (1, 2, 3):
+                raise Bad("criticality must be 1, 2 or 3")
+        except (ValueError, AttributeError) as e:
+            return self._json(400, {"error": f"bad JSON body: {e}"})
+        except Bad as e:
+            return self._json(400, {"error": str(e)})
+        try:
+            job = jobs.submit(repo, crit)
+        except jobs.Conflict as e:
+            return self._json(
+                409, {"error": "a job for this repo is queued or running", "job_id": str(e)}
+            )
+        return self._json(202, {"job_id": job.job_id, "repo": repo})
+
     def do_GET(self):
         u = urlparse(self.path)
         q = parse_qs(u.query)
@@ -212,6 +302,22 @@ class Handler(BaseHTTPRequestHandler):
             with session() as s:
                 n, ms = timed(s, "MATCH (sv:Service) RETURN count(*) AS c")
             return self._json(200, {"ok": True, "services": n[0]["c"], "ms": ms})
+        if u.path == "/jobs":
+            return self._json(200, [j.public() for j in jobs.all_jobs()])
+        if u.path.startswith("/jobs/"):
+            j = jobs.get(u.path[len("/jobs/") :])
+            return (
+                self._json(200, j.public(with_log=True))
+                if j
+                else self._json(404, {"error": "no such job"})
+            )
+        if u.path in ("/services", "/graph/stats"):
+            try:
+                with session() as s:
+                    body = list_services(s) if u.path == "/services" else graph_stats(s)
+            except Exception as e:  # noqa: BLE001
+                return self._json(502, {"error": str(e)[:400]})
+            return self._json(200, body)
         fn = ROUTES.get(u.path)
         if fn is None:
             return self._json(404, {"error": "unknown route", "routes": sorted(ROUTES)})
@@ -229,10 +335,10 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main() -> None:
-    srv = HTTPServer((HOST, PORT), Handler)
-    print(
-        f"reachable api on http://{HOST}:{PORT}  (read-only; loopback)", file=sys.stderr, flush=True
-    )
+    jobs.start()
+    srv = ThreadingHTTPServer((HOST, PORT), Handler)
+    srv.daemon_threads = True
+    print(f"reachable api on http://{HOST}:{PORT}  (loopback)", file=sys.stderr, flush=True)
     try:
         srv.serve_forever()
     except KeyboardInterrupt:

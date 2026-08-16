@@ -31,3 +31,76 @@ export async function apiHealthy(): Promise<boolean> {
     return false;
   }
 }
+
+// ---- Services registry + ingest jobs (worker contract, docs/plans/2026-08-16-console-v2.md) ----
+
+export type Service = {
+  key: string; // svc:owner/repo
+  name: string;
+  repo_url: string;
+  criticality: number;
+  lockfiles: number;
+  latest_commit: string | { sha: string; committed_at?: number; committed_at_iso?: string } | null; // worker sends the sha as a string today
+  added_at?: string | number | null;
+  note?: string | null;
+};
+
+export type JobStep = { name: string; status: "pending" | "running" | "done" | "failed" | "skipped"; ms: number | null; detail?: string | null };
+export type Job = {
+  job_id: string;
+  repo: string;
+  status: "queued" | "running" | "done" | "failed";
+  started_at: string | number | null;
+  ended_at: string | number | null;
+  step: string | null;
+  steps: JobStep[];
+  log?: string[];
+  error?: string | null;
+};
+
+export type GraphStats = {
+  nodes: Record<string, number | null>;
+  edges_written: Record<string, number>;
+  last_ingest: string | number | null;
+};
+
+// Plain JSON round-trip; the caller decides how to degrade. Throws only on network/timeout.
+async function json<T>(path: string, init?: RequestInit & { timeoutMs?: number }): Promise<{ status: number; body: T }> {
+  const r = await fetch(`${API}${path}`, { cache: "no-store", signal: AbortSignal.timeout(init?.timeoutMs ?? 10_000), ...init });
+  return { status: r.status, body: (await r.json().catch(() => ({}))) as T };
+}
+
+export async function services(): Promise<Service[] | null> {
+  try {
+    const { status, body } = await json<Service[]>("/services");
+    return status === 200 && Array.isArray(body) ? body : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function addService(repo: string): Promise<{ status: number; body: { job_id?: string; error?: string } }> {
+  return json("/services/add", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ repo }) });
+}
+
+export async function jobs(): Promise<Job[] | null> {
+  try {
+    const { status, body } = await json<Job[]>("/jobs");
+    return status === 200 && Array.isArray(body) ? body : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function job(id: string): Promise<{ status: number; body: Job | { error?: string } }> {
+  return json(`/jobs/${encodeURIComponent(id)}`);
+}
+
+export async function graphStats(): Promise<GraphStats | null> {
+  try {
+    const { status, body } = await json<GraphStats>("/graph/stats");
+    return status === 200 ? body : null;
+  } catch {
+    return null;
+  }
+}

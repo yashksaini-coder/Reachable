@@ -89,7 +89,7 @@ export default async function ServicePage({ params }: PageProps<"/incident/[advi
                             {short(el)}
                           </span>
                         ) : (
-                          <span key={j} className="text-muted-foreground/70">←{el}←</span>
+                          <span key={j} className="text-muted-foreground">←{el}←</span>
                         ),
                       )}
                       <span className="ml-2 text-muted-foreground">{p.hops === 0 ? "direct dependency" : `${p.hops} hop${p.hops === 1 ? "" : "s"}`}</span>

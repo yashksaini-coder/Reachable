@@ -1,7 +1,11 @@
-"""The ingest pipeline: seeds.json -> graph. Idempotent, resumable, cached.
+"""The ingest pipeline: a list of repos -> graph. Idempotent, resumable, cached.
 
-    make ingest            (python -m reachable.pipeline --seeds seeds.json)
-    python -m reachable.pipeline --seeds seeds.json --only services   # one stage
+    make ingest            (python -m reachable.pipeline --seeds demo/services.txt)
+    python -m reachable.pipeline --seeds demo/services.txt --only services   # one stage
+    python -m reachable.pipeline --repo owner/repo     # one repo, same steps as a console job
+
+`--seeds` takes a plain text list (`owner/repo [criticality]` per line, `#` comments) or the
+legacy JSON shape with snapshots/incidents/typosquat_corpus.
 
 Order matters only for property completeness, not correctness — every write is
 a MERGE on a deterministic id, so re-running any stage changes nothing.
@@ -27,12 +31,45 @@ import json
 import sys
 import time
 from collections import defaultdict
+from datetime import UTC, datetime
 from pathlib import Path
 
 from reachable import load, typosquat
 from reachable.db import run, session
 from reachable.load import log, upsert_edges, upsert_nodes
 from reachable.sources import github, npm, osv, reach
+
+
+def yearly_cutoffs(years: int = 4) -> list[str]:
+    """Jan 1 of the last `years` years plus today — i.e. one snapshot per year and the latest
+    lockfile commit."""
+    y = datetime.now(UTC).year
+    return [f"{yy}-01-01" for yy in range(y - years + 1, y + 1)] + [
+        datetime.now(UTC).strftime("%Y-%m-%d")
+    ]
+
+
+def write_service(s, r: dict) -> dict[str, int]:
+    """Write one github.ingest_service() result. Returns edge counts per type."""
+    upsert_nodes(s, "Service", [r["service"]])
+    upsert_nodes(s, "Package", r["packages"])
+    upsert_nodes(s, "Version", r["versions"])
+    upsert_nodes(s, "Lockfile", r["lockfiles"])
+    return {
+        "VERSION_OF": upsert_edges(s, "VERSION_OF", "Version", "Package", r["version_of"]),
+        "HAS_LOCKFILE": upsert_edges(s, "HAS_LOCKFILE", "Service", "Lockfile", r["has_lockfile"]),
+        "RESOLVED": upsert_edges(s, "RESOLVED", "Lockfile", "Version", r["resolved"]),
+        "DEPENDS_ON": upsert_edges(s, "DEPENDS_ON", "Version", "Version", r["depends_on"]),
+    }
+
+
+def versions_of(r: dict) -> dict[str, set[str]]:
+    """{name: {versions}} from an ingest_service() result."""
+    out: dict[str, set[str]] = defaultdict(set)
+    for v in r["versions"]:
+        name = v["key"][len("pkg:npm/") :].rsplit("@", 1)[0]
+        out[name].add(v["version"])
+    return out
 
 
 def stage_services(s, seeds: dict) -> dict:
@@ -43,17 +80,9 @@ def stage_services(s, seeds: dict) -> dict:
     for svc in seeds["services"]:
         t0 = time.perf_counter()
         r = github.ingest_service(svc["slug"], svc["criticality"], cut, around)
-        upsert_nodes(s, "Service", [r["service"]])
-        upsert_nodes(s, "Package", r["packages"])
-        upsert_nodes(s, "Version", r["versions"])
-        upsert_nodes(s, "Lockfile", r["lockfiles"])
-        upsert_edges(s, "VERSION_OF", "Version", "Package", r["version_of"])
-        upsert_edges(s, "HAS_LOCKFILE", "Service", "Lockfile", r["has_lockfile"])
-        upsert_edges(s, "RESOLVED", "Lockfile", "Version", r["resolved"])
-        upsert_edges(s, "DEPENDS_ON", "Version", "Version", r["depends_on"])
-        for v in r["versions"]:
-            name = v["key"][len("pkg:npm/") :].rsplit("@", 1)[0]
-            touched[name].add(v["version"])
+        write_service(s, r)
+        for name, vs in versions_of(r).items():
+            touched[name].update(vs)
         log(
             f"  {svc['slug']}: {len(r['lockfiles'])} lockfiles, {len(r['resolved'])} RESOLVED, "
             f"{len(r['depends_on'])} DEPENDS_ON, {len(r['versions'])} versions, "
@@ -192,19 +221,23 @@ def stage_advisories(
 ) -> None:
     ids: set[str] = {i["id"] for i in seeds["incidents"]}
     pairs = sorted((n, v) for n, vs in touched.items() for v in vs)
-    # every (name, version) in the graph -> advisory ids
-    hits = osv.query_batch(pairs)
-    for found in hits.values():
-        ids.update(found)
     # incidents may list bad versions that no seed resolved — still ingest them, so the
     # graph carries the whole incident (Q2's version list, and hand-listed packages)
-    extra_pairs = []
     for inc in seeds["incidents"]:
         for name, versions in inc.get("packages", {}).items():
-            extra_pairs.extend((name, v) for v in versions)
-    if extra_pairs:
-        for found in osv.query_batch(extra_pairs).values():
-            ids.update(found)
+            pairs.extend((name, v) for v in versions)
+    ingest_advisories(s, pairs, known, ids)
+
+
+def ingest_advisories(
+    s, pairs: list[tuple[str, str]], known: dict[str, list[str]], ids: set[str] | None = None
+) -> dict[str, int]:
+    """OSV querybatch over (name, version) pairs (+ any explicit advisory ids) -> Advisory,
+    AFFECTS with the temporal window, stub Package/Version for affected-but-unresolved
+    versions, malicious flags. Returns counts."""
+    ids = set(ids or ())
+    for found in osv.query_batch(sorted(set(pairs))).values():
+        ids.update(found)
     log(f"  {len(ids)} advisories touch the graph")
     advisories, affects, all_pairs = [], [], set()
     all_windows: dict = {}
@@ -262,6 +295,7 @@ def stage_advisories(
         # MERGE needs `version` too? No — MERGE on id unions properties; key is required by upsert.
         upsert_nodes(s, "Version", _dedupe(mal))
     log(f"  {len(advisories)} advisories, {len(affects)} AFFECTS, {len(mal)} malicious versions")
+    return {"advisories": len(advisories), "AFFECTS": len(affects), "malicious": len(mal)}
 
 
 def stage_reach(s) -> None:
@@ -352,13 +386,39 @@ def stage_verify(s) -> None:
 STAGES = ["services", "packages", "advisories", "reach", "typosquats", "verify"]
 
 
+def load_seeds(path: str) -> dict:
+    """JSON (legacy shape) or a text list of `owner/repo [criticality]` lines."""
+    text = Path(path).read_text()
+    if text.lstrip().startswith("{"):
+        return json.loads(text)
+    services = []
+    for line in text.splitlines():
+        line = line.split("#", 1)[0].strip()
+        if line:
+            slug, *rest = line.split()
+            services.append({"slug": slug, "criticality": int(rest[0]) if rest else 1})
+    return {
+        "services": services,
+        "snapshots": {"yearly_cutoffs": yearly_cutoffs(), "around_incidents_days": 0},
+        "incidents": [],
+        "typosquat_corpus": {"top_n_by_downloads": 2000},
+    }
+
+
 def main(argv=None) -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--seeds", default="seeds.json")
+    ap.add_argument("--seeds", default="demo/services.txt")
+    ap.add_argument("--repo", help="owner/repo: run the per-repo job steps and exit")
     ap.add_argument("--only", choices=STAGES, action="append")
     a = ap.parse_args(argv)
-    with open(a.seeds) as f:
-        seeds = json.load(f)
+    if a.repo:
+        from reachable import jobs  # circular at module level
+
+        job = jobs.run_repo(a.repo)
+        for st in job.steps:
+            log(f"  {st['name']:10} {st['status']:7} {st['ms']:>8.0f} ms  {st['detail']}")
+        return 0 if job.status == "done" else 1
+    seeds = load_seeds(a.seeds)
     only = set(a.only or STAGES)
     t0 = time.perf_counter()
     with session() as s:

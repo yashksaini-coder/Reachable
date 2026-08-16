@@ -43,3 +43,4 @@ worker/out/MAL-TEST-*.json
 worker/out/GHSA-TEST-*.json
 benchmarks/results/MAL-TEST-*.json
 benchmarks/results/GHSA-TEST-*.json
+.hydradb-test/

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, KanbanSquare, MessageSquareCode, Radar, Menu } from "lucide-react";
+import { Activity, KanbanSquare, MessageSquareCode, Network, Radar, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ const NAV = [
   { href: "/board", label: "Board", hint: "services by triage state", icon: KanbanSquare },
   { href: "/services", label: "Services", hint: "what is being watched", icon: Activity },
   { href: "/ask", label: "Ask", hint: "query the graph live", icon: MessageSquareCode },
+  { href: "/graph", label: "Graph", hint: "counts, schema, ingest jobs", icon: Network },
 ];
 
 function isActive(path: string, href: string) {

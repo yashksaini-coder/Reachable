@@ -9,14 +9,6 @@
    verdict colours that mean the same thing everywhere, tabular numerals, dense grid.
    Dark-only by design: it is a tool read under pressure at 3 a.m. */
 @theme {
-  --color-bg: #0b0c0f;
-  --color-panel: #111318;
-  --color-panel-2: #171a21;
-  --color-line: #232733;
-  --color-line-2: #2f3442;
-  --color-ink: #e6e8ee;
-  --color-ink-2: #a9afbd;
-  --color-ink-3: #6b7280;
   --color-signal: #ff6a1a;
   --color-signal-2: #ffb08a;
   --color-l2: #ff5c5c;
@@ -139,15 +131,4 @@
 .num {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
-}
-.verdict-l2 { color: var(--color-l2); }
-.verdict-l1 { color: var(--color-l1); }
-.verdict-l0 { color: var(--color-l0); }
-.verdict-unknown { color: var(--color-unknown); }
-.grid-paper {
-  background-image:
-    linear-gradient(to right, color-mix(in oklab, var(--color-line) 60%, transparent) 1px, transparent 1px),
-    linear-gradient(to bottom, color-mix(in oklab, var(--color-line) 60%, transparent) 1px, transparent 1px);
-  background-size: 32px 32px;
-  mask-image: radial-gradient(ellipse at top left, black 30%, transparent 75%);
 }

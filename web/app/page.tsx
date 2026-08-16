@@ -1,9 +1,8 @@
 import Link from "next/link";
-import { ArrowUpRight, Clock, GitCommitHorizontal, Radar } from "lucide-react";
+import { ChevronRight, Radar } from "lucide-react";
 import { listIncidents, fmtMs, fmtUtc } from "@/lib/incident";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { Chip } from "./ui";
+import { cn } from "@/lib/utils";
 
 export const dynamic = "force-static";
 
@@ -19,114 +18,103 @@ export default async function Home() {
   );
 
   return (
-    <div className="space-y-10">
-      <section className="relative overflow-hidden rounded-xl border border-border bg-card p-6 md:p-8">
-        <div className="grid-paper pointer-events-none absolute inset-0" aria-hidden />
-        <div className="relative max-w-3xl">
-          <div className="mb-3 flex items-center gap-2 text-[11px] font-mono uppercase tracking-[0.18em] text-signal">
+    <div className="space-y-6">
+      <section className="flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
+        <div>
+          <div className="mb-1.5 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.18em] text-signal">
             <Radar className="size-3.5" strokeWidth={2} /> incident response on a graph
           </div>
-          <h1 className="text-[28px] font-semibold leading-tight tracking-tight md:text-[36px]">
-            Everyone else ships more alerts. <span className="text-signal">We ship fewer, with proof.</span>
+          <h1 className="text-[22px] font-semibold leading-tight tracking-tight md:text-[26px]">
+            Which services are exposed, which resolved it while it was live, which need action — one traversal each.
           </h1>
-          <p className="mt-3 max-w-2xl text-[14.5px] leading-relaxed text-muted-foreground">
-            When an npm package is compromised: which of your services are transitively exposed, which resolved the bad
-            version <em className="text-foreground/90 not-italic">while it was live</em>, which packages share its maintainers,
-            which nearby names are typosquats — and which exposures are actually reachable from first-party code. Each answer
-            is one traversal inside HydraDB, with the executed Cypher shown under it.
-          </p>
-          <div className="mt-6 grid max-w-xl grid-cols-3 gap-3">
-            <Metric n={totals.exposed} label="services exposed" />
-            <Metric n={totals.live} label="resolved while live" tone="text-l1" />
-            <Metric n={totals.l2} label="reachable · act now" tone="text-l2" />
-          </div>
         </div>
+        <dl className="flex gap-6">
+          <Metric n={totals.exposed} label="services exposed" />
+          <Metric n={totals.live} label="resolved while live" tone="text-l1" />
+          <Metric n={totals.l2} label="reachable · act now" tone="text-l2" />
+        </dl>
       </section>
 
       <section>
-        <div className="mb-3 flex items-baseline justify-between">
+        <div className="mb-2 flex items-baseline justify-between">
           <h2 className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">Incidents</h2>
           <span className="text-[11px] text-muted-foreground">{incidents.length} composed</span>
         </div>
+
         {incidents.length === 0 && (
-          <Card>
-            <CardContent className="py-8 text-center text-sm text-muted-foreground">
-              No incident composed yet. Run <code className="text-foreground">make incident ID=… ARGS=&quot;--out&quot;</code>.
-            </CardContent>
-          </Card>
+          <div className="rounded-lg border border-border bg-card px-5 py-8 text-center text-[13px] text-muted-foreground">
+            No incident composed yet. Add a repository with <code className="text-foreground">make add REPO=owner/repo</code>, then compose one with{" "}
+            <code className="text-foreground">make incident ID=GHSA-…</code>.
+          </div>
         )}
-        <div className="grid gap-4 md:grid-cols-2">
-          {incidents.map((inc) => (
-            <Link key={inc.advisory.key} href={`/incident/${inc.advisory.key}`} className="group block focus-visible:outline-none">
-              <Card className="h-full transition-colors group-hover:border-signal/60 group-focus-visible:border-signal">
-                <CardContent className="flex h-full flex-col gap-4 p-5">
-                  <div className="flex items-start gap-3">
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-mono text-[13px] text-signal-2">{inc.advisory.key}</span>
-                        <Badge variant="outline" className="rounded-full font-mono text-[10px] uppercase">
-                          {inc.advisory.kind} · {inc.advisory.severity}
-                        </Badge>
-                      </div>
-                      <div className="mt-1 line-clamp-2 text-[13.5px] text-muted-foreground">{inc.advisory.summary}</div>
+
+        {incidents.length > 0 && (
+          <div className="overflow-x-auto rounded-lg border border-border">
+            <div className="min-w-[860px] divide-y divide-border">
+              <div className="grid grid-cols-[minmax(260px,1fr)_repeat(4,72px)_150px_130px_20px] items-center gap-x-4 bg-card/60 px-4 py-2 text-[10.5px] font-medium uppercase tracking-wider text-muted-foreground">
+                <span>advisory</span>
+                <span className="text-right">exposed</span>
+                <span className="text-right">while live</span>
+                <span className="text-right">act now</span>
+                <span className="text-right">unscanned</span>
+                <span>published</span>
+                <span className="text-right">cold · warm</span>
+                <span />
+              </div>
+              {incidents.map((inc) => (
+                <Link
+                  key={inc.advisory.key}
+                  href={`/incident/${inc.advisory.key}`}
+                  className="group grid grid-cols-[minmax(260px,1fr)_repeat(4,72px)_150px_130px_20px] items-center gap-x-4 px-4 py-3 text-[13px] transition-colors hover:bg-card focus-visible:bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-signal/60"
+                >
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-mono text-[13px] text-signal-2">{inc.advisory.key}</span>
+                      <Badge variant="outline" className="rounded-full font-mono text-[10px] uppercase">
+                        {inc.advisory.kind}
+                      </Badge>
+                      <Badge variant="outline" className={cn("rounded-full font-mono text-[10px] uppercase", sevTone(inc.advisory.severity))}>
+                        {inc.advisory.severity}
+                      </Badge>
                     </div>
-                    <ArrowUpRight className="ml-auto size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-signal" strokeWidth={1.75} />
+                    <div className="mt-0.5 truncate text-[12.5px] text-muted-foreground">{inc.advisory.summary}</div>
                   </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    <Metric n={inc.headline.services_exposed} label="exposed" small />
-                    <Metric n={inc.headline.resolved_while_live ?? "n/a"} label="while live" tone="text-l1" small />
-                    <Metric n={inc.headline.reachable_L2} label="act now" tone="text-l2" small />
-                  </div>
-                  <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
-                    <span className="inline-flex items-center gap-1">
-                      <Clock className="size-3" strokeWidth={1.75} /> published {fmtUtc(inc.advisory.published_at_iso)}
-                    </span>
-                    <span className="inline-flex items-center gap-1 font-mono">
-                      <GitCommitHorizontal className="size-3" strokeWidth={1.75} />
-                      blast radius {fmtMs(inc.q1_exposed.timing.cold_ms)} cold · {fmtMs(inc.q1_exposed.timing.warm_p50_ms)} warm
-                    </span>
-                    {inc.headline.unscanned > 0 && <Chip>{inc.headline.unscanned} unscanned</Chip>}
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section className="grid gap-4 md:grid-cols-3">
-        <Principle title="Lockfile is a node">
-          Exposure is a fact <em>as of a commit</em>. Every <code>package-lock.json</code> snapshot is a time-stamped node whose
-          RESOLVED edges are the flattened tree npm actually installed — so “who resolved it while it was live” is one
-          predicate comparing two relationship properties, in-engine.
-        </Principle>
-        <Principle title="One call, many sources">
-          <code>algo.MSpaths</code> takes every compromised version and every service in a single reverse traversal. No
-          client-side fan-out; the proving path comes back from the engine.
-        </Principle>
-        <Principle title="Honest windows">
-          <code>live_from</code> is exact — npm keeps the publish timestamp after erasing a version. <code>live_to</code> is an
-          upper bound and is labelled as one on every row. Unknowns are shown as unknown.
-        </Principle>
+                  <Num n={inc.headline.services_exposed} />
+                  <Num n={inc.headline.resolved_while_live ?? "n/a"} tone="text-l1" />
+                  <Num n={inc.headline.reachable_L2} tone="text-l2" />
+                  <Num n={inc.headline.unscanned} tone="text-unknown" />
+                  <span className="num text-[11.5px] text-muted-foreground">{fmtUtc(inc.advisory.published_at_iso)}</span>
+                  <span className="num text-right text-[11.5px] text-muted-foreground">
+                    {fmtMs(inc.q1_exposed.timing.cold_ms)} · {fmtMs(inc.q1_exposed.timing.warm_p50_ms)}
+                  </span>
+                  <ChevronRight className="size-4 text-muted-foreground transition-colors group-hover:text-signal" strokeWidth={1.75} />
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </section>
     </div>
   );
 }
 
-function Metric({ n, label, tone = "", small = false }: { n: number | string; label: string; tone?: string; small?: boolean }) {
-  return (
-    <div className={small ? "" : "rounded-lg border border-border bg-background/60 px-3 py-2.5"}>
-      <div className={`num leading-none ${small ? "text-2xl" : "text-3xl"} ${tone}`}>{n}</div>
-      <div className="mt-1 text-[11px] text-muted-foreground">{label}</div>
-    </div>
-  );
+function sevTone(sev: string) {
+  const s = sev.toLowerCase();
+  return s === "critical" || s === "high" ? "border-l2/40 text-l2" : s === "moderate" || s === "medium" ? "border-l1/40 text-l1" : "";
 }
 
-function Principle({ title, children }: { title: string; children: React.ReactNode }) {
+function Num({ n, tone = "" }: { n: number | string; tone?: string }) {
+  return <span className={cn("num text-right text-[15px]", n === 0 || n === "n/a" ? "text-muted-foreground" : tone)}>{n}</span>;
+}
+
+function Metric({ n, label, tone = "" }: { n: number | string; label: string; tone?: string }) {
   return (
-    <div className="rounded-lg border border-border bg-card/60 p-4 text-[13px] leading-relaxed text-muted-foreground">
-      <h3 className="mb-1 font-medium text-foreground">{title}</h3>
-      {children}
+    <div>
+      <dt className="sr-only">{label}</dt>
+      <dd className={cn("num text-3xl leading-none", tone)}>{n}</dd>
+      <dd className="mt-1 text-[11px] text-muted-foreground" aria-hidden>
+        {label}
+      </dd>
     </div>
   );
 }

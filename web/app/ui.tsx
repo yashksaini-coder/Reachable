@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { AlertTriangle, ChevronRight, Database } from "lucide-react";
-import { fmtMs } from "@/lib/incident";
+import { fmtMs } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
