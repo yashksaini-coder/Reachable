@@ -49,9 +49,11 @@ real and lets HydraDB do the walking.
 - **A console** (`web/`, Next 16) — a landing page at `/`, then `/incidents` and the incident
   report that answers the six questions with the executed Cypher on every card, a triage
   **Board**, a **Services** registry with add-by-URL ingest jobs, an **Ask** page (typed
-  questions → Cypher, live), and a **Graph** page with a live force-directed neighbourhood
-  explorer. Design: dark operations console, one accent, semantic verdict colours, every number
-  server-rendered true and never estimated.
+  questions → Cypher, live), a **Graph** page with a live force-directed neighbourhood
+  explorer, and in-app **Docs** (`/docs`, rendered from `docs/console/*.md` and
+  `docs/schema.md`). Design: dark operations console, one accent, semantic verdict colours,
+  every number server-rendered true and never estimated; live pages degrade to designed
+  states, API errors surface as toasts, unknown routes get a designed 404.
 - **An MCP server** (`worker/reachable/mcp_server.py`) exposing twelve tools so Claude Code,
   Codex, OpenCode, Cursor or Copilot can ask the graph the same questions.
 - **A badge** (`/badge/{owner}/{repo}.svg`) for READMEs.
@@ -161,7 +163,7 @@ worker/reachable/   db · ids · load · pipeline · sources/{github,npm,osv,rea
 worker/tests/       14 golden tests (isolated node on :17687)
 web/                Next 16 console (app/, lib/, api routes are server-only proxies)
 worker/out/         composed incidents (the web contract)      benchmarks/results/  stamped timings
-docs/               schema.md · JUDGE_GUIDE.md · plans/ · screenshots/
+docs/               schema.md · JUDGE_GUIDE.md · console/ (in-app docs) · plans/ · screenshots/
 demo/               services.txt · incidents.txt               AGENTS.md  source of truth for rules and engine facts
 ```
 

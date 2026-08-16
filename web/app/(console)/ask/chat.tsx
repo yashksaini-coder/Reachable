@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/components/console/toast";
 import { ArrowRight, CornerDownRight, PlugZap } from "lucide-react";
 import { describe, EXAMPLES, parseAsk, type Ask } from "@/lib/ask";
 import { Answer, sentence, type AskData } from "./answers";
@@ -18,6 +19,7 @@ export function Chat({ initialQ, healthy: initialHealthy }: { initialQ: string; 
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [draft, setDraft] = useState("");
   const [healthy, setHealthy] = useState(initialHealthy);
+  const toast = useToast();
   const box = useRef<HTMLInputElement>(null);
   const seq = useRef(0);
   const ran = useRef(false);
@@ -43,6 +45,7 @@ export function Chat({ initialQ, healthy: initialHealthy }: { initialQ: string; 
       next = r.ok && j.data ? { id, q, state: "done", ask: parsed, data: j.data } : { id, q, state: "error", ask: parsed, error: j.error ?? `HTTP ${r.status}` };
     } catch {
       next = { id, q, state: "error", ask: parsed, error: "request failed" };
+      toast.error("the question could not reach the worker", "start it with make up and ask again");
     }
     setMsgs((m) => m.map((x) => (x.id === id ? next : x)));
   }

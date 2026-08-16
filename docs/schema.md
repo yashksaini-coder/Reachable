@@ -102,7 +102,7 @@ Q3 is **only offered for `Advisory.kind = 'malware'`**. For an ordinary CVE the
 artifact stays on the registry indefinitely, `live_to` is unbounded, and
 "resolved while live" collapses into "resolved at all".
 
-## Two decisions defended on camera
+## Two decisions, defended
 
 **`Lockfile` is a node.** A service's exposure is a fact *as of a commit*.
 Each snapshot of `package-lock.json` is a `Lockfile` with `committed_at`, and

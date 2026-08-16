@@ -7,6 +7,7 @@ import { ArrowRight, Check, X } from "lucide-react";
 import type { Job, JobStep } from "@/lib/api";
 import { fmtMs } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/components/console/toast";
 
 const SLUG = /^[\w.-]+\/[\w.-]+$/;
 const normalise = (raw: string) => {
@@ -19,6 +20,7 @@ const normalise = (raw: string) => {
 export function AddRepository({ disabled, recent, prominent = false }: { disabled: boolean; recent: Job[]; prominent?: boolean }) {
   const [value, setValue] = useState("");
   const [msg, setMsg] = useState<{ text: string; tone: "error" | "note" } | null>(null);
+  const toast = useToast();
   const [busy, setBusy] = useState(false);
   const [jobId, setJobId] = useState<string | null>(null);
 
@@ -36,9 +38,13 @@ export function AddRepository({ disabled, recent, prominent = false }: { disable
         setJobId(body.job_id);
         setValue("");
         setMsg(r.status === 409 ? { text: "an ingest is already running — attached to it", tone: "note" } : { text: `queued · job ${body.job_id}`, tone: "note" });
-      } else setMsg({ text: body.error ?? `HTTP ${r.status}`, tone: "error" });
+      } else {
+        setMsg({ text: body.error ?? `HTTP ${r.status}`, tone: "error" });
+        toast.error("could not queue the repository", body.error ?? `HTTP ${r.status}`);
+      }
     } catch {
       setMsg({ text: "live API unavailable", tone: "error" });
+      toast.error("live API unavailable", "the worker on :8787 did not answer — start it with make up");
     } finally {
       setBusy(false);
     }

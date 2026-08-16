@@ -129,9 +129,16 @@ worker/
 benchmarks/results/    provenance-stamped timing JSON, same command (created on first --out)
 scripts/               probe.py, roundtrip.py — Phase 0 harnesses, kept
 web/
-  app/                 / · /incident/[advisory] · /incident/[advisory]/[service] · /badge/[owner]/[repo] · /api/health
-  lib/                 env.ts (server-only) · incident.ts (loads worker/out JSON)
-demo/services.txt      12 demo repos in two disclosed cohorts (8 core + 4 real victims), replayed by
+  app/(landing)/       / — landing (design-bundle components, real incident data)
+  app/(console)/       shell + /incidents · /incident/[advisory] · /incident/[advisory]/[owner]/[repo] · /board ·
+                       /services · /ask · /graph · /docs/[slug] · not-found · error · loading
+  app/api/*, app/badge/[owner]/[repo]   server-only proxies to the worker · README badge SVG
+  components/console/  nav (Shell) · ui (HydraCard, Question, Stat…) · toast · states · skeleton · count-up
+  components/landing/  landing sections
+  lib/                 env.ts (server-only) · incident.ts (loads worker/out JSON) · api.ts (worker) · ask.ts (grammar) ·
+                       docs.ts (markdown → html) · level.ts (verdict vocabulary, server-safe)
+docs/console/          in-app docs (overview · pages · ask · data · run); docs/schema.md is also rendered
+demo/services.txt      13 demo repos: two disclosed cohorts (8 core + 4 real victims) + 1 added via the console, replayed by
                        `make demo` as `make add` jobs — not configuration the code reads
 demo/incidents.txt     the demo advisory ids, replayed as `make incident … --out`
 requirements.txt       pinned worker deps · pyproject.toml holds only ruff/pytest config
@@ -491,6 +498,13 @@ submission text; JUDGE_GUIDE numbers filled from benchmarks.
 `web/components/console/ui.tsx`, tokens in `web/app/globals.css`, verdict vocabulary in
 `web/lib/level.ts` (server-safe). Rules that bit: exports of a `"use client"` module are
 client references on the server (LEVEL had to move to `lib/`); `pkill -f` self-kill.
+
+**Console extras (2026-08-17 ~01:00 IST):** in-app docs at `/docs/[slug]` (`web/lib/docs.ts`
+renders `docs/console/*.md` + `docs/schema.md` with `marked` at build time — edit the markdown,
+not the page); toasts (`web/components/console/toast.tsx`, `useToast()` — wired into add-repo,
+victims, ask, graph explorer); designed states (`components/console/states.tsx`: 404 inside the
+shell for both unmatched URLs and `notFound()`, route `error.tsx` with retry, loading skeletons for
+services/graph/ask). Landing "Docs" → `/docs`.
 
 **Known open items:** push to the public GitHub repo (owner action) · Vercel
 read-only deploy from committed JSON · video ≤ 3:00 in the prescribed order ·

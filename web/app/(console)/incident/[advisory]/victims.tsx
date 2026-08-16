@@ -6,6 +6,7 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { ArrowUpRight, Check, Loader2 } from "lucide-react";
 import { short } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/components/console/toast";
 
 const EASE = [0.32, 0.72, 0, 1] as const;
 
@@ -16,6 +17,7 @@ type Resp = { rows?: Victim[]; searched?: string[]; errors?: string[]; limitatio
 // them with one click. Nothing here is a verdict — watching a repo is what produces one.
 export function FindVictims({ advisory }: { advisory: string }) {
   const [state, setState] = useState<"idle" | "busy" | "done">("idle");
+  const toast = useToast();
   const [data, setData] = useState<Resp | null>(null);
   const [rows, setRows] = useState<Victim[]>([]);
   const reduce = useReducedMotion();
@@ -29,6 +31,7 @@ export function FindVictims({ advisory }: { advisory: string }) {
       setRows(r.ok ? (body.rows ?? []) : []);
     } catch {
       setData({ error: "live API unavailable" });
+      toast.error("live API unavailable", "GitHub search runs through the local worker — start it with make up");
     } finally {
       setState("done");
     }
@@ -106,6 +109,7 @@ export function FindVictims({ advisory }: { advisory: string }) {
 
 function VictimRow({ v, onWatched }: { v: Victim; onWatched: () => void }) {
   const [busy, setBusy] = useState(false);
+  const toast = useToast();
   const [jobId, setJobId] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
@@ -121,6 +125,7 @@ function VictimRow({ v, onWatched }: { v: Victim; onWatched: () => void }) {
       } else setErr(body.error ?? `HTTP ${r.status}`);
     } catch {
       setErr("live API unavailable");
+      toast.error("could not start watching", "the worker did not answer");
     } finally {
       setBusy(false);
     }

@@ -16,7 +16,8 @@ recorded in a committed JSON with the statement that produced it.
 4. Expand any **“How HydraDB answered this”** card. That is the Cypher / `algo.*` call actually
    sent over Bolt, with rows and wall-clock ms (cold and warm). It is generated from the executed
    statement, not typed into the page.
-5. Click a service → the **proving path**: `bad version ← DEPENDS_ON ← … ← RESOLVED ← lockfile`,
+5. **Docs** in the sidebar (`/docs`) explains every page, the Ask grammar, the data sources and the schema — rendered from the repo's own markdown.
+6. Click a service → the **proving path**: `bad version ← DEPENDS_ON ← … ← RESOLVED ← lockfile`,
    returned by `algo.SPpaths` — the engine explains *why*, we do not reconstruct it.
 
 ## The six track questions → where each is answered

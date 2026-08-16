@@ -326,3 +326,117 @@
 @utility blip {
   animation: blip 1s steps(2, end) infinite;
 }
+
+/* ── docs prose (markdown rendered from the repo) ──────────────────────────── */
+.doc {
+  max-width: 72ch;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--color-mut);
+}
+.doc h2 {
+  margin: 36px 0 10px;
+  font-size: 17px;
+  line-height: 1.3;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--color-fg);
+  scroll-margin-top: 24px;
+}
+.doc h3 {
+  margin: 24px 0 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-fg);
+}
+.doc p {
+  margin: 0 0 12px;
+  text-wrap: pretty;
+}
+.doc strong {
+  color: var(--color-fg);
+  font-weight: 500;
+}
+.doc a {
+  color: var(--color-signal-2);
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 176, 138, 0.35);
+  text-underline-offset: 3px;
+}
+.doc a:hover {
+  color: var(--color-signal);
+}
+.doc ul,
+.doc ol {
+  margin: 0 0 12px;
+  padding-left: 22px;
+}
+.doc li {
+  margin: 4px 0;
+}
+.doc li::marker {
+  color: var(--color-dim);
+}
+.doc code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-signal-2);
+  background: var(--color-code);
+  border: 1px solid var(--color-line);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+.doc pre {
+  margin: 12px 0 16px;
+  padding: 12px 14px;
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid var(--color-line);
+  background: var(--color-code);
+  font-size: 11.5px;
+  line-height: 1.65;
+}
+.doc pre code {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--color-signal-2);
+}
+.doc table {
+  width: 100%;
+  margin: 12px 0 18px;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  display: block;
+  overflow-x: auto;
+}
+.doc th {
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--color-dim);
+  text-align: left;
+  padding: 0 12px 9px 0;
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+.doc td {
+  padding: 10px 12px 10px 0;
+  border-bottom: 1px solid var(--color-line);
+  vertical-align: top;
+}
+.doc tr:last-child td {
+  border-bottom: 0;
+}
+.doc blockquote {
+  margin: 12px 0;
+  padding: 0 0 0 14px;
+  border-left: 2px solid var(--color-border);
+  color: var(--color-dim);
+}
+.doc hr {
+  border: 0;
+  border-top: 1px solid var(--color-line);
+  margin: 24px 0;
+}

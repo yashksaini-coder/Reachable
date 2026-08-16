@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Loader2, Network, X } from "lucide-react";
 import { ForceGraph, LABEL, type GEdge, type GNode } from "./force-graph";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/components/console/toast";
 import { HydraCard, Limits } from "@/components/console/ui";
 
 type Sample = { nodes: GNode[]; edges: GEdge[]; cypher: string[]; ms: number; limitations: string[] };
@@ -42,18 +43,26 @@ export function GraphExplorer({ services, initial }: { services: string[]; initi
   const [seed, setSeed] = useState<(typeof SEEDS)[number]>("all");
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  const toast = useToast();
 
   const load = (params: { service?: string; advisory?: string }) => {
     start(async () => {
       setSelected(null);
       setError(null);
       const qs = new URLSearchParams(params.service ? { service: params.service } : { advisory: params.advisory ?? "" });
-      const r = await fetch(`/api/graph?${qs}`, { cache: "no-store" });
-      const j = await r.json();
-      if (!r.ok) {
-        setError(j.error ?? `HTTP ${r.status}`);
+      try {
+        const r = await fetch(`/api/graph?${qs}`, { cache: "no-store" });
+        const j = await r.json();
+        if (!r.ok) {
+          setError(j.error ?? `HTTP ${r.status}`);
+          setData(null);
+          toast.error("the neighbourhood could not be loaded", j.error ?? `HTTP ${r.status}`);
+        } else setData(j);
+      } catch {
+        setError("live API unavailable");
         setData(null);
-      } else setData(j);
+        toast.error("live API unavailable", "the worker on :8787 did not answer — start it with make up");
+      }
     });
   };
   useEffect(() => {
@@ -236,7 +245,7 @@ export function GraphExplorer({ services, initial }: { services: string[]; initi
             <p className="max-w-[44ch] text-pretty text-center text-[13px] text-mut">
               {error ? "The worker could not return this neighbourhood." : data ? "Nothing in the neighbourhood yet — advisories may not be ingested." : "Pick a service or an advisory to render its neighbourhood."}
             </p>
-            {error && <p className="font-mono text-[11px] text-l2">{error}</p>}
+            {error && <p className="font-mono text-[11px] text-l1">{error}</p>}
           </Canvas>
         )}
       </div>

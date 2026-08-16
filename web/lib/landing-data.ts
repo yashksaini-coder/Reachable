@@ -13,7 +13,7 @@ import { C } from './verdict';
 export const LINKS = {
   connect: '/services',
   console: '/incidents',
-  docs: 'https://github.com/yashksaini-coder/Reachable#readme',
+  docs: '/docs',
   status: '/graph',
 };
 
