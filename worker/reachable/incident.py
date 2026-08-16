@@ -259,7 +259,9 @@ def print_report(p: dict) -> None:
         )
     if p["q3_while_live"]:
         q3 = p["q3_while_live"]
-        print(f"  Q3 resolved while live ({q3['ms']} ms): {len(q3['services'])} services")
+        print(
+            f"  Q3 resolved while live ({q3['ms']} ms): {len(q3['services'])} services — {q3['in_window']} in window, {q3['pinned_removed']} pin a removed version"
+        )
         for r in q3["rows"][:10]:
             print(
                 f"    {r['service']:<28} {r['sha'][:12]}  at {r['resolved_at_iso']}  window→{r['live_to_iso']} [{r['live_to_kind']}]"

@@ -167,28 +167,44 @@ def q1_blast_radius_count(
 
 
 def q3_resolved_while_live(s, advisory_key: str) -> Result:
-    """Which lockfiles resolved an affected version INSIDE its live window.
+    """Which lockfiles resolved an affected version while it was installable.
 
-    One query for the whole incident. The window predicate compares two relationship properties
-    in-engine (RESOLVED.at vs AFFECTS.live_from/live_to). No transitive arm is needed: RESOLVED
-    is the flattened tree, so an indirect dependency still has its own RESOLVED edge.
+    Two in-engine evidence classes, both one query for the whole incident, no transitive arm
+    (RESOLVED is the flattened tree, so an indirect dependency has its own RESOLVED edge):
+      in_window      — the lockfile was committed inside [live_from, live_to]: two relationship
+                       properties compared in-engine (RESOLVED.at vs AFFECTS.live_from/live_to).
+      pinned_removed — the lockfile pins a version npm has since erased. Only possible while it
+                       was live, whatever the commit time; catches commits after the (upper-bound)
+                       takedown and windows we cannot bound.
     """
     res = Result([], 0.0)
     a = _int(gid(advisory_key))
-    res.rows = _run(
-        s,
-        res,
+    head = (
         f"MATCH (a:Advisory {{id: {a}}})-[af:AFFECTS]->(v:Version)<-[r:RESOLVED]-(l:Lockfile)"
         "<-[:HAS_LOCKFILE]-(sv:Service) "
-        "WHERE r.at >= af.live_from AND r.at <= af.live_to "
-        "RETURN sv.key AS service, l.key AS lockfile, l.sha AS sha, r.at AS resolved_at, "
-        "v.key AS version, af.live_from AS live_from, af.live_to AS live_to, "
-        "af.live_to_kind AS live_to_kind ORDER BY r.at ASC",
     )
+    tail = (
+        "RETURN sv.key AS service, l.key AS lockfile, l.sha AS sha, r.at AS resolved_at, "
+        "v.key AS version, v.removed AS removed, af.live_from AS live_from, af.live_to AS live_to, "
+        "af.live_to_kind AS live_to_kind ORDER BY r.at ASC"
+    )
+    seen: dict[tuple[str, str, str], dict] = {}
+    for row in _run(s, res, head + "WHERE r.at >= af.live_from AND r.at <= af.live_to " + tail):
+        seen[(row["service"], row["lockfile"], row["version"])] = {**row, "evidence": "in_window"}
+    for row in _run(s, res, head + "WHERE v.removed = true " + tail):
+        k = (row["service"], row["lockfile"], row["version"])
+        if k in seen:
+            seen[k]["evidence"] = "in_window+pinned_removed"
+        else:
+            seen[k] = {**row, "evidence": "pinned_removed"}
+    res.rows = sorted(seen.values(), key=lambda r: (r["resolved_at"], r["service"]))
     res.meta["services"] = sorted({r["service"] for r in res.rows})
+    res.meta["in_window"] = sum(1 for r in res.rows if r["evidence"].startswith("in_window"))
+    res.meta["pinned_removed"] = sum(1 for r in res.rows if "pinned_removed" in r["evidence"])
     res.limitations.append(
-        "A lockfile commit inside the window means the pin was live when the artifact was "
-        "installable; it does not prove an install happened."
+        "in_window: the pin was committed while the artifact was installable; it does not prove "
+        "an install happened. pinned_removed: the lockfile pins a version npm has erased, which "
+        "is only possible while it was live — commit time is irrelevant."
     )
     return res
 

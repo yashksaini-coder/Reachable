@@ -6,6 +6,7 @@ is published anywhere; `next_surviving_publish` is the live_to upper-bound proxy
 """
 
 import re
+import time
 from datetime import datetime
 
 from reachable.http import HttpError, get_json
@@ -109,6 +110,9 @@ def downloads(names: list[str]) -> dict[str, int]:
     scoped = [n for n in names if n.startswith("@")]
     plain = [n for n in names if not n.startswith("@")]
     for n in scoped:
+        # api.npmjs.org 429s a burst of single-name calls into minutes of backoff; the cache
+        # makes this a one-time cost, so pace it rather than fight it.
+        time.sleep(0.35)
         try:
             d = get_json(f"{DOWNLOADS}/{n}", ok404=True)
         except HttpError as e:  # downloads are a ranking signal, never worth failing an ingest

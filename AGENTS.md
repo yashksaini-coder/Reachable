@@ -295,6 +295,39 @@ Everything below was run against the live node. Full detail in the
       vs 84 sequential single-arm queries 766 ms on the fixture. Q3's
       transitive arm stays a per-version loop — simpler, same speed.
 
+### Third round — 2026-08-16 evening, against the REAL graph (8 services, 110 lockfiles, 6k packages, 69k versions)
+
+The fixture was ~100× too sparse to show any of this. Every item below reshaped a query.
+
+- [x] **`RESOLVED` is the flattened install tree**, so "does this lockfile pull in X" is
+      one hop (**17 ms** for 110 lockfiles / 8 services). The transitive `*1..8` arms the
+      spec drafted for Q1/Q3/Q4 were redundant — and fatal, see next two items.
+- [x] **Incoming var-length from a popular version explodes**: `MATCH (bad {id})<-[:DEPENDS_ON*1..8]-…`
+      hits the 30 s query timeout even at `*1..1`; targeted `MSpaths` with `pathCount: 1000`
+      is refused by admission control: `native_path_frontier_paths … 250001 exceeds limit 250000`.
+- [x] **Untargeted `MSpaths` from a bad version returns 0 services**: 1000 partial
+      `DEPENDS_ON` paths saturate `resultLimit` before any reaches a `Service`. Always pass
+      `targetLabel/targetProperty/targetValues` and keep `pathCount` small.
+- [x] **`algo.SPpaths(sourceNode, targetNode, …)` with integer-id parameters** yields the
+      proving chain (`bad ← DEPENDS_ON ← dep ← RESOLVED ← lockfile`) in **600 ms cold /
+      1 ms warm**, `pathCount: 3`. This is Q1's explanation, with zero literal surface.
+- [x] **Latency is bimodal — cold vs warm.** Same targeted MSpaths: **5.4 s cold, 2 ms
+      warm**. Object-store-native engine; the first touch pages data in. Every quoted
+      number carries a cold/warm label or is `TBD`. `incident.py --runs N` records both.
+- [x] **Whole-type edge counts time out** past ~100k edges — labelled or not
+      (`cypher_relationship_edge_records exceeded query timeout`). Never
+      `MATCH (a)-[r:RESOLVED]->(b) RETURN count(*)`; count small types only, log big
+      ones at write time.
+- [x] **Node deletion by id is a full scan**: `MATCH (n {id}) DELETE n` ≈ **1.3 s per row**
+      at 25k nodes; `DETACH DELETE` the same. Edge deletion (both ends id-anchored) is 5 ms.
+      Design so node deletion is never needed; the fixture wipe deletes edges only.
+- [x] **`null` is not a valid `UNWIND` parameter** ("only boolean, signed integer, finite
+      float, and string"). `load.py` omits `None`-valued properties per row.
+- [x] `RETURN … ORDER BY` with an aggregate cannot reference row properties:
+      `aggregate ORDER BY cannot reference row properties`. Sort in Python.
+- [x] Anonymous labelled nodes need a name: `(:Lockfile)` refused (`node labels and
+      non-id properties require a named node`); write `(l:Lockfile)`.
+
 Still unverified: HTTP `consistency: "strong"` round trip · weighted paths.
 
 **Workflow when unsure:** add a case to `make probe` and run it. Ten seconds of

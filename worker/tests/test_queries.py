@@ -70,9 +70,13 @@ def test_q3_resolved_while_live(s):
         ("svc:acme/webapp", "lock:acme/webapp@aaaa"),  # T0+150, inside [T0+100, T0+200]
         ("svc:acme/reachy", "lock:acme/reachy@ffff"),  # T0+150, inside
     }, hits
-    # webapp@bbbb is AFTER the window (T0+300); api@cccc is BEFORE (T0+50); both excluded
+    # webapp@bbbb is AFTER the window (T0+300) and resolves the FIXED 5.6.2; api@cccc is
+    # BEFORE (T0+50) with the clean 5.6.0. Neither pins a removed version, so neither appears.
     assert r.meta["services"] == ["svc:acme/reachy", "svc:acme/webapp"]
-    assert len(r.cypher) == 1 and "r.at >= af.live_from" in r.cypher[0]  # one in-engine query
+    assert all(row["evidence"] == "in_window+pinned_removed" for row in r.rows)
+    assert r.meta == {"services": r.meta["services"], "in_window": 2, "pinned_removed": 2}
+    assert len(r.cypher) == 2 and "r.at >= af.live_from" in r.cypher[0]
+    assert "v.removed = true" in r.cypher[1]
 
 
 def test_q3_open_window_cve(s):
