@@ -469,32 +469,43 @@ Before reporting any task complete:
 
 > Keep this current. It is how a fresh agent session knows where things stand.
 
-**Current phase:** Phases 0–4 and 6 (L0/L1) built; real ingest of 12 seeds in
-progress; Phase 5 (differentiator UI) mostly landed with the console; next are
-the first real incident JSON, README, deploy, video.
+**Current phase (2026-08-16, ~20:30 IST):** everything through Phase 7 built and
+running on real data; remaining are deploy (Phase 8), video + form (Phase 9).
 
-**Last verified working (2026-08-16 evening):**
-`make node` · `make fixture` · `make test` (11 golden tests, lint, leak check) ·
-`make incident ID=MAL-TEST-1` on the fixture · `make ingest` services + packages
-stages against real GitHub/npm/OSV data (8 core + 4 victim repos, ~6.2k packages,
-~110 lockfile snapshots; three real lockfiles pin `debug@4.4.2` / `chalk@5.6.1`
-inside or after the 2025-09-08 window) · `web/` builds and prerenders from
-committed JSON.
+**Last verified working:** `make node` (prod, :7687) · `make node-test` +
+`make test` (14 golden tests, lint, leak check — isolated node :17687) ·
+clean real ingest of 13 services / 246 lockfiles / 6.4k packages / 55k versions /
+657 advisories / 3k maintainers · three real incidents composed with cold/warm
+timings and committed (`worker/out/*.json`, `benchmarks/results/*`):
+`MAL-2025-46974` (debug — 3 exposed, 3 while live, 2 in-window), `MAL-2025-46969`
+(chalk — 1, pinned_removed), `GHSA-g7cv-rxg3-hmpx` (TanStack — 0, fresh-advisory
+ingest inside compose) · console builds and prerenders them (Incidents, incident
+page with six answer cards, Board, Services + add-by-URL jobs, Ask, Graph) ·
+"Beyond the watched set" (GitHub code search → watch) · MCP stdio server
+(12 tools, `.mcp.json`) verified with a stdio client · README written as the
+submission text; JUDGE_GUIDE numbers filled from benchmarks.
 
-**Known open items:** ingest stages advisories→reach→typosquats→verify must
-complete on the real graph; `worker/out/*.json` and `benchmarks/results/*` are
-empty until `make incident … --out` runs with the ingest idle; README is a stub;
-no deploy; no video. `docs/JUDGE_GUIDE.md` has `see benchmarks/results/` where
-numbers belong — fill from measurements only.
+**Known open items:** push to the public GitHub repo (owner action) · Vercel
+read-only deploy from committed JSON · video ≤ 3:00 in the prescribed order ·
+form · final disqualifier pass (private-window links, no pre-Aug-12 commits,
+licence, `.env` never committed).
 
-**Decisions this session:** RESOLVED is the closure (transitive arms removed
-everywhere); Q3 has two in-engine evidence classes (in_window, pinned_removed);
-`unscanned` is a first-class verdict; CLI cut; chalk/debug is the primary
-incident, TanStack the Q2 story; every payload section carries the executed
-Cypher and its limitations.
+**Decisions:** RESOLVED is the closure (no var-length anywhere); Q3 evidence
+classes in_window + pinned_removed; `unscanned` is a first-class verdict; CLI
+cut (badge + MCP are the other surfaces); seeds.json removed — services are a
+registry in the graph, `demo/*.txt` are replays; Q4 exposure capped to the 8
+most-downloaded co-maintained packages (rest = `null` → "not computed", never 0);
+Q5 one row per package; no LLM — Ask is a typed grammar → Cypher; every payload
+section carries the executed Cypher and its limitations; 408/429/5xx never cached.
+
+**Process gotchas (cost us restarts today):** never `pkill -f` a pattern that also
+appears in your own shell command line (`pkill -f "[r]eachable.api"` inside a
+compound command that also *starts* `reachable.api` kills the shell — exit 144);
+kill by pid from `ss -ltnp` or `pgrep -af` output instead. Never `pkill next-server`
+or broad patterns — the node runs in the same session.
 
 Phases: 0 engine · 1 model · 2 ingestion · 3 queries · 4 web · 5 differentiators
-· 6 reachability · 7 badge · 8 deploy · 9 submission.
+· 6 reachability · 7 badge/MCP · 8 deploy · 9 submission.
 See `docs/spec-v3.md` for each phase's goal, done-when, and cut-if-late.
 
 ---
