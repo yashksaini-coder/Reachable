@@ -1,4 +1,4 @@
-.PHONY: venv node node-test node-test-stop node-stop node-logs roundtrip probe fixture ingest incident lint test api web web-build up down add reset demo
+.PHONY: mcp venv node node-test node-test-stop node-stop node-logs roundtrip probe fixture ingest incident lint test api web web-build up down add reset demo
 
 DATA    := $(CURDIR)/.hydradb
 PY      := $(CURDIR)/.venv/bin/python
@@ -97,6 +97,11 @@ test: lint
 
 api:
 	$(PY) -m reachable.api
+
+# MCP (stdio) server for coding agents; needs `make api` running. Registered for Claude Code
+# via .mcp.json; other agents: command .venv/bin/python, args -m reachable.mcp_server, PYTHONPATH=worker
+mcp:
+	$(PY) -m reachable.mcp_server
 
 web:
 	cd web && npm run dev

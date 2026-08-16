@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "reachable": {
+      "command": ".venv/bin/python",
+      "args": [
+        "-m",
+        "reachable.mcp_server"
+      ],
+      "env": {
+        "PYTHONPATH": "worker"
+      }
+    }
+  }
+}
