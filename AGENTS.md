@@ -66,6 +66,18 @@ Authoritative sources for this project, in order:
 2. `cypher-compat.md` in that repo — the supported OpenCypher subset
 3. A probe query against our running local node (see §6)
 
+**Nuance added 2026-08-16 after reading the official Participant Guide.** The
+guide's resources page lists `docs.hydradb.com` ("start here when you are
+building"), `dashboard.hydradb.com` and `research.hydradb.com` as legitimate
+event resources alongside the OSS repo. So those domains are not radioactive —
+they are one vendor documenting both a hosted service and an engine. What stays
+true is narrower and still binding: **nothing on those sites governs the API
+shape of the OSS engine.** Read them for background, benchmarks and account
+keys; never for query syntax, driver choice or write patterns. The marker list
+above is unchanged — `graph_payload`, BYOG, collections and `hydradb-sdk` remain
+proof you have drifted onto the hosted product. Ranking above is unchanged too:
+repo docs, then `cypher-compat.md`, then a probe against the running node.
+
 ---
 
 ## 4. Stack
@@ -308,11 +320,51 @@ See `docs/spec-v3.md` for each phase's goal, done-when, and cut-if-late.
 
 ---
 
-## 13. Deadline
+## 13. Deadline and submission
 
 **August 20, 2026, 11:59 PM PT.** Submission needs three things, all required:
 public repo · demo video **≤ 3:00** · completed form.
 
 Reserve time for submission a full day early. Open every link yourself in a
 private window before submitting — broken links are the most common way people
-lose.
+lose. The guide says it outright: *"Most disqualifications are a missing link,
+not a weak project."*
+
+Form: <https://forms.gle/GrMYKxLj9zPQcqqc8>. The `forms.gle/WEwqEmmN7Bkp4HyJ6`
+link that circulated earlier resolves to the **same** form — verified 2026-08-16,
+both redirect to `docs.google.com/forms/d/e/1FAIpQLSdXpGqgsxPKRlaii1MXjlFCAfKYRBOxO8xa801LmT6z65IejA`.
+Either is safe.
+
+### Straight from the official Participant Guide
+
+**The video has a prescribed running order** — four beats, in this sequence:
+the problem · the project (what you built) · the demo (show it working) ·
+HydraDB (where it is used, and why it matters). Our script in `docs/spec-v3.md`
+§7 already follows this order. Do not reorder it to be clever.
+
+**The repo must carry**, and judges must find without asking for access:
+complete source · OSS licence · no participant-authored commits before Aug 12 ·
+a clear README · setup and run instructions that *actually work* · an
+explanation of how HydraDB is used · dependency and environment information ·
+attribution.
+
+**The form asks for** project name and short description · the problem · what
+you built · deployed link (if any) · how the project uses HydraDB · tech stack ·
+team members and contributions · repo and video links. Write the README so
+these are copy-paste, not composed under deadline pressure.
+
+**Track 02 has no mandated dataset.** Tracks 01 and 03 ship one; ours says bring
+your own — so `seeds.yaml` and every source in §6 **must be disclosed in the
+README**. That is a stated rule, not politeness.
+
+**Track 02 is scored on precision, recall, query latency and cost**, with ground
+truth from OSV and the GitHub Advisory Database. Latency we already measure.
+**Cost is the lever nobody else will pull** — HydraDB is object-store-native, so
+a per-query cost or bytes-scanned figure from the admin endpoint is a cheap,
+on-theme differentiator. Only report it if it is measured.
+
+Balance this against the judging line, which is explicit and in our favour:
+*"We care about working, thoughtful products, not just benchmark scores."*
+Product first, always. And the guide's closing advice, which is the cut order in
+one sentence: *"Stop adding features before the deadline. Test what you already
+built."*
