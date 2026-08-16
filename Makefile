@@ -1,4 +1,4 @@
-.PHONY: venv node node-stop node-logs roundtrip probe fixture ingest incident lint test web
+.PHONY: venv node node-stop node-logs roundtrip probe fixture ingest incident lint test api web
 
 DATA    := $(CURDIR)/.hydradb
 PY      := $(CURDIR)/.venv/bin/python
@@ -69,6 +69,9 @@ test: lint
 	$(PY) -m pytest -q
 	@! grep -rnE "process\.env\.NEXT_PUBLIC|NEXT_PUBLIC_[A-Z_]*(HYDRA|TOKEN)" web/app web/lib web/.env* 2>/dev/null \
 	  || (echo "NEXT_PUBLIC_ var found — token leak risk"; exit 1)
+
+api:
+	$(PY) -m reachable.api
 
 web:
 	cd web && npm run dev

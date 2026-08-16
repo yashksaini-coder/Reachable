@@ -31,8 +31,8 @@ export default async function ServicePage({ params }: PageProps<"/incident/[advi
 
   return (
     <div className="space-y-8">
-      <div className="text-xs text-zinc-500">
-        <Link href={`/incident/${inc.advisory.key}`} className="hover:text-zinc-200">
+      <div className="text-xs text-ink-3">
+        <Link href={`/incident/${inc.advisory.key}`} className="hover:text-ink">
           {inc.advisory.key}
         </Link>{" "}
         / {svcSlug(key)}
@@ -41,27 +41,27 @@ export default async function ServicePage({ params }: PageProps<"/incident/[advi
         <h1 className="font-mono text-2xl">{svcSlug(key)}</h1>
         <div className="mt-2 flex items-center gap-3">
           <Level level={level} />
-          <span className="text-sm text-zinc-300">{verdict[level]}</span>
+          <span className="text-sm text-ink-2">{verdict[level]}</span>
         </div>
       </header>
 
       <section>
-        <h2 className="mb-2 text-sm font-medium text-zinc-200">Why this service is exposed</h2>
+        <h2 className="mb-2 text-sm font-medium text-ink">Why this service is exposed</h2>
         <div className="space-y-3">
           {rows.map((r) => (
-            <div key={r.lockfile} className="rounded border border-zinc-800 bg-zinc-900/40 p-4">
+            <div key={r.lockfile} className="rounded border border-line bg-panel p-4">
               <div className="flex flex-wrap items-baseline gap-3 font-mono text-xs">
-                <span className="text-zinc-300">lockfile {r.sha.slice(0, 12)}</span>
-                <span className="text-zinc-500">committed {fmtUtc(new Date(r.committed_at * 1000).toISOString())}</span>
-                <span className="text-zinc-500">
+                <span className="text-ink-2">lockfile {r.sha.slice(0, 12)}</span>
+                <span className="text-ink-3">committed {fmtUtc(new Date(r.committed_at * 1000).toISOString())}</span>
+                <span className="text-ink-3">
                   resolves {r.bad_versions.map(short).join(", ")}
                 </span>
                 {live.some((l) => l.lockfile === r.lockfile) && (
-                  <span className="rounded bg-amber-500/15 px-1.5 text-amber-300">resolved while live</span>
+                  <span className="rounded bg-l1/15 px-1.5 text-l1">resolved while live</span>
                 )}
               </div>
               <div className="mt-3 space-y-1">
-                {r.paths.length === 0 && <div className="text-xs text-zinc-500">direct RESOLVED edge (no explanation path requested)</div>}
+                {r.paths.length === 0 && <div className="text-xs text-ink-3">direct RESOLVED edge (no explanation path requested)</div>}
                 {r.paths.map((p, i) => (
                   <div key={i} className="flex flex-wrap items-center gap-1 font-mono text-xs">
                     {p.chain.map((el, j) =>
@@ -69,18 +69,18 @@ export default async function ServicePage({ params }: PageProps<"/incident/[advi
                         <span
                           key={j}
                           className={`rounded px-1.5 py-0.5 ${
-                            j === 0 ? "bg-red-500/15 text-red-300" : j === p.chain.length - 1 ? "bg-zinc-700/50 text-zinc-200" : "bg-zinc-800 text-zinc-300"
+                            j === 0 ? "bg-l2/15 text-l2" : j === p.chain.length - 1 ? "bg-panel-2 text-ink" : "bg-panel-2 text-ink-2"
                           }`}
                         >
                           {short(el)}
                         </span>
                       ) : (
-                        <span key={j} className="text-zinc-600">
+                        <span key={j} className="text-ink-3">
                           ←{el}←
                         </span>
                       ),
                     )}
-                    <span className="ml-2 text-zinc-500">
+                    <span className="ml-2 text-ink-3">
                       {p.hops === 0 ? "direct dependency" : `${p.hops} hop${p.hops === 1 ? "" : "s"}`}
                     </span>
                   </div>
@@ -94,24 +94,24 @@ export default async function ServicePage({ params }: PageProps<"/incident/[advi
 
       {reach && (
         <section>
-          <h2 className="mb-2 text-sm font-medium text-zinc-200">Reachability</h2>
-          <div className="rounded border border-zinc-800 bg-zinc-900/40 p-4 text-sm">
-            <div className="text-xs text-zinc-400">{reach.files_scanned} first-party files scanned</div>
+          <h2 className="mb-2 text-sm font-medium text-ink">Reachability</h2>
+          <div className="rounded border border-line bg-panel p-4 text-sm">
+            <div className="text-xs text-ink-2">{reach.files_scanned} first-party files scanned</div>
             {reach.imports.length > 0 && (
               <ul className="mt-2 space-y-1 font-mono text-xs">
                 {reach.imports.map((i, k) => (
                   <li key={k}>
-                    {i.path}:{i.line} <span className="text-zinc-500">imports {short(i.package)}</span>
+                    {i.path}:{i.line} <span className="text-ink-3">imports {short(i.package)}</span>
                   </li>
                 ))}
               </ul>
             )}
             {reach.symbols.length > 0 && (
-              <ul className="mt-2 space-y-1 font-mono text-xs text-red-300">
+              <ul className="mt-2 space-y-1 font-mono text-xs text-l2">
                 {reach.symbols.map((s, k) => (
                   <li key={k}>
                     {s.path}:{s.line} uses {s.symbol}
-                    {s.inferred && <span className="ml-2 text-zinc-500">(symbol inferred from advisory prose)</span>}
+                    {s.inferred && <span className="ml-2 text-ink-3">(symbol inferred from advisory prose)</span>}
                   </li>
                 ))}
               </ul>
@@ -124,13 +124,13 @@ export default async function ServicePage({ params }: PageProps<"/incident/[advi
 
       {live.length > 0 && (
         <section>
-          <h2 className="mb-2 text-sm font-medium text-zinc-200">Resolved while live</h2>
+          <h2 className="mb-2 text-sm font-medium text-ink">Resolved while live</h2>
           <ul className="space-y-1 font-mono text-xs">
             {live.map((l, i) => (
-              <li key={i} className="rounded border border-zinc-800 px-3 py-2">
+              <li key={i} className="rounded border border-line px-3 py-2">
                 {l.sha.slice(0, 12)} · committed {fmtUtc(l.resolved_at_iso)} · {short(l.version)} ·{" "}
-                <span className={l.evidence.includes("in_window") ? "text-amber-300" : "text-red-300"}>{l.evidence.replace("+", " + ")}</span>
-                <span className="text-zinc-500">
+                <span className={l.evidence.includes("in_window") ? "text-l1" : "text-l2"}>{l.evidence.replace("+", " + ")}</span>
+                <span className="text-ink-3">
                   {" "}
                   · window {fmtUtc(l.live_from_iso)} → {fmtUtc(l.live_to_iso)} ({l.live_to_kind.replace("_", " ")})
                 </span>
