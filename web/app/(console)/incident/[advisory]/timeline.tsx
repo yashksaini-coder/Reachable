@@ -42,8 +42,8 @@ export function Timeline({ rows, versions, advisoryPublished }: { rows: WhileLiv
   const inWin = cluster(rows.filter((r) => r.evidence.includes("in_window")).map((r) => [x(r.resolved_at), r] as const));
   const removed = cluster(rows.filter((r) => !r.evidence.includes("in_window")).map((r) => [x(r.resolved_at), r] as const));
   const adX = x(advisoryPublished);
-  // A 90-minute window on a multi-day axis is a sliver: lift its label above the bar so it never
-  // collides with the `upper bound` label at the bar's right edge.
+  // A 90-minute window on a multi-day axis is a sliver: put its label to the LEFT of the bar so it
+  // never collides with the `upper bound` label at the bar's right edge or the advisory rule.
   const narrow = x(barEnd) - x(barStart) < 170;
   const adFlip = adX > X1 - 140;
 
@@ -70,7 +70,7 @@ export function Timeline({ rows, versions, advisoryPublished }: { rows: WhileLiv
           </rect>
         ))}
         {upper && <line x1={x(barEnd)} y1={70} x2={x(barEnd)} y2={106} className="stroke-signal" strokeWidth={1.4} strokeDasharray="3 3" />}
-        <text x={narrow ? x(barStart) : x(barStart) + 8} y={narrow ? 66 : 92} className="fill-signal-2 font-mono text-[11px]">
+        <text x={narrow ? x(barStart) - 8 : x(barStart) + 8} y={92} textAnchor={narrow ? "end" : "start"} className="fill-signal-2 font-mono text-[11px]">
           installable · {bounded.length} version{bounded.length === 1 ? "" : "s"}
         </text>
         {upper && (
