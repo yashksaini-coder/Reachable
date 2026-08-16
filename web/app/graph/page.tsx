@@ -1,4 +1,5 @@
-import { graphStats, jobs, type GraphStats, type Job } from "@/lib/api";
+import { graphStats, jobs, services as listServices, type GraphStats, type Job } from "@/lib/api";
+import { GraphExplorer } from "./explorer";
 import { fmtMs } from "@/lib/incident";
 import { Stat } from "@/app/ui";
 import { cn } from "@/lib/utils";
@@ -31,7 +32,8 @@ const when = (t: string | number | null | undefined) =>
   t == null ? "—" : new Date(typeof t === "number" ? t * 1000 : t).toISOString().replace("T", " ").replace(/\.\d+Z$/, "Z");
 
 export default async function GraphPage() {
-  const [stats, list]: [GraphStats | null, Job[] | null] = await Promise.all([graphStats(), jobs()]);
+  const [stats, list, svcs]: [GraphStats | null, Job[] | null, Awaited<ReturnType<typeof listServices>>] = await Promise.all([graphStats(), jobs(), listServices()]);
+  const names = (svcs ?? []).map((s) => s.key.replace(/^svc:/, "")).sort();
 
   return (
     <div className="space-y-8">
@@ -41,6 +43,8 @@ export default async function GraphPage() {
           what is in HydraDB right now · counted live over Bolt
         </span>
       </header>
+
+      {svcs && names.length > 0 && <GraphExplorer services={names} initial={{ service: names[0] }} />}
 
       {!stats ? (
         <Unavailable what="counts" />

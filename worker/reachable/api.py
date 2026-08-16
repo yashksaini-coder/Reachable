@@ -246,6 +246,145 @@ def graph_stats(s) -> dict:
     return {"nodes": nodes, "edges_written": edges, "last_ingest": last}
 
 
+def graph_sample(s, q) -> dict:
+    """A bounded, anchored neighbourhood for the console's graph view. Never a scan.
+
+    ?service=owner/repo  → the service, its lockfiles (≤10), the advisory-affected versions
+                           they resolve (≤40), those versions' packages, the advisories, and
+                           the packages' maintainers (≤20)
+    ?advisory=<id>       → the advisory, affected versions that some lockfile resolved (≤40),
+                           their packages, the lockfiles (≤30) and services
+    Every hop is anchored on an id; caps keep the picture readable and the query bounded.
+    """
+    nodes: dict[str, dict] = {}
+    edges: list[dict] = []
+    ex: list[str] = []
+    res = queries.Result([], 0.0)
+
+    def add(key: str, label: str, **props):
+        nodes.setdefault(key, {"id": key, "label": label, **props})
+
+    def link(a: str, t: str, b: str):
+        edges.append({"s": a, "t": b, "type": t})
+
+    svc = _svc(q, required=False)
+    adv = (q.get("advisory") or [""])[0].strip()
+    if svc:
+        add(svc, "Service", name=svc[4:])
+        lfs = queries._run(
+            s,
+            res,
+            f"MATCH (sv:Service {{id: {gid(svc)}}})-[:HAS_LOCKFILE]->(l:Lockfile) "
+            "RETURN l.key AS k, l.id AS id, l.sha AS sha, l.committed_at AS at ORDER BY l.committed_at DESC",
+        )[:10]
+        for lf in lfs:
+            add(lf["k"], "Lockfile", sha=lf["sha"][:12], at=lf["at"])
+            link(svc, "HAS_LOCKFILE", lf["k"])
+        seen_v = 0
+        for lf in lfs:
+            for r in queries._run(
+                s,
+                res,
+                f"MATCH (l:Lockfile {{id: {lf['id']}}})-[:RESOLVED]->(v:Version)<-[af:AFFECTS]-(a:Advisory) "
+                "MATCH (v)-[:VERSION_OF]->(p:Package) "
+                "RETURN v.key AS v, v.id AS vid, p.key AS p, p.id AS pid, a.key AS a, a.kind AS kind, a.severity AS sev",
+            ):
+                if r["v"] not in nodes:
+                    if seen_v >= 40:
+                        continue
+                    seen_v += 1
+                add(r["v"], "Version", removed=False)
+                add(r["p"], "Package")
+                add(r["a"], "Advisory", kind=r["kind"], severity=r["sev"])
+                link(lf["k"], "RESOLVED", r["v"])
+                link(r["v"], "VERSION_OF", r["p"])
+                link(r["a"], "AFFECTS", r["v"])
+        if seen_v == 0 and lfs:
+            # nothing advisory-affected (yet): show the newest lockfile's first resolved packages
+            # so the neighbourhood is never an empty picture
+            for r in queries._run(
+                s,
+                res,
+                f"MATCH (l:Lockfile {{id: {lfs[0]['id']}}})-[:RESOLVED]->(v:Version)-[:VERSION_OF]->(p:Package) "
+                "RETURN v.key AS v, p.key AS p ORDER BY p.key ASC LIMIT 24",
+            ):
+                add(r["v"], "Version")
+                add(r["p"], "Package")
+                link(lfs[0]["k"], "RESOLVED", r["v"])
+                link(r["v"], "VERSION_OF", r["p"])
+        pk = [n for n in nodes.values() if n["label"] == "Package"][:15]
+        mcount = 0
+        for pnode in pk:
+            for r in queries._run(
+                s,
+                res,
+                f"MATCH (p:Package {{id: {gid(pnode['id'])}}})<-[:MAINTAINS]-(m:Maintainer) RETURN m.key AS m",
+            ):
+                if mcount >= 20 and r["m"] not in nodes:
+                    continue
+                if r["m"] not in nodes:
+                    mcount += 1
+                add(r["m"], "Maintainer")
+                link(r["m"], "MAINTAINS", pnode["id"])
+    elif adv:
+        if not _ADV.match(adv):
+            raise Bad("advisory must look like GHSA-…/MAL-…/CVE-…")
+        a = queries._run(
+            s,
+            res,
+            f"MATCH (a:Advisory {{id: {gid(adv)}}}) RETURN a.key AS k, a.kind AS kind, a.severity AS sev",
+        )
+        if not a:
+            raise Bad("advisory not in graph")
+        add(adv, "Advisory", kind=a[0]["kind"], severity=a[0]["sev"])
+        rows = queries._run(
+            s,
+            res,
+            f"MATCH (a:Advisory {{id: {gid(adv)}}})-[:AFFECTS]->(v:Version)<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) "
+            "MATCH (v)-[:VERSION_OF]->(p:Package) "
+            "RETURN v.key AS v, p.key AS p, l.key AS l, l.sha AS sha, l.committed_at AS at, sv.key AS sv",
+        )
+        vs, ls = set(), set()
+        for r in rows:
+            if r["v"] not in vs and len(vs) >= 40:
+                continue
+            if r["l"] not in ls and len(ls) >= 30:
+                continue
+            vs.add(r["v"])
+            ls.add(r["l"])
+            add(r["v"], "Version")
+            add(r["p"], "Package")
+            add(r["l"], "Lockfile", sha=r["sha"][:12], at=r["at"])
+            add(r["sv"], "Service", name=r["sv"][4:])
+            link(adv, "AFFECTS", r["v"])
+            link(r["v"], "VERSION_OF", r["p"])
+            link(r["l"], "RESOLVED", r["v"])
+            link(r["sv"], "HAS_LOCKFILE", r["l"])
+        if not rows:
+            # still show the affected versions/packages even if no watched service resolves them
+            for r in queries._run(
+                s,
+                res,
+                f"MATCH (a:Advisory {{id: {gid(adv)}}})-[:AFFECTS]->(v:Version)-[:VERSION_OF]->(p:Package) RETURN v.key AS v, p.key AS p",
+            )[:40]:
+                add(r["v"], "Version")
+                add(r["p"], "Package")
+                link(adv, "AFFECTS", r["v"])
+                link(r["v"], "VERSION_OF", r["p"])
+    else:
+        raise Bad("pass ?service=owner/repo or ?advisory=<id>")
+    # dedupe edges
+    uniq = {(e["s"], e["t"], e["type"]): e for e in edges}
+    return {
+        "nodes": list(nodes.values()),
+        "edges": list(uniq.values()),
+        "cypher": res.cypher,
+        "ms": round(res.ms, 2),
+        "limitations": ex
+        + ["Bounded neighbourhood: ≤10 lockfiles, ≤40 versions, ≤20 maintainers."],
+    }
+
+
 ROUTES = {
     "/ask/exposed": ask_exposed,
     "/ask/pulls": ask_pulls,
@@ -255,6 +394,7 @@ ROUTES = {
     "/ask/maintainers": lambda s, q: ask_maintainers(s, q),
     "/ask/typosquats": lambda s, q: _res(queries.q5_typosquats(s, f"pkg:npm/{_pkg(q)}")),
     "/cypher": ask_cypher,
+    "/graph/sample": graph_sample,
 }
 
 
