@@ -122,7 +122,7 @@ def stage_packages(
             medges.extend(r["maintains"])
         dl = npm.downloads([p["name"] for p in pkgs])
         for p in pkgs:
-            p["downloads"] = dl.get(p["name"], 0)
+            p["downloads"] = dl.get(p["name"])  # None for scoped -> property omitted
         upsert_nodes(s, "Package", pkgs)
         upsert_nodes(s, "Version", vers)
         upsert_nodes(s, "Maintainer", _dedupe(maints))

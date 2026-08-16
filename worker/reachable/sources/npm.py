@@ -104,21 +104,21 @@ def maintains_edges(doc: dict) -> list[dict]:
     return [{"src": f"npm:{login}", "dst": pkg} for login, _ in _logins(doc)]
 
 
-def downloads(names: list[str]) -> dict[str, int]:
-    """Weekly downloads. Unscoped bulk 128/req; scoped singly (bulk 400s on them). Missing -> 0."""
-    out = {n: 0 for n in names}
-    scoped = [n for n in names if n.startswith("@")]
+def downloads(names: list[str], *, scoped: bool = False) -> dict[str, int | None]:
+    """Weekly downloads. Unscoped: bulk 128/req (30 calls for 4k names). Scoped packages must be
+    fetched one by one and api.npmjs.org 429s that into hours of backoff, so they are skipped
+    unless scoped=True and reported as None (unknown) — never 0. Missing unscoped -> 0."""
+    out: dict[str, int | None] = {n: None for n in names}
     plain = [n for n in names if not n.startswith("@")]
-    for n in scoped:
-        # api.npmjs.org 429s a burst of single-name calls into minutes of backoff; the cache
-        # makes this a one-time cost, so pace it rather than fight it.
-        time.sleep(0.35)
-        try:
-            d = get_json(f"{DOWNLOADS}/{n}", ok404=True)
-        except HttpError as e:  # downloads are a ranking signal, never worth failing an ingest
-            log(f"npm downloads: {e}")
-            d = None
-        out[n] = int((d or {}).get("downloads") or 0)
+    for n in names:
+        if n.startswith("@") and scoped:
+            time.sleep(0.35)
+            try:
+                d = get_json(f"{DOWNLOADS}/{n}", ok404=True)
+            except HttpError as e:  # downloads are a ranking signal, never worth failing an ingest
+                log(f"npm downloads: {e}")
+                d = None
+            out[n] = int((d or {}).get("downloads") or 0)
     for i in range(0, len(plain), 128):
         chunk = plain[i : i + 128]
         try:
@@ -176,7 +176,7 @@ if __name__ == "__main__":
     assert tcv["4.1.1"]["removed"] is True and tcv["4.1.2"]["removed"] is True
     assert tcv["4.1.1"]["key"] == "pkg:npm/@ctrl/tinycolor@4.1.1"
 
-    dl = downloads(["chalk", "@ctrl/tinycolor"])
+    dl = downloads(["chalk", "@ctrl/tinycolor"], scoped=True)
     assert dl["chalk"] > 0 and dl["@ctrl/tinycolor"] > 0, dl
 
     assert fetch_packument("this-package-does-not-exist-reachable-xyz") is None
