@@ -89,6 +89,30 @@ def resolved_versions(s) -> dict[str, set[str]]:
     return out
 
 
+class LazyKnown(dict):
+    """{name: [versions]} for OSV range expansion, resolved on demand from the disk-cached
+    packument. `in` answers for the packages the graph holds; values are memoised."""
+
+    def __init__(self, names: list[str]):
+        super().__init__()
+        self._names = set(names)
+
+    def __bool__(self) -> bool:  # empty memo must not read as "no known versions"
+        return bool(self._names)
+
+    def __contains__(self, name) -> bool:  # type: ignore[override]
+        return name in self._names or dict.__contains__(self, name)
+
+    def __missing__(self, name: str) -> list[str]:
+        doc = npm.fetch_packument(name) or {}
+        vs = [v for v in doc.get("time", {}) if v not in ("created", "modified")]
+        self[name] = vs
+        return vs
+
+    def keys(self):  # the enriched set: what the graph holds
+        return self._names
+
+
 def graph_packages(s) -> list[str]:
     return sorted(r["name"] for r in run(s, "MATCH (p:Package) RETURN p.name AS name"))
 
@@ -221,7 +245,7 @@ def stage_advisories(
     upsert_nodes(s, "Advisory", advisories)
     upsert_edges(s, "AFFECTS", "Advisory", "Version", affects)
     # affected versions discovered here still need their packument (published_at, removed)
-    missing = sorted({n for n, _ in all_pairs} - set(known))
+    missing = sorted({n for n, _ in all_pairs} - set(known.keys()))
     if missing:
         log(f"  enriching {len(missing)} advisory-only packages")
         keep: dict[str, set[str]] = defaultdict(set)
@@ -343,12 +367,8 @@ def main(argv=None) -> None:
             log("== advisories")
             if not touched:
                 touched = resolved_versions(s)
-            if not known:  # resumed run: version lists from the graph
-                for r in run(
-                    s,
-                    "MATCH (v:Version)-[:VERSION_OF]->(p:Package) RETURN p.name AS n, v.version AS v",
-                ):
-                    known.setdefault(r["n"], []).append(r["v"])
+            if not known:  # resumed run: lazily from cached packuments (a Version scan is refused)
+                known = LazyKnown(graph_packages(s))
             stage_advisories(s, seeds, known, touched)
         if "reach" in only:
             log("== reach")
