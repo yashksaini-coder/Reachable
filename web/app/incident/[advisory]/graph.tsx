@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { short, svcSlug, type Incident } from "@/lib/incident";
 import { cn } from "@/lib/utils";
-import { ELEV } from "@/app/ui";
+import { Chip, ELEV } from "@/app/ui";
 
 // Blast radius, drawn from the JSON paths HydraDB returned (algo.SPpaths chains + the
 // lockfile→service edge). Layered left→right: affected versions · intermediate dependency
@@ -132,6 +132,9 @@ export function BlastGraph({ inc }: { inc: Incident }) {
           role="img"
           aria-label={`blast radius graph: ${nodes.size} nodes, ${edges.size} edges, ${shown} services`}
         >
+          {heads.map((_, i) => (
+            <rect key={`b${i}`} x={i * colW} y={0} width={colW} height={H} fill="var(--color-muted-foreground)" fillOpacity={i % 2 ? 0.045 : 0.02} />
+          ))}
           {heads.map((h, i) => (
             <text key={i} x={padX + i * colW} y={11} fill={GREY} fontSize="9" fontFamily="ui-monospace, monospace" letterSpacing="0.1em">
               {h.toUpperCase()}
@@ -150,15 +153,15 @@ export function BlastGraph({ inc }: { inc: Incident }) {
             <g key={n.key}>
               <title>{n.key}</title>
               {n.kind === "svc" ? (
-                <rect x={x(n) - 5} y={n.y - 5} width={10} height={10} rx={2} fill={n.tone} />
+                <rect x={x(n) - 5} y={n.y - 5} width={10} height={10} rx={2.5} fill={n.tone} stroke="var(--color-card)" strokeWidth={1.5} />
               ) : (
-                <circle cx={x(n)} cy={n.y} r={n.kind === "bad" ? 5 : 4} fill={n.tone} />
+                <circle cx={x(n)} cy={n.y} r={n.kind === "bad" ? 5 : 3.5} fill={n.tone} stroke="var(--color-card)" strokeWidth={1.5} />
               )}
               <text
                 x={x(n) + 10}
                 y={n.y + 3.5}
                 fill="var(--color-foreground)"
-                fontSize="10.5"
+                fontSize="10"
                 fontFamily="ui-monospace, monospace"
                 paintOrder="stroke"
                 stroke="var(--color-card)"
@@ -171,7 +174,7 @@ export function BlastGraph({ inc }: { inc: Incident }) {
           ))}
         </svg>
       </div>
-      <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 font-mono text-[10px] text-muted-foreground" aria-label="legend">
+      <ul className="mt-2 flex flex-wrap gap-1.5" aria-label="legend">
         <Key swatch={<span className="block size-2.5 rounded-full bg-l2" />}>affected version</Key>
         <Key swatch={<span className="block size-2 rounded-full bg-muted-foreground" />}>dependency / lockfile</Key>
         <Key swatch={<span className="block size-2 rounded-full bg-l1" />}>lockfile committed while live</Key>
@@ -194,11 +197,13 @@ export function BlastGraph({ inc }: { inc: Incident }) {
 
 function Key({ swatch, children }: { swatch: ReactNode; children: ReactNode }) {
   return (
-    <li className="inline-flex items-center gap-1.5">
-      <span className="inline-flex items-center justify-center" aria-hidden>
-        {swatch}
-      </span>
-      {children}
+    <li>
+      <Chip>
+        <span className="inline-flex items-center justify-center" aria-hidden>
+          {swatch}
+        </span>
+        {children}
+      </Chip>
     </li>
   );
 }

@@ -14,7 +14,8 @@ export const QUESTIONS: [string, string][] = [
   ["q6", "blast radius"],
 ];
 
-export function Rail() {
+// `counts`: the answer summary number per question (q1 → 2 …), shown tiny beside the label.
+export function Rail({ counts = {} }: { counts?: Record<string, number | string | null> }) {
   const [active, setActive] = useState("q1");
   useEffect(() => {
     const seen = new Set<string>();
@@ -50,6 +51,7 @@ export function Rail() {
               >
                 <span className={cn("num w-5 shrink-0", on ? "text-signal" : "")}>Q{i + 1}</span>
                 <span>{label}</span>
+                {counts[id] != null && <span className="num ml-auto pr-1 text-[10px] text-muted-foreground/80">{counts[id]}</span>}
               </a>
             </li>
           );

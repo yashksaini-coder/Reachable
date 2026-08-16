@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { AlertTriangle, Check, ChevronRight, Copy, Database } from "lucide-react";
+import { AlertTriangle, Check, ChevronRight, Copy, Database, Info } from "lucide-react";
 import { fmtMs } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +24,7 @@ export function HydraCard({
   truncated,
   timing,
   defaultOpen = false,
+  flat = false,
 }: {
   title: string;
   cypher: string[];
@@ -32,12 +33,13 @@ export function HydraCard({
   truncated?: boolean;
   timing?: { cold_ms: number | null; warm_p50_ms: number | null; warm_p95_ms: number | null; runs: number };
   defaultOpen?: boolean;
+  flat?: boolean; // inside a Question footer: hairline top border, no card chrome
 }) {
   const [open, setOpen] = useState(defaultOpen);
   const reduce = useReducedMotion();
   const t = reduce ? { duration: 0 } : SPRING;
   return (
-    <div className={cn("mt-3 overflow-hidden rounded-lg border border-border bg-card/70", ELEV)}>
+    <div className={flat ? "overflow-hidden border-t border-border" : cn("mt-3 overflow-hidden rounded-lg border border-border bg-card/70", ELEV)}>
       <button
         type="button"
         aria-expanded={open}
@@ -126,8 +128,10 @@ function dedupe(qs: string[]): [string, number][] {
   return [...m.entries()];
 }
 
-export function Limits({ items }: { items: string[] }) {
+// Amber is reserved for real warnings (truncation, explicit warnings). tone="quiet" is Notes.
+export function Limits({ items, tone = "warning" }: { items: string[]; tone?: "warning" | "quiet" }) {
   if (!items.length) return null;
+  if (tone === "quiet") return <Notes items={items} />;
   return (
     <ul className="mt-3 space-y-1 rounded-lg border border-l1/25 bg-l1/5 px-3 py-2 text-xs text-l1/90">
       {items.map((t, i) => (
@@ -137,6 +141,78 @@ export function Limits({ items }: { items: string[] }) {
         </li>
       ))}
     </ul>
+  );
+}
+
+// Method notes: what the answer does and does not prove. Informational, not an alarm.
+export function Notes({ items }: { items: string[] }) {
+  const list = items.filter(Boolean);
+  if (!list.length) return null;
+  return (
+    <ul className="space-y-1 border-t border-border px-3 py-2 text-[11px] text-muted-foreground">
+      {list.map((t, i) => (
+        <li key={i} className="flex gap-2">
+          <Info className="mt-0.5 size-3.5 shrink-0 opacity-70" />
+          <span className="text-pretty">{t}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+// One question = one section card: header (Qn · title · answer summary), body (the answer's own
+// visual), footer strip (HydraDB disclosure + notes). Same anatomy for all six so the rhythm reads.
+export function Question({
+  n,
+  title,
+  summary,
+  star,
+  children,
+  footer,
+}: {
+  n: string;
+  title: string;
+  summary?: ReactNode;
+  star?: boolean;
+  children: ReactNode;
+  footer?: ReactNode;
+}) {
+  return (
+    <section id={`q${n}`} className={cn("scroll-mt-6 overflow-hidden rounded-lg border border-border bg-card", ELEV)}>
+      <header className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-border px-4 py-3">
+        <span className="font-mono text-[11px] tracking-widest text-signal">{`Q${n}`}</span>
+        <h2 className="text-balance text-[17px] font-medium tracking-tight">{title}</h2>
+        {star && <span className="text-[11px] text-muted-foreground">★ differentiator</span>}
+        {summary && <span className="num basis-full text-[11px] text-muted-foreground md:ml-auto md:basis-auto md:text-right">{summary}</span>}
+      </header>
+      <div className="p-4">{children}</div>
+      {footer && <footer className="bg-background/40 text-xs">{footer}</footer>}
+    </section>
+  );
+}
+
+// Table rows past a cap, behind a "show all N" row. `children` render always; `more` on demand.
+export function ShowAll({ n, cols, children, more }: { n: number; cols: number; children: ReactNode; more: ReactNode }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      {children}
+      {open ? (
+        more
+      ) : (
+        <tr>
+          <td colSpan={cols} className="p-0">
+            <button
+              type="button"
+              onClick={() => setOpen(true)}
+              className="flex min-h-10 w-full cursor-pointer items-center justify-center gap-1 text-[11px] text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-signal/50"
+            >
+              <ChevronRight className="size-3.5 rotate-90" /> show all <span className="num">{n}</span>
+            </button>
+          </td>
+        </tr>
+      )}
+    </>
   );
 }
 
@@ -176,22 +252,14 @@ export function Kind({ kind }: { kind: string }) {
   );
 }
 
-export function Stat({ n, label, tone = "" }: { n: number | string | null; label: string; tone?: string }) {
+// `rule` = a bg-* class; draws the verdict colour as a thin top rule so the tile reads by colour, not only by numeral.
+export function Stat({ n, label, tone = "", rule }: { n: number | string | null; label: string; tone?: string; rule?: string }) {
   return (
-    <div className={cn("rounded-lg border border-border bg-card px-4 py-3", ELEV)}>
+    <div className={cn("relative overflow-hidden rounded-lg border border-border bg-card px-4 py-3", ELEV)}>
+      {rule && <span aria-hidden className={cn("absolute inset-x-0 top-0 h-0.5", rule)} />}
       <div className={cn("num text-3xl leading-none", tone)}>{typeof n === "number" ? <CountUp n={n} /> : (n ?? "n/a")}</div>
       <div className="mt-1.5 text-[11px] text-muted-foreground">{label}</div>
     </div>
-  );
-}
-
-export function SectionTitle({ n, title, star }: { n: string; title: string; star?: boolean }) {
-  return (
-    <h2 className="mb-3 flex flex-wrap items-baseline gap-3">
-      <span className="font-mono text-[11px] tracking-widest text-signal">{`Q${n}`}</span>
-      <span className="text-balance text-[17px] font-medium tracking-tight">{title}</span>
-      {star && <span className="text-[11px] text-muted-foreground">★ differentiator</span>}
-    </h2>
   );
 }
 
