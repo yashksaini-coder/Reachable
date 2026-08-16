@@ -4,61 +4,168 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Reachable — design tokens.
-   Dark operations console, Swiss/functionalist discipline: one accent (signal orange),
-   verdict colours that mean the same thing everywhere, tabular numerals, dense grid.
-   Dark-only by design: it is a tool read under pressure at 3 a.m. */
+/* ───────────────────────────────────────────────────────────────────────────────
+   Reachable — design tokens (docs: design handoff README, "Design tokens").
+   Dark operations console. Dark only — there is no light theme and none may be added.
+   Every value below is the whole design: ~20 colours + a type scale + one ease.
+   Consume as Tailwind utilities (bg-card2, text-mut, border-line, text-l2 …) — never as
+   arbitrary hex in JSX.
+   ─────────────────────────────────────────────────────────────────────────────── */
 @theme {
-  --color-signal: #ff6a1a;
-  --color-signal-2: #ffb08a;
-  --color-l2: #ff5c5c;
-  --color-l1: #f5b400;
-  --color-l0: #2fd07f;
-  --color-unknown: #8b93a7;
+  /* neutral ramp — one cool/blue hue bias, page ground → hover */
+  --color-bg: #0a0b0e; /* page ground */
+  --color-card: #0f1116; /* card surface */
+  --color-card2: #131620; /* nested surface (one level only) */
+  --color-pop: #171a21; /* popover / side panel */
+  --color-hover: #181c27; /* row + control hover */
+  --color-border: #1e2330; /* 1px card border */
+  --color-line: #191c25; /* internal hairline / row rule */
+  --color-input: #262c3a; /* input border, dashed edges — lightest neutral permitted */
+  --color-code: #0b0d12; /* <pre> and code-chip ground */
+
+  /* text ladder — exactly four steps (disabled = --mut at 38–50 % opacity), no fifth grey */
+  --color-fg: #e6e8ee; /* primary */
+  --color-mut: #a9afbd; /* secondary / body */
+  --color-dim: #8b93a7; /* metadata — floor for readable text */
+
+  /* accent family — the ONLY free accent; at most one filled orange element per viewport */
+  --color-signal: #ff6a1a; /* base */
+  --color-signal-2: #ffb08a; /* tint: links, mono code, small labels */
+  --color-ink: #0b0c0f; /* text on a filled orange element */
+  --color-sigfill: rgba(255, 106, 26, 0.12); /* tinted fill */
+
+  /* semantic verdict colours — text, 1px rules and dots at 100 %; backgrounds only at /14–/15 */
+  --color-l2: #ff5c5c; /* act now */
+  --color-l1: #f5b400; /* imported / resolved while live */
+  --color-l0: #2fd07f; /* present only */
+  --color-unknown: #8b93a7; /* unscanned */
+
+  /* graph-only node colours (explorer legend) */
+  --color-node-service: #ff6a1a;
+  --color-node-lockfile: #f5b400;
+  --color-node-version: #8b93a7;
+  --color-node-package: #5b8cff;
+  --color-node-advisory: #ff5c5c;
+  --color-node-maintainer: #2fd07f;
+  --color-node-file: #9b8cff;
+
+  /* type — set by next/font on <html> as --font-ui / --font-code */
+  --font-sans: var(--font-ui), "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-code), "JetBrains Mono", ui-monospace, monospace;
+
+  /* geometry — concentric radii: outer card 12–16, nested 8–10, pill/chip 5–7 */
+  --radius-xs: 4px;
+  --radius-sm: 5px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 14px;
+  --radius-3xl: 16px;
+
+  /* motion — one ease, no bounce */
+  --ease-out-expo: cubic-bezier(0.32, 0.72, 0, 1);
+
+  /* keyframes (use as animate-[en_.3s_var(--ease)_both] etc.) */
+  --animate-en: en 0.3s var(--ease) both;
+  --animate-fade: fade 0.25s var(--ease) both;
+  --animate-blip: blip 1s steps(2, end) infinite;
+  --animate-grow: grow 0.6s var(--ease) both;
+  --animate-pop: pop 0.25s var(--ease) both;
+
+  @keyframes en {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes fade {
+    from {
+      opacity: 0.55;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes blip {
+    0%,
+    100% {
+      opacity: 0.4;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+  @keyframes grow {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+  @keyframes pop {
+    from {
+      opacity: 0;
+      transform: scale(0.25);
+      filter: blur(4px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+      filter: none;
+    }
+  }
 }
 
-/* shadcn semantic tokens, mapped onto the palette above (no light theme). */
+/* Plain custom properties used by inline SVG and by the shadcn layer. */
 :root,
 .dark {
   color-scheme: dark;
-  --background: #0b0c0f;
-  --foreground: #e6e8ee;
-  --card: #111318;
-  --card-foreground: #e6e8ee;
-  --popover: #171a21;
-  --popover-foreground: #e6e8ee;
-  --primary: #ff6a1a;
-  --primary-foreground: #0b0c0f;
-  --secondary: #171a21;
-  --secondary-foreground: #e6e8ee;
-  --muted: #171a21;
-  --muted-foreground: #a9afbd;
-  --accent: #1c2029;
-  --accent-foreground: #e6e8ee;
-  --destructive: #ff5c5c;
-  --border: #232733;
-  --input: #2f3442;
-  --ring: #ff6a1a;
-  --chart-1: #ff6a1a;
-  --chart-2: #f5b400;
-  --chart-3: #2fd07f;
-  --chart-4: #8b93a7;
-  --chart-5: #ff5c5c;
-  --radius: 0.5rem;
-  --sidebar: #0e1014;
-  --sidebar-foreground: #e6e8ee;
-  --sidebar-primary: #ff6a1a;
-  --sidebar-primary-foreground: #0b0c0f;
-  --sidebar-accent: #171a21;
-  --sidebar-accent-foreground: #e6e8ee;
-  --sidebar-border: #232733;
-  --sidebar-ring: #ff6a1a;
+
+  --ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --elev: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+  --focus: rgba(255, 106, 26, 0.5);
+
+  /* shadcn semantic tokens mapped onto the palette (no light theme). */
+  --background: var(--color-bg);
+  --foreground: var(--color-fg);
+  --card: var(--color-card);
+  --card-foreground: var(--color-fg);
+  --popover: var(--color-pop);
+  --popover-foreground: var(--color-fg);
+  --primary: var(--color-signal);
+  --primary-foreground: var(--color-ink);
+  --secondary: var(--color-card2);
+  --secondary-foreground: var(--color-fg);
+  --muted: var(--color-card2);
+  --muted-foreground: var(--color-mut);
+  --accent: var(--color-hover);
+  --accent-foreground: var(--color-fg);
+  --destructive: var(--color-l2);
+  --border: var(--color-border);
+  --input: var(--color-input);
+  --ring: var(--color-signal);
+  --chart-1: var(--color-signal);
+  --chart-2: var(--color-l1);
+  --chart-3: var(--color-l0);
+  --chart-4: var(--color-unknown);
+  --chart-5: var(--color-l2);
+  --radius: 8px;
+  --sidebar: var(--color-bg);
+  --sidebar-foreground: var(--color-fg);
+  --sidebar-primary: var(--color-signal);
+  --sidebar-primary-foreground: var(--color-ink);
+  --sidebar-accent: var(--color-hover);
+  --sidebar-accent-foreground: var(--color-fg);
+  --sidebar-border: var(--color-border);
+  --sidebar-ring: var(--color-signal);
 }
 
 @theme inline {
-  --font-sans: var(--font-plex), ui-sans-serif, system-ui, sans-serif;
-  --font-heading: var(--font-plex), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-jet), ui-monospace, "SFMono-Regular", Menlo, monospace;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -73,8 +180,6 @@
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
   --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
   --color-destructive: var(--destructive);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
@@ -87,74 +192,137 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
+    box-sizing: border-box;
   }
   html {
     @apply font-sans;
-    background: var(--background);
+    background: var(--color-bg);
   }
   body {
-    @apply bg-background text-foreground;
-    font-feature-settings: "tnum" 1, "cv11" 1, "ss01" 1;
+    @apply bg-bg text-fg;
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.55;
+    font-weight: 400;
+    /* tabular numerals everywhere: dynamic numbers must never shift layout */
+    font-feature-settings: "tnum" 1, "cv05" 1;
+    font-variant-numeric: tabular-nums;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+  /* weight 500 is the maximum: hierarchy is size and space, not weight */
+  h1,
+  h2,
+  h3,
+  strong,
+  b {
+    font-weight: 500;
   }
   h1,
   h2 {
     text-wrap: balance;
   }
-  /* one icon weight everywhere (CSS beats the SVG presentation attribute, so per-icon strokeWidth props are ignored on purpose) */
+  p {
+    text-wrap: pretty;
+  }
+  a {
+    color: var(--color-signal-2);
+    text-decoration: none;
+    transition: color 0.18s var(--ease);
+  }
+  a:hover {
+    color: var(--color-signal);
+  }
+  button {
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    text-align: left;
+  }
+  input,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+  code,
+  kbd,
+  pre {
+    font-family: var(--font-mono);
+  }
+  svg {
+    display: block;
+  }
+  /* one icon weight everywhere (CSS beats the SVG presentation attribute) */
   svg.lucide {
     stroke-width: 1.75;
   }
-  ::selection {
-    background: color-mix(in oklab, var(--color-signal) 40%, transparent);
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
   }
+  ::selection {
+    background: rgba(255, 106, 26, 0.24);
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #20242f;
+    border-radius: 8px;
+    border: 3px solid var(--color-bg);
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  /* reduced motion → zero motion; every reveal visible, every number at its final value */
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
     *::after {
-      animation-duration: 0.01ms !important;
-      animation-delay: 0s !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
-      transition-delay: 0s !important;
+      animation: none !important;
+      transition: none !important;
       scroll-behavior: auto !important;
     }
   }
 }
 
-/* utilities that carry meaning */
+/* ── utilities that carry meaning ──────────────────────────────────────────── */
+
+/* mono + tabular for any dynamic number */
 @utility num {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
 }
-/* depth: hairline ring + contact shadow + soft ambient. Borders alone read flat. */
-@utility elev {
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.03),
-    0 1px 2px rgba(0, 0, 0, 0.6),
-    0 16px 40px -24px rgba(0, 0, 0, 0.9);
+/* uppercase tracked metadata label: 10.5px, .09–.11em, --dim */
+@utility label {
+  font-size: 10.5px;
+  line-height: 1;
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--color-dim);
 }
-/* raised state for hovered cards that are links */
-@utility elev-2 {
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.05),
-    0 2px 4px rgba(0, 0, 0, 0.6),
-    0 24px 48px -24px rgba(0, 0, 0, 0.9);
+/* depth = shadow + a 2–3 % surface tint per level, never a thicker border */
+@utility elev {
+  box-shadow: var(--elev);
+}
+/* per-cell inset hairlines for stat grids: no phantom cells when the row wraps */
+@utility cell-lines {
+  box-shadow: inset 1px 0 0 var(--color-border), inset 0 1px 0 var(--color-border);
+}
+/* the one idle loop permitted: a 1 Hz status blip */
+@utility blip {
+  animation: blip 1s steps(2, end) infinite;
 }

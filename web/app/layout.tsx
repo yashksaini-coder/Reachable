@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Sans, JetBrains_Mono } from "next/font/google";
 import Link from "next/link";
 import { MotionConfig } from "motion/react";
@@ -6,16 +6,18 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Nav, MobileNav } from "./nav";
 
-const plex = IBM_Plex_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-plex",
-  display: "swap",
-});
-const jet = JetBrains_Mono({
+// Weight 500 is the maximum in this design — hierarchy is size and space, not weight — so 600 is
+// not even loaded. The token sheet reads these variables as --font-sans / --font-mono.
+const ui = IBM_Plex_Sans({
   subsets: ["latin"],
   weight: ["400", "500"],
-  variable: "--font-jet",
+  variable: "--font-ui",
+  display: "swap",
+});
+const code = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-code",
   display: "swap",
 });
 
@@ -25,11 +27,14 @@ export const metadata: Metadata = {
     "Supply-chain incident response on a graph. When a package is compromised: which services are exposed, which resolved it while it was live, which actually need action.",
 };
 
+// Dark only: no theme provider, nothing to switch to.
+export const viewport: Viewport = { themeColor: "#0a0b0e", colorScheme: "dark" };
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={cn("dark h-full antialiased", plex.variable, jet.variable)}
+      className={cn("dark h-full antialiased", ui.variable, code.variable)}
     >
       <body className="min-h-full font-sans">
         <MotionConfig reducedMotion="user">

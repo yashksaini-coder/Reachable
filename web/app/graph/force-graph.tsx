@@ -193,7 +193,7 @@ export function ForceGraph({
                 {isSel && <circle r={n.r + 5} fill="none" stroke="#ff6a1a" strokeWidth={1.5} strokeOpacity={0.9} />}
                 <circle r={n.r} fill={c.fill} fillOpacity={off ? 0.15 : 0.95} stroke="#0b0c0f" strokeWidth={1.2} />
                 {showLabel && (
-                  <text x={n.r + 4} y={3.5} fontSize={n.label === "Service" ? 11 : 10} fontFamily="var(--font-jet), ui-monospace, monospace" fill={off ? "#3a3f4d" : "#e6e8ee"}>
+                  <text x={n.r + 4} y={3.5} fontSize={n.label === "Service" ? 11 : 10} fontFamily="var(--font-code), ui-monospace, monospace" fill={off ? "#3a3f4d" : "#e6e8ee"}>
                     {short(n.id).length > 34 ? short(n.id).slice(0, 32) + "…" : short(n.id)}
                   </text>
                 )}

@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { AlertTriangle, Check, ChevronRight, Copy, Database, Info } from "lucide-react";
+import { AlertTriangle, ChevronDown, ChevronRight, Info } from "lucide-react";
 import { fmtMs } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -14,8 +14,14 @@ export const ELEV = "elev";
 
 const SPRING = { type: "spring", duration: 0.3, bounce: 0 } as const;
 
-// "How HydraDB answered this" — generated from the statements that were actually executed,
-// never a static string. If this card lies, the JSON lies, and the golden test catches it.
+// HydraCard — the engine-identity strip. Generated from the statements that were actually
+// executed, never a static string; if this card lies, the JSON lies, and the golden test catches it.
+// Spec: 1px --border + 2px orange left rule, 8px radius, --card2. Header ≥44px: mono `hydradb`
+// tag · the question (ellipsed; wraps to its own line <760px) · `{rows} rows · {ms} · {temp}` ·
+// chevron (180° on open). Body: the Cypher in a --code <pre>, 11.5/1.65 mono, --signal-2, plus a
+// "copy statement" button that reads "copied". Collapsed is fine; hidden is never allowed.
+const EASE = [0.32, 0.72, 0, 1] as const;
+
 export function HydraCard({
   title,
   cypher,
@@ -33,59 +39,69 @@ export function HydraCard({
   truncated?: boolean;
   timing?: { cold_ms: number | null; warm_p50_ms: number | null; warm_p95_ms: number | null; runs: number };
   defaultOpen?: boolean;
-  flat?: boolean; // inside a Question footer: hairline top border, no card chrome
+  flat?: boolean; // no outer margin (caller stacks cards itself)
 }) {
   const [open, setOpen] = useState(defaultOpen);
   const reduce = useReducedMotion();
-  const t = reduce ? { duration: 0 } : SPRING;
+  const t = reduce ? { duration: 0 } : { duration: 0.25, ease: EASE };
+  const statements = dedupe(cypher);
+  // Temperature is stated only when it was measured (a cold/warm pair); a lone ms carries no claim.
+  const warm = timing && timing.runs > 1 && timing.warm_p50_ms != null;
   return (
-    <div className={flat ? "overflow-hidden border-t border-border" : cn("mt-3 overflow-hidden rounded-lg border border-border bg-card/70", ELEV)}>
+    <div className={cn("overflow-hidden rounded-lg border border-border border-l-2 border-l-signal/55 bg-card2", !flat && "mt-3")}>
       <button
         type="button"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className="flex min-h-11 w-full cursor-pointer flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 text-left text-xs text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-signal/50"
+        className="flex min-h-11 w-full items-center gap-3.5 px-[13px] py-[11px] text-left transition-colors duration-[180ms] ease-[var(--ease)] hover:bg-hover/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-signal/50 max-[760px]:flex-wrap"
       >
-        <motion.span animate={{ rotate: open ? 90 : 0 }} transition={t} className="inline-flex shrink-0">
-          <ChevronRight className="size-3.5" strokeWidth={2} />
-        </motion.span>
-        <Database className="size-3.5 shrink-0 text-signal" strokeWidth={1.75} />
-        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-signal">HydraDB</span>
-        <span className="min-w-0 flex-1 basis-40">How HydraDB answered “{title}”</span>
-        <span className="num basis-full text-[11px] text-muted-foreground md:ml-auto md:basis-auto md:text-right">
+        <span className="shrink-0 rounded-xs bg-sigfill px-1.5 py-[5px] font-mono text-[9.5px] font-medium uppercase leading-none tracking-[0.1em] text-signal">hydradb</span>
+        <span className="min-w-0 flex-1 truncate text-[12.5px] text-mut max-[760px]:order-2 max-[760px]:basis-full max-[760px]:whitespace-normal">{title}</span>
+        <span className="num shrink-0 text-[10.5px] leading-none text-dim">
           {rows} rows · {fmtMs(ms)}
-          {timing && timing.runs > 1 && timing.cold_ms != null && (
+          {warm && (
             <>
               {" "}
-              · cold {fmtMs(timing.cold_ms)} / warm p50 {fmtMs(timing.warm_p50_ms)} p95 {fmtMs(timing.warm_p95_ms)} ({timing.runs} runs)
+              · warm p50 {fmtMs(timing.warm_p50_ms)}
+              {timing.cold_ms != null && <> · cold {fmtMs(timing.cold_ms)}</>}
             </>
           )}
-          {truncated && <span className="ml-2 text-l1">TRUNCATED</span>}
+          {truncated && <span className="ml-2 text-l1">truncated</span>}
         </span>
+        <motion.span animate={{ rotate: open ? 180 : 0 }} transition={t} className="inline-flex shrink-0 text-dim" aria-hidden>
+          <ChevronDown className="size-3.5" />
+        </motion.span>
       </button>
       <AnimatePresence initial={false}>
         {open && (
           <motion.div
             key="body"
-            initial={{ height: 0, opacity: 0 }}
+            initial={{ height: 0, opacity: 0.55 }}
             animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0, transition: { duration: reduce ? 0 : 0.2 } }}
+            exit={{ height: 0, opacity: 0.55, transition: { duration: reduce ? 0 : 0.2, ease: EASE } }}
             transition={t}
             className="overflow-hidden"
           >
-            <div className="relative space-y-2 border-t border-border bg-background/60 px-3 py-2 pr-12">
-              {cypher.length > 0 && <CopyButton text={dedupe(cypher).map(([q]) => q).join("\n\n")} />}
-              {cypher.length === 0 && <div className="text-xs text-muted-foreground">No statement executed.</div>}
-              {dedupe(cypher).map(([q, n], i) => (
-                <pre key={i} className="overflow-x-auto whitespace-pre-wrap break-words font-mono text-[11px] leading-relaxed text-foreground/90">
-                  {n > 1 && <span className="num mr-2 rounded bg-secondary px-1 text-muted-foreground">×{n}</span>}
-                  {q}
+            <div className="px-[13px] pb-[13px]">
+              {statements.length === 0 ? (
+                <div className="rounded-md border border-line bg-code p-3 font-mono text-[11.5px] text-dim">no statement executed</div>
+              ) : (
+                <pre className="m-0 overflow-x-auto rounded-md border border-line bg-code p-3 font-mono text-[11.5px] leading-[1.65] text-signal-2">
+                  {statements.map(([q, n], i) => (
+                    <span key={i} className="block">
+                      {i > 0 && "\n"}
+                      {n > 1 && <span className="mr-2 rounded-xs bg-hover px-1 text-dim">×{n}</span>}
+                      {q}
+                    </span>
+                  ))}
                 </pre>
-              ))}
-              <p className="text-pretty text-[10px] text-muted-foreground">
-                Statements as sent over Bolt. Integer literals are 52-bit ids from <code>gid(key)</code>; string literals in
-                <code> algo.MSpaths</code> passed the npm-name allowlist. Timings are wall-clock from the Python driver over loopback.
-              </p>
+              )}
+              <div className="mt-[9px] flex items-center gap-2">
+                {statements.length > 0 && <CopyStatement text={statements.map(([q]) => q).join("\n\n")} />}
+                <span className="font-mono text-[10.5px] leading-[1.6] text-dim">
+                  as sent over Bolt · integer literals are 52-bit ids · timings are wall-clock from the driver over loopback
+                </span>
+              </div>
             </div>
           </motion.div>
         )}
@@ -94,29 +110,26 @@ export function HydraCard({
   );
 }
 
-// Copy → Check cross-fade: both icons share one grid cell; opacity/scale/blur swap between them.
-function CopyButton({ text }: { text: string }) {
+// "copy statement" → "copied": the label swaps with the opacity/scale/blur pop, no icon toggling.
+function CopyStatement({ text }: { text: string }) {
   const [done, setDone] = useState(false);
   const reduce = useReducedMotion();
-  const t = reduce ? { duration: 0 } : SPRING;
-  const show = { opacity: 1, scale: 1, filter: "blur(0px)" };
-  const hide = { opacity: 0, scale: 0.25, filter: "blur(4px)" };
+  const t = reduce ? { duration: 0 } : { duration: 0.25, ease: EASE };
   return (
     <button
       type="button"
-      aria-label={done ? "copied" : "copy cypher"}
       onClick={async () => {
         await navigator.clipboard.writeText(text);
         setDone(true);
         setTimeout(() => setDone(false), 1500);
       }}
-      className="absolute right-1 top-1 grid size-10 place-items-center rounded-md text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50 active:scale-[0.96] [&>*]:[grid-area:1/1]"
+      className="grid min-h-8 shrink-0 rounded-md border border-border px-[11px] text-[11px] font-medium leading-none text-mut transition-[color,background-color,transform] duration-[180ms] ease-[var(--ease)] hover:bg-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50 active:scale-[0.97] [&>*]:[grid-area:1/1]"
     >
-      <motion.span initial={false} animate={done ? hide : show} transition={t} className="inline-flex">
-        <Copy className="size-3.5" strokeWidth={1.75} />
+      <motion.span initial={false} animate={done ? { opacity: 0, scale: 0.25, filter: "blur(4px)" } : { opacity: 1, scale: 1, filter: "blur(0px)" }} transition={t} className="inline-flex items-center">
+        copy statement
       </motion.span>
-      <motion.span initial={false} animate={done ? show : hide} transition={t} className="inline-flex">
-        <Check className="size-3.5 text-l0" strokeWidth={2} />
+      <motion.span initial={false} animate={done ? { opacity: 1, scale: 1, filter: "blur(0px)" } : { opacity: 0, scale: 0.25, filter: "blur(4px)" }} transition={t} className="inline-flex items-center justify-center text-l0" aria-live="polite">
+        copied
       </motion.span>
     </button>
   );
