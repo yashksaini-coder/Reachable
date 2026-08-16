@@ -12,8 +12,10 @@ a MERGE on a deterministic id, so re-running any stage changes nothing.
                 Maintainer, MAINTAINS, Package.downloads
   3. advisories OSV: the seed incidents by id, plus querybatch over every (name,version)
                 in the graph -> Advisory, AFFECTS with the temporal window
-  4. typosquats NAME_SIMILAR_TO over every package name vs the top-N by downloads
-  5. verify     coverage asserts: no Version without published_at, no AFFECTS without
+  4. reach      L0/L1: scan first-party sources of every exposed (service, commit) for
+                imports of the affected packages -> File, CONTAINS, IMPORTS
+  5. typosquats NAME_SIMILAR_TO over every package name vs the top-N by downloads
+  6. verify     coverage asserts: no Version without published_at, no AFFECTS without
                 a window, counts printed
 
 Every HTTP response is on disk after the first run (.cache/), so a cold run is
@@ -29,7 +31,7 @@ from collections import defaultdict
 from reachable import load, typosquat
 from reachable.db import run, session
 from reachable.load import log, upsert_edges, upsert_nodes
-from reachable.sources import github, npm, osv
+from reachable.sources import github, npm, osv, reach
 
 
 def stage_services(s, seeds: dict) -> dict:
@@ -189,6 +191,35 @@ def stage_advisories(
     log(f"  {len(advisories)} advisories, {len(affects)} AFFECTS, {len(mal)} malicious versions")
 
 
+def stage_reach(s) -> None:
+    """L0/L1 reachability for every (service, lockfile) that resolves an advisory-affected
+    version: scan first-party sources at that commit for imports of the affected packages."""
+    rows = run(
+        s,
+        "MATCH (a:Advisory)-[:AFFECTS]->(v:Version)-[:VERSION_OF]->(p:Package) "
+        "MATCH (v)<-[:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) "
+        "RETURN sv.key AS svc, l.sha AS sha, p.name AS pkg",
+    )
+    targets: dict[tuple[str, str], set[str]] = defaultdict(set)
+    for r in rows:
+        targets[(r["svc"], r["sha"])].add(r["pkg"])
+    log(f"  {len(targets)} exposed (service, commit) pairs to scan")
+    files, contains, imports = [], [], []
+    for (svc, sha), pkgs in sorted(targets.items()):
+        slug = svc[len("svc:") :]
+        r = reach.scan_service(slug, sha, pkgs)
+        files += r["files"]
+        contains += r["contains"]
+        imports += r["imports"]
+        log(
+            f"  {slug}@{sha[:12]}: {r['scanned']} files, {r['hits']} import hits for {sorted(pkgs)[:4]}"
+        )
+    upsert_nodes(s, "File", _dedupe(files))
+    upsert_edges(s, "CONTAINS", "Service", "File", contains)
+    upsert_edges(s, "IMPORTS", "File", "Package", imports)
+    log(f"  {len(_dedupe(files))} files, {len(imports)} IMPORTS edges")
+
+
 def stage_typosquats(s, seeds: dict) -> None:
     rows = run(s, "MATCH (p:Package) RETURN p.name AS name, p.downloads AS downloads")
     names = [r["name"] for r in rows]
@@ -236,7 +267,7 @@ def stage_verify(s) -> None:
     assert win == aff, "AFFECTS edges without a window — Q3 would under-report"
 
 
-STAGES = ["services", "packages", "advisories", "typosquats", "verify"]
+STAGES = ["services", "packages", "advisories", "reach", "typosquats", "verify"]
 
 
 def main(argv=None) -> None:
@@ -272,6 +303,9 @@ def main(argv=None) -> None:
                 ):
                     known.setdefault(r["n"], []).append(r["v"])
             stage_advisories(s, seeds, known, touched)
+        if "reach" in only:
+            log("== reach")
+            stage_reach(s)
         if "typosquats" in only:
             log("== typosquats")
             stage_typosquats(s, seeds)

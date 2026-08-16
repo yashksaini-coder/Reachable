@@ -108,7 +108,7 @@ worker/
     db.py              driver + env; the only place HYDRA_TOKEN is read
     ids.py             gid()/eid() integer ids, safe_purl() allowlist
     fixture.py         ~30-node hand-verified test graph, loaded via UNWIND
-    sources/           npm.py depsdev.py osv.py github.py (lockfile history)
+    sources/           npm.py osv.py github.py (lockfile history) reach.py (L0/L1 import scan) depsdev.py
     typosquat.py       materialises NAME_SIMILAR_TO edges
     load.py            UNWIND MERGE write primitives, idempotent by deterministic id
     pipeline.py        seeds.json -> graph, five resumable stages
