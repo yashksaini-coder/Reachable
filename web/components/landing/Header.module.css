@@ -1,0 +1,84 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(10, 11, 14, 0.86);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+
+.inner {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.wordmark {
+  font: 500 14px/1 var(--ui);
+  letter-spacing: -0.01em;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+}
+
+.link {
+  padding: 0 11px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  font: 400 12.5px/1 var(--ui);
+  color: var(--mut);
+  border-radius: 7px;
+  transition: background 0.18s var(--ease), color 0.18s var(--ease);
+}
+
+.link:hover {
+  color: var(--fg);
+  background: var(--hover);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.docs {
+  padding: 0 12px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  font: 400 12.5px/1 var(--ui);
+  color: var(--mut);
+  transition: color 0.18s var(--ease);
+}
+
+.docs:hover {
+  color: var(--fg);
+}
+
+/* the header's own primary action is a shorter 40px chip, not the 44px hero button */
+.cta {
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font: 500 12.5px/1 var(--ui);
+}
+
+@media (max-width: 900px) {
+  .nav {
+    display: none;
+  }
+}

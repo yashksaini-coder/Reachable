@@ -1,0 +1,73 @@
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: 44px;
+  align-items: center;
+}
+
+/* HydraCard identity: a faint orange left rule + the mono engine tag, so an
+   evidence strip never reads as a note. */
+.hydra {
+  border: 1px solid var(--border);
+  border-left: 2px solid rgba(255, 106, 26, 0.55);
+  border-radius: 12px;
+  background: var(--card2);
+  box-shadow: var(--elev);
+  overflow: hidden;
+}
+
+.hydraHead {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 15px;
+  border-bottom: 1px solid var(--line);
+}
+
+.tag {
+  font: 500 9.5px/1 var(--mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--sig);
+  background: var(--sigfill);
+  padding: 5px 6px;
+  border-radius: 4px;
+}
+
+.question {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--mut);
+}
+
+.meta {
+  white-space: nowrap;
+}
+
+.copy {
+  max-width: 44ch;
+}
+
+@media (max-width: 900px) {
+  .split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* below 760px the question wraps onto its own line instead of being ellipsed */
+@media (max-width: 760px) {
+  .hydraHead {
+    flex-wrap: wrap;
+    gap: 10px 14px;
+  }
+
+  .question {
+    flex-basis: 100%;
+    order: 3;
+  }
+
+  .meta {
+    margin-left: auto;
+  }
+}

@@ -1,0 +1,182 @@
+/* Landing page — bridge from the token layer to the CSS-module names the landing components use
+   (they were authored against the design bundle's :root names), plus the bundle's global classes,
+   scoped under .landing so nothing leaks into the console. Values come from globals.css tokens. */
+.landing {
+  --bg: var(--color-bg);
+  --card: var(--color-card);
+  --card2: var(--color-card2);
+  --pop: var(--color-pop);
+  --hover: var(--color-hover);
+  --border: var(--color-border);
+  --line: var(--color-line);
+  --input: var(--color-input);
+  --fg: var(--color-fg);
+  --mut: var(--color-mut);
+  --dim: var(--color-dim);
+  --sig: var(--color-signal);
+  --sig2: var(--color-signal-2);
+  --sig-ink: var(--color-ink);
+  --sigfill: var(--color-sigfill);
+  --l2: var(--color-l2);
+  --l1: var(--color-l1);
+  --l0: var(--color-l0);
+  --unk: var(--color-unknown);
+  --ui: var(--font-sans);
+  --mono: var(--font-mono);
+  --gutter: 40px;
+  --maxw: 1240px;
+  background: var(--bg);
+  color: var(--fg);
+  font: 400 13px/1.55 var(--ui);
+}
+
+/* ---------------------------------------------------------------- layout */
+
+.landing .container {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding-left: var(--gutter);
+  padding-right: var(--gutter);
+}
+
+.landing .section {
+  padding-top: 96px;
+}
+
+/* -------------------------------------------------------- type primitives */
+
+.landing .eyebrow {
+  display: block;
+  font: 500 10.5px/1 var(--ui);
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.landing .h2 {
+  margin: 16px 0 0;
+  font: 500 32px/1.18 var(--ui);
+  letter-spacing: -0.028em;
+  text-wrap: balance;
+}
+
+.landing .lead {
+  margin: 16px 0 0;
+  font-size: 14px;
+  line-height: 1.62;
+  color: var(--mut);
+  text-wrap: pretty;
+}
+
+.landing .metaMono {
+  font: 400 10.5px/1 var(--mono);
+  color: var(--dim);
+}
+
+/* a hairline that fades out to the right — used beside mono tags */
+.landing .ruleFade {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--border), transparent);
+}
+
+/* ------------------------------------------------------------- the button */
+/* At most one filled orange element per viewport; everything else outlines. */
+
+.landing .btn {
+  height: 44px;
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 9px;
+  font: 500 13px/1 var(--ui);
+  white-space: nowrap;
+}
+
+.landing .btnPrimary {
+  color: var(--sig-ink);
+  background: var(--sig);
+  transition: filter 0.18s var(--ease), transform 0.12s var(--ease);
+}
+
+.landing .btnPrimary:hover {
+  color: var(--sig-ink);
+  filter: brightness(1.08);
+}
+
+.landing .btnPrimary:active {
+  transform: scale(0.97);
+}
+
+.landing .btnOutline {
+  color: var(--mut);
+  border: 1px solid var(--border);
+  transition: background 0.18s var(--ease), color 0.18s var(--ease);
+}
+
+.landing .btnOutline:hover {
+  color: var(--fg);
+  background: var(--hover);
+}
+
+/* ------------------------------------------------------------- card grids */
+/* Hairlines are drawn per cell with inset shadows, never by a border-coloured
+   container behind the gaps — that leaves phantom cells when a row wraps. */
+
+.landing .cellGrid {
+  display: grid;
+  gap: 1px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.landing .cellGrid > * {
+  background: var(--card);
+  box-shadow: inset 1px 0 0 var(--border), inset 0 1px 0 var(--border);
+}
+
+/* a 2px x 22px rule carrying a semantic colour above a stat */
+.landing .statRule {
+  height: 2px;
+  width: 22px;
+  background: var(--rule-color);
+}
+
+/* --------------------------------------------------------- scroll reveals */
+/* Visible is the default. An element is only ever hidden inside an observer
+   callback that actually fired, so with no JS the page reads as static. */
+
+.landing .reveal {
+  transition: opacity 0.42s var(--ease), transform 0.42s var(--ease);
+}
+
+.landing .reveal[data-in='0'] {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+
+@keyframes scan {
+  0% { transform: translateX(-100%); opacity: 0; }
+  12% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { transform: translateX(100%); opacity: 0; }
+}
+/* edges settle at dashoffset 0, so a skipped animation leaves them drawn */
+@keyframes draw {
+  from { stroke-dashoffset: var(--len); }
+  to { stroke-dashoffset: 0; }
+}
+@media (max-width: 900px) {
+  .landing { --gutter: 22px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing .reveal[data-in='0'] { opacity: 1; transform: none; }
+}
+/* Staggered page enter. The delay rides on a custom property so a component can set it. */
+.landing .enter {
+  animation: en 0.34s var(--ease) var(--enter-delay, 0ms) both;
+}

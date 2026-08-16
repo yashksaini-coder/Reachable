@@ -1,0 +1,88 @@
+.hero {
+  padding-top: 84px;
+  position: relative;
+}
+
+/* the accent glow behind the eyebrow — the one gradient the palette allows */
+.glow {
+  position: absolute;
+  left: -160px;
+  top: -80px;
+  width: 520px;
+  height: 340px;
+  background: radial-gradient(closest-side, rgba(255, 106, 26, 0.1), transparent 70%);
+  pointer-events: none;
+}
+
+.eyebrowRow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.liveDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--l0);
+  animation: blip 1s steps(2, end) infinite;
+}
+
+.eyebrow {
+  font: 500 10.5px/1 var(--ui);
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--sig);
+}
+
+.h1 {
+  margin: 20px 0 0;
+  max-width: 22ch;
+  font: 500 52px/1.08 var(--ui);
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.lead {
+  margin: 22px 0 0;
+  max-width: 58ch;
+  font-size: 15px;
+  line-height: 1.62;
+  color: var(--mut);
+  text-wrap: pretty;
+}
+
+.actions {
+  margin-top: 30px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.trust {
+  margin-top: 22px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  font: 400 11px/1.4 var(--mono);
+  color: var(--dim);
+}
+
+.d1 {
+  --enter-delay: 70ms;
+}
+.d2 {
+  --enter-delay: 140ms;
+}
+.d3 {
+  --enter-delay: 200ms;
+}
+.d4 {
+  --enter-delay: 250ms;
+}
+
+@media (max-width: 900px) {
+  .h1 {
+    font-size: 36px;
+  }
+}

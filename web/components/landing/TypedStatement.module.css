@@ -1,0 +1,13 @@
+.pre {
+  margin: 0;
+  padding: 16px;
+  font: 400 12px/1.7 var(--mono);
+  color: var(--sig2);
+  overflow-x: auto;
+  min-height: 132px;
+}
+
+.cursor {
+  color: var(--sig);
+  animation: blip 1s steps(2, end) infinite;
+}

@@ -1,0 +1,43 @@
+.footer {
+  padding-top: 56px;
+  padding-bottom: 48px;
+  margin-top: 56px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: center;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.wordmark {
+  font: 400 11.5px/1 var(--mono);
+  color: var(--dim);
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  font: 400 11.5px/1 var(--mono);
+}
+
+.link {
+  color: var(--dim);
+  transition: color 0.18s var(--ease);
+}
+
+.link:hover {
+  color: var(--mut);
+}
+
+.snapshot {
+  margin-left: auto;
+  font: 400 11px/1 var(--mono);
+  color: var(--dim);
+}

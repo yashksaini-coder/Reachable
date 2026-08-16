@@ -1,0 +1,47 @@
+.copy {
+  max-width: 52ch;
+}
+
+.bar {
+  margin-top: 32px;
+  display: flex;
+  height: 10px;
+  border-radius: 5px;
+  overflow: hidden;
+  background: var(--hover);
+}
+
+.segment {
+  transform-origin: left;
+  animation: grow 0.6s var(--ease) both;
+}
+
+.grid {
+  margin-top: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(232px, 1fr));
+}
+
+.card {
+  padding: 22px;
+}
+
+.rule {
+  margin-bottom: 16px;
+}
+
+.tag {
+  font: 500 13px/1 var(--mono);
+}
+
+.title {
+  margin-top: 12px;
+  font: 500 14px/1.35 var(--ui);
+  color: var(--fg);
+}
+
+.body {
+  margin: 9px 0 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--mut);
+}

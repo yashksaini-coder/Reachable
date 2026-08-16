@@ -1,0 +1,54 @@
+.section {
+  padding-top: 104px;
+}
+
+.card {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: linear-gradient(180deg, #101318, #0c0e13);
+  box-shadow: var(--elev);
+  padding: 52px 44px;
+  overflow: hidden;
+}
+
+.glow {
+  position: absolute;
+  right: -120px;
+  top: -120px;
+  width: 420px;
+  height: 420px;
+  background: radial-gradient(closest-side, rgba(255, 106, 26, 0.13), transparent 70%);
+  pointer-events: none;
+}
+
+.h2 {
+  margin: 0;
+  max-width: 24ch;
+  font: 500 32px/1.16 var(--ui);
+  letter-spacing: -0.028em;
+  text-wrap: balance;
+}
+
+.lead {
+  max-width: 50ch;
+}
+
+.actions {
+  margin-top: 28px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.note {
+  font: 400 11px/1.4 var(--mono);
+  color: var(--dim);
+}
+
+@media (max-width: 900px) {
+  .card {
+    padding: 36px 24px;
+  }
+}

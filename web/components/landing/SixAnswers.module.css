@@ -1,0 +1,47 @@
+.h2 {
+  margin: 16px 0 0;
+  max-width: 26ch;
+  font: 500 34px/1.16 var(--ui);
+  letter-spacing: -0.028em;
+  text-wrap: balance;
+}
+
+.grid {
+  margin-top: 36px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.card {
+  padding: 24px;
+  transition: background 0.2s var(--ease);
+}
+
+.card:hover {
+  background: var(--card2);
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tag {
+  font: 500 11px/1 var(--mono);
+  color: var(--sig);
+}
+
+.title {
+  margin: 14px 0 0;
+  font: 500 16px/1.35 var(--ui);
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+.body {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--mut);
+  max-width: 44ch;
+}

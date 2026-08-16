@@ -1,0 +1,73 @@
+/* The 6s loop. Every element's resting state is its truthful one — markers sit
+   visible, the window bar is drawn at full width — so a paused, reduced-motion
+   or no-JS render is a legible static frame. Only the playhead and the settle
+   of the markers move. */
+
+@keyframes tlSweep {
+  0% {
+    transform: translateX(0);
+  }
+  10% {
+    transform: translateX(0);
+  }
+  78%,
+  100% {
+    transform: translateX(118px);
+  }
+}
+
+@keyframes tlMark {
+  0%,
+  4% {
+    opacity: 0.28;
+    transform: translateY(4px);
+  }
+  12% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes tlGlow {
+  0%,
+  8% {
+    opacity: 0;
+  }
+  22% {
+    opacity: 0.14;
+  }
+  64% {
+    opacity: 0.08;
+  }
+  88%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.svg {
+  --cycle: 6s;
+  width: 100%;
+  height: auto;
+}
+
+.paused * {
+  animation-play-state: paused;
+}
+
+.sweep {
+  animation: tlSweep var(--cycle) linear infinite;
+}
+
+.glow {
+  opacity: 0;
+  animation: tlGlow var(--cycle) var(--ease) infinite;
+}
+
+.mark {
+  animation: tlMark var(--cycle) var(--ease) var(--delay) infinite;
+}

@@ -13,7 +13,7 @@ export default function NotFound() {
         The page you asked for is not in the graph. Incidents live under <code className="font-mono text-foreground">/incident/&lt;advisory&gt;</code>.
       </p>
       <Link
-        href="/"
+        href="/incidents"
         className="mt-6 inline-flex min-h-10 items-center gap-2 rounded-md border border-border bg-card px-3.5 text-[13px] text-foreground elev transition-[border-color,transform,box-shadow] duration-150 hover:border-signal/40 hover:elev-2 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50"
       >
         <ArrowLeft className="size-4 text-signal" strokeWidth={1.75} /> Back to incidents
