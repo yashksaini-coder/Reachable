@@ -18,8 +18,12 @@ LOGIN = re.compile(r"^[a-z0-9][a-z0-9._-]{0,63}$")
 _META = {"created", "modified"}
 
 
-def _ts(s: str) -> int:
+def epoch(s: str) -> int:
+    """ISO-8601 (ms, Z) -> int epoch seconds UTC."""
     return int(datetime.fromisoformat(s.replace("Z", "+00:00")).timestamp())
+
+
+_ts = epoch
 
 
 def fetch_packument(name: str) -> dict | None:

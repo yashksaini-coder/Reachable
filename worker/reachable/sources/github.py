@@ -21,9 +21,11 @@ def _ts(iso: str) -> int:
     return int(datetime.fromisoformat(iso.replace("Z", "+00:00")).timestamp())
 
 
-def _day(d: str, offset_days: int = 0) -> str:
-    """'2025-09-08' + offset -> ISO-Z timestamp at day boundary."""
+def _day(d: str, offset_days: int = 0, *, end: bool = False) -> str:
+    """'2025-09-08' + offset -> ISO-Z timestamp at 00:00:00 (or 23:59:59 if end)."""
     dt = datetime.fromisoformat(d).replace(tzinfo=UTC) + timedelta(days=offset_days)
+    if end:
+        dt += timedelta(days=1, seconds=-1)
     return dt.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
@@ -53,10 +55,10 @@ def snapshot_shas(slug: str, cutoffs: list[str], around: list[tuple[str, int]] =
     """Last lockfile commit at/before each cutoff + every commit within +-days of each incident date."""
     seen: dict[str, int] = {}
     for c in cutoffs:
-        for row in lockfile_commits(slug, until=_day(c, 1)):
+        for row in lockfile_commits(slug, until=_day(c, end=True)):
             seen[row["sha"]] = row["committed_at"]
     for date, days in around:
-        since, until = _day(date, -days), _day(date, days + 1)
+        since, until = _day(date, -days), _day(date, days, end=True)
         # ponytail: cap 100 per window (one page); the busiest seed repo has ~1500 commits over 9 years
         for row in lockfile_commits(slug, since=since, until=until, per_page=100):
             seen[row["sha"]] = row["committed_at"]
@@ -222,6 +224,8 @@ def ingest_service(
     }
     for snap in snapshot_shas(slug, cutoffs, around):
         doc = fetch_lockfile(slug, snap["sha"])
+        if doc is None:
+            log(f"warn: {slug}@{snap['sha'][:12]}: no package-lock.json at ref")
         parsed = parse_lockfile(doc) if doc else None
         if parsed is None:
             out["skipped_snapshots"].append(snap["sha"])

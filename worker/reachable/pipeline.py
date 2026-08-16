@@ -72,7 +72,7 @@ def stage_packages(s, names: list[str]) -> dict[str, dict]:
         if r is None:
             log(f"  no packument: {name}")
             continue
-        docs[name] = r["doc"]
+        docs[name] = npm.fetch_packument(name)  # disk-cached: free second read
         pkgs.append(r["package"])
         vers.extend(r["versions"])
         vof.extend(r["version_of"])
@@ -145,7 +145,7 @@ def stage_advisories(s, seeds: dict, docs: dict[str, dict], touched: dict[str, s
         p = osv.affected_pairs(rec, known_versions=_known(docs))
         all_pairs.update(p)
         windows = _windows(docs, p)
-        r = osv.ingest_advisory(aid, windows)
+        r = osv.ingest_advisory(aid, windows, known_versions=_known(docs))
         advisories.append(r["advisory"])
         affects.extend(r["affects"])
     # affected versions that were not already in the graph need Version + Package nodes
