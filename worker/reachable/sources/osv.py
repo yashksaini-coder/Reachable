@@ -132,7 +132,7 @@ def affects_edges(
         if w is None:
             log(f"osv {rec['id']}: no window for {name}@{ver}, skipped")
             continue
-        live_to, kind = UNBOUNDED, "exact"
+        live_to, kind = UNBOUNDED, "unbounded"
         if adv["kind"] == "malware":
             # A bound that predates the publish is not a bound (advisory published before
             # a later-added bad version shipped) — only bounds after live_from count.

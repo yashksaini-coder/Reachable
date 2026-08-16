@@ -46,7 +46,7 @@ export type WhileLiveRow = {
   live_from_iso: string;
   live_to: number;
   live_to_iso: string;
-  live_to_kind: "exact" | "upper_bound" | "incident_override";
+  live_to_kind: "exact" | "upper_bound" | "unbounded";
   evidence: "in_window" | "pinned_removed" | "in_window+pinned_removed";
 };
 
@@ -107,7 +107,7 @@ export type Incident = {
     bolt_uri: string;
     host: string;
     platform: string;
-    graph: Record<string, number>;
+    graph: Record<string, number | null>; // null when the count was rejected (e.g. admission control under load)
     note: string;
   };
   headline: {

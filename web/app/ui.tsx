@@ -92,7 +92,7 @@ export function Kind({ kind }: { kind: string }) {
       ? "text-emerald-300 border-emerald-500/40"
       : kind === "upper_bound"
         ? "text-amber-300 border-amber-500/40"
-        : "text-sky-300 border-sky-500/40";
+        : "text-zinc-400 border-zinc-600"; // unbounded: still on the registry
   return <span className={`rounded border px-1 font-mono text-[10px] ${cls}`}>{kind.replace("_", " ")}</span>;
 }
 

@@ -4,7 +4,7 @@ import { listIncidents } from "@/lib/incident";
 // every incident that touches this service; a service nobody has scanned says "unscanned".
 export async function GET(_req: Request, ctx: RouteContext<"/badge/[owner]/[repo]">) {
   const { owner, repo } = await ctx.params;
-  const key = `svc:${owner}/${repo}`;
+  const key = `svc:${owner}/${repo.replace(/\.svg$/, "")}`;
   let exposed = 0;
   let l2 = 0;
   let scanned = false;

@@ -48,14 +48,14 @@ string against an int errors the whole query.
 
 | Label | Properties |
 |---|---|
-| `Package` | `name`, `ecosystem` (`'npm'`), `downloads` int (weekly) |
-| `Version` | `version`, `published_at` int, `removed` bool, `malicious` bool |
-| `Maintainer` | `login`, `account_created` int, `twofa` bool, `email_domain` |
+| `Package` | `name`, `ecosystem` (`'npm'`), `downloads` int (weekly; only on packages the `packages` stage enriched) |
+| `Version` | `version`, `published_at` int, `removed` bool, `malicious` bool (only written `true`, by the `advisories` stage) |
+| `Maintainer` | `login`, `email_domain`; `account_created` int and `twofa` bool exist in the fixture only — the public registry does not expose them, real ingest never writes them (`null` rows are dropped, never stored) |
 | `Advisory` | `kind` (`'malware'` \| `'cve'`), `severity`, `severity_rank` int, `published_at` int, `summary` |
 | `Service` | `name`, `repo_url`, `criticality` int |
 | `Lockfile` | `committed_at` int, `sha`, `path` |
-| `File` | `path`, `language` |
-| `Symbol` | `name` |
+| `File` | `path`, `language` (`'javascript'` \| `'typescript'`, by extension) |
+| `Symbol` | `name` — **fixture only**; L2 was cut, no ingest stage writes Symbol nodes |
 
 `Version.removed` = the version key is present in the registry `time` map but
 absent from `versions` — npm keeps the publish timestamp after erasing the
@@ -77,11 +77,11 @@ Every relationship has `id` and `eid` (both `eid(src, type, dst)`).
 | `AFFECTS` | `(Advisory)→(Version)` | **`live_from` int, `live_to` int, `live_to_kind`** | OSV + registry |
 | `HAS_LOCKFILE` | `(Service)→(Lockfile)` | — | GitHub |
 | `RESOLVED` | `(Lockfile)→(Version)` | **`at` int** (= lockfile `committed_at`) | lockfile |
-| `CONTAINS` | `(Service)→(File)` | — | tree-sitter (Phase 6) |
-| `IMPORTS` | `(File)→(Package)` | `line` int | tree-sitter (Phase 6) |
-| `USES_SYMBOL` | `(File)→(Symbol)` | `line` int | tree-sitter (Phase 6) |
-| `VULNERABLE_SYMBOL` | `(Advisory)→(Symbol)` | `inferred` bool (always true) | LLM (Phase 6) |
-| `NAME_SIMILAR_TO` | `(Package)→(Package)` | `distance` int, `kind` | materialised at ingest |
+| `CONTAINS` | `(Service)→(File)` | — | `sources/reach.py` — regex import scan of first-party JS/TS at the exposed commit (L0/L1) |
+| `IMPORTS` | `(File)→(Package)` | `line` int | `sources/reach.py` |
+| `USES_SYMBOL` | `(File)→(Symbol)` | `line` int | **fixture only** (L2 cut) |
+| `VULNERABLE_SYMBOL` | `(Advisory)→(Symbol)` | `inferred` bool (always true) | **fixture only** (L2 cut) |
+| `NAME_SIMILAR_TO` | `(Package)→(Package)` | `distance` int (1 or 2), `kind` (`scope` \| `hyphen` \| `homoglyph` \| `prefix_suffix` \| `insertion` \| `deletion` \| `transposition` \| `substitution` \| `edit2`) | `typosquat.py`, materialised at ingest (suspect → popular) |
 
 ## The temporal window — what "while it was live" means
 
@@ -92,8 +92,8 @@ one engine-side predicate: `RESOLVED.at BETWEEN AFFECTS.live_from AND live_to`.
 | Field | Value | Honesty |
 |---|---|---|
 | `live_from` | registry `time[version]` | **exact** — npm keeps it after takedown |
-| `live_to` | `min(next_surviving_version_publish, advisory_published)` | **upper bound** — npm publishes no takedown time anywhere |
-| `live_to_kind` | `'exact'` \| `'upper_bound'` \| `'incident_override'` | rendered next to every window in the UI |
+| `live_to` | `min(next_surviving_version_publish, advisory_published)` for malware (only bounds `>= live_from` count); the sentinel `4102444800` (2100-01-01) = still live, used for every CVE and for malware with no bound | **upper bound** — npm publishes no takedown time anywhere |
+| `live_to_kind` | `'upper_bound'` when a bound was found; `'unbounded'` with the sentinel (CVEs, or malware with no bound); `'exact'` reserved for a real takedown timestamp — npm never gives one, so it is never written today | rendered next to every window in the UI |
 
 `Version.published_at` and `AFFECTS.live_from` are the same number by
 construction; the duplication is deliberate so Q3 never needs a second hop.

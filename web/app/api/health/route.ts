@@ -10,7 +10,7 @@ export async function GET() {
   let hydradb: "unconfigured" | "up" | "down" = "unconfigured";
   if (env.HYDRA_TOKEN) {
     try {
-      const r = await fetch(`${env.HYDRA_HTTP_URL.replace(/\/$/, "")}/readyz`, { cache: "no-store", signal: AbortSignal.timeout(2000) });
+      const r = await fetch(`${env.HYDRA_HTTP_URL.replace(/\/$/, "")}/healthz`, { cache: "no-store", signal: AbortSignal.timeout(2000) });
       hydradb = r.ok ? "up" : "down";
     } catch {
       hydradb = "down";

@@ -299,7 +299,7 @@ EDGES: list[tuple] = [
         "GHSA-TEST-CVE",
         "Version",
         "pkg:fx/ansi-regex@6.0.0",
-        {"live_from": T0 - 2000, "live_to": 4_102_444_800, "live_to_kind": "exact"},
+        {"live_from": T0 - 2000, "live_to": 4_102_444_800, "live_to_kind": "unbounded"},
     ),  # 2100-01-01: still live
     ("HAS_LOCKFILE", "Service", "svc:acme/webapp", "Lockfile", "lock:acme/webapp@aaaa", {}),
     ("HAS_LOCKFILE", "Service", "svc:acme/webapp", "Lockfile", "lock:acme/webapp@bbbb", {}),
@@ -513,8 +513,10 @@ def main() -> None:
         wipe(s)
         load(s)
         n = sum(len(v) for v in NODES.values())
-        got = run(s, "MATCH (n:Version) WHERE n.key STARTS WITH 'pkg:fx/' RETURN count(*) AS c")
-        assert got[0]["c"] == len(NODES["Version"]), (got, len(NODES["Version"]))
+        # Id-anchored: a whole-label scan trips admission control (250k candidates) on the real graph.
+        for row in node_rows("Version"):
+            got = run(s, f"MATCH (n:Version {{id: {row['id']}}}) RETURN n.key AS key")
+            assert got and got[0]["key"] == row["key"], (row["key"], got)
         print(f"fixture loaded: {n} nodes, {len(EDGES)} edges")
 
 

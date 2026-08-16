@@ -133,7 +133,7 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
                   </td>
                   <td className="px-3 py-2 font-mono text-xs">{fmtUtc(r.published_at_iso)}</td>
                   <td className="px-3 py-2 font-mono text-xs">
-                    {r.live_to_kind === "exact" && r.live_to > 4_000_000_000 ? "still live" : fmtUtc(r.live_to_iso)}{" "}
+                    {r.live_to_kind === "unbounded" ? "still live" : fmtUtc(r.live_to_iso)}{" "}
                     <Kind kind={r.live_to_kind} />
                   </td>
                   <td className="px-3 py-2 text-xs">
@@ -295,7 +295,7 @@ function rank(inc: Awaited<ReturnType<typeof readIncident>> & object, svc: strin
 function SectionTitle({ n, title, star }: { n: string; title: string; star?: boolean }) {
   return (
     <h2 className="mb-3 flex items-baseline gap-3">
-      <span className="font-mono text-xs text-orange-400">Q{n}</span>
+      <span className="font-mono text-xs text-orange-400">{`Q${n}`}</span>
       <span className="text-lg font-medium">{title}</span>
       {star && <span className="text-xs text-zinc-500">★ differentiator</span>}
     </h2>
@@ -313,7 +313,7 @@ function Provenance({ inc }: { inc: NonNullable<Awaited<ReturnType<typeof readIn
         <div>bolt {p.bolt_uri}</div>
         <div>host {p.host} · {p.platform}</div>
         <div className="md:col-span-2 font-mono">
-          graph: {Object.entries(p.graph).map(([k, v]) => `${k} ${v.toLocaleString()}`).join(" · ")}
+          graph: {Object.entries(p.graph).map(([k, v]) => `${k} ${v?.toLocaleString() ?? "n/a"}`).join(" · ")}
         </div>
       </div>
       <p className="mt-2 text-[11px] text-zinc-500">{p.note}</p>

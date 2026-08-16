@@ -3,8 +3,12 @@
 DATA    := $(CURDIR)/.hydradb
 PY      := $(CURDIR)/.venv/bin/python
 IMAGE   := ghcr.io/hydra-db/hydradb:latest
-# Local dev token only. Real deployments read it from the environment.
-TOKEN   ?= local-development-token-32-bytes
+# Token: from .env (HYDRA_TOKEN) if present, else the local dev default. The node and the
+# worker must agree — both read the same .env.
+TOKEN   ?= $(shell grep -E '^HYDRA_TOKEN=' .env 2>/dev/null | cut -d= -f2- | tr -d "\"'" || true)
+ifeq ($(strip $(TOKEN)),)
+TOKEN   := local-development-token-32-bytes
+endif
 export PYTHONPATH := $(CURDIR)/worker
 
 # .venv and .hydradb are gitignored, so a clean checkout has neither.
@@ -18,7 +22,7 @@ node:
 	@printf '%s\n' '$(TOKEN)' > $(DATA)/auth-token
 	docker run --rm --name reachable-hydradb \
 	  --user "$$(id -u):$$(id -g)" \
-	  -p 7687:7687 -p 8443:8443 -p 9090:9090 \
+	  -p 127.0.0.1:7687:7687 -p 127.0.0.1:8443:8443 -p 127.0.0.1:9090:9090 \
 	  -v "$(DATA):/data" \
 	  -e CLOUD_PROVIDER=local \
 	  -e LOCAL_PATH=/data/store \
@@ -50,11 +54,13 @@ probe:
 fixture:
 	$(PY) -m reachable.fixture
 
+# make ingest ARGS="--only reach --only typosquats" to run selected stages
 ingest:
-	$(PY) -m reachable.pipeline --seeds seeds.json
+	$(PY) -m reachable.pipeline --seeds seeds.json $(ARGS)
 
+# make incident ID=<advisory> ARGS="--out --runs 5"  (a bare `--out` is swallowed by make as --output-sync)
 incident:
-	$(PY) -m reachable.incident $(ID)
+	$(PY) -m reachable.incident $(ID) $(ARGS)
 
 lint:
 	$(PY) -m ruff check . && $(PY) -m ruff format --check .

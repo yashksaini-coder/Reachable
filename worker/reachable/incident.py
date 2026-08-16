@@ -18,6 +18,8 @@ import time
 from datetime import UTC, datetime
 from pathlib import Path
 
+from neo4j.exceptions import Neo4jError
+
 from reachable import queries
 from reachable.db import URI, run, session
 from reachable.ids import gid
@@ -70,13 +72,18 @@ def provenance(s) -> dict:
         digest = None
     counts = {}
     for label in ("Service", "Lockfile", "Package", "Version", "Advisory", "Maintainer"):
-        counts[label] = run(s, f"MATCH (n:{label}) RETURN count(*) AS c")[0]["c"]
+        try:
+            counts[label] = run(s, f"MATCH (n:{label}) RETURN count(*) AS c")[0]["c"]
+        except Neo4jError as e:
+            # A whole-label count past 250k nodes is refused by admission control
+            # (cypher_vertex_label_index_candidates … exceeds limit 250000). Report, never guess.
+            counts[label] = None
+            print(f"provenance: {label} count unavailable: {e.message}", file=sys.stderr)
     # No edge counts here: whole-type edge scans exceed the 30 s query timeout past ~100k edges.
     return {
         "generated_at": datetime.now(UTC).isoformat(),
         "hydradb_image": digest,
         "bolt_uri": URI,
-        "host": platform.node(),
         "platform": platform.platform(),
         "graph": counts,
         "note": "All ms are wall-clock from the Python driver over loopback Bolt; cold = first run "

@@ -104,28 +104,32 @@ Data sources: `registry.npmjs.org` (versions, maintainers, publish times) ·
 docs/
   spec-v3.md           the plan (its §4 data model is superseded by schema.md)
   schema.md            THE frozen graph schema — labels, properties, id scheme
+  JUDGE_GUIDE.md       90-second path + six-question table for judges
+  hack-hydra-participant-guide.pdf   the official rules (source for §13)
 worker/
   reachable/
-    db.py              driver + env; the only place HYDRA_TOKEN is read
+    db.py              driver + env; the only place HYDRA_TOKEN is read (os.environ only — .env is not auto-loaded)
+    http.py            cached HTTP GET/POST for the sources
     ids.py             gid()/eid() integer ids, safe_purl() allowlist
     fixture.py         ~30-node hand-verified test graph, loaded via UNWIND
-    sources/           npm.py osv.py github.py (lockfile history) reach.py (L0/L1 import scan) depsdev.py
+    sources/           npm.py osv.py github.py (lockfile history) reach.py (L0/L1 import scan)
+                       depsdev.py (present, NOT used by the pipeline — DEPENDS_ON comes from lockfiles)
     typosquat.py       materialises NAME_SIMILAR_TO edges
     load.py            UNWIND MERGE write primitives, idempotent by deterministic id
     pipeline.py        seeds.json -> graph, six resumable stages (services, packages,
                        advisories, reach, typosquats, verify)
     queries.py         Q1–Q7, one function each, typed results
     incident.py        composes the six answers into one payload
-  tests/               golden-file tests against the fixture
-  out/                 precomputed incident JSON (committed)
+  tests/               golden-file tests against the fixture (test_queries.py)
+  out/                 incident JSON written by `make incident … ARGS=--out` (the web contract; empty until it runs)
+benchmarks/results/    provenance-stamped timing JSON, same command (created on first --out)
 scripts/               probe.py, roundtrip.py — Phase 0 harnesses, kept
 web/
-  app/                 / · /incident/[advisory] · /incident/[advisory]/[service]
-  lib/                 server-only DB + data loading (env.ts imports "server-only")
+  app/                 / · /incident/[advisory] · /incident/[advisory]/[service] · /badge/[owner]/[repo] · /api/health
+  lib/                 env.ts (server-only) · incident.ts (loads worker/out JSON)
 seeds.json             12 seed repos in two disclosed cohorts: 8 core + 4 real victims
-docs/JUDGE_GUIDE.md    90-second path + six-question table for judges
-benchmarks/results/    provenance-stamped timing JSON written by `make incident --out`
-worker/out/            committed incident JSON — the web contract and the demo fallback
+requirements.txt       pinned worker deps · pyproject.toml holds only ruff/pytest config
+.env.example           copy to .env / web/.env.local; both are gitignored
 ```
 
 There is deliberately **no `schema/` directory and no `.cypher` files.** The
@@ -140,14 +144,21 @@ plus the id functions in `ids.py`; the fixture is Python.
 ```bash
 make venv        # python venv from requirements.txt
 make node        # start local graph-node with correct env (foreground)
+make node-stop   # docker stop the node          make node-logs   # follow its logs
+make roundtrip   # write + read one node over Bolt (node health check)
 make probe       # run the Cypher feature probe against the node
-make fixture     # wipe + load the hand-verified fixture graph
-make ingest      # full pipeline from seeds.json
-make incident ID=GHSA-xxxx-yyyy-zzzz
+make fixture     # (re)load the hand-verified fixture graph (fx/acme keys; wipes only its own edges)
+make ingest      # full pipeline from seeds.json; ARGS="--only <stage>" for one stage
+make incident ID=GHSA-xxxx-yyyy-zzzz              # print the report
+make incident ID=… ARGS="--out --runs 5"          # + write worker/out/<id>.json and benchmarks/results/
 make lint        # ruff
-make test        # lint + pytest against fixture + NEXT_PUBLIC leak check
+make test        # lint + pytest against fixture (needs a running node) + NEXT_PUBLIC leak check
 make web         # next dev
+make web-build   # npm ci && next build
 ```
+
+Extra flags go through `ARGS=` — a bare `make incident ID=x --out` is silently
+eaten by make itself (`--out` abbreviates `--output-sync`) and writes nothing.
 
 If a command doesn't exist yet, create it in the `Makefile` rather than
 documenting a raw one-liner. One entry point per task.
@@ -331,6 +342,18 @@ The fixture was ~100× too sparse to show any of this. Every item below reshaped
       `aggregate ORDER BY cannot reference row properties`. Sort in Python.
 - [x] Anonymous labelled nodes need a name: `(:Lockfile)` refused (`node labels and
       non-id properties require a named node`); write `(l:Lockfile)`.
+
+- [x] **Whole-label node counts are refused past 250k nodes**: `MATCH (n:Version) RETURN
+      count(*)` → `cypher_vertex_label_index_candidates rejected by admission control:
+      actual 250001 exceeds limit 250000`. Same for `WHERE key STARTS WITH` over a big
+      label. Anchor by id, or count at write time. (`incident.provenance` reports `null`.)
+- [x] **Targeted `MSpaths` explodes on the target side too**: with real `Service` targets,
+      `maxLen ≥ 3` over `DEPENDS_ON+RESOLVED+HAS_LOCKFILE` hits the 30 s timeout
+      (`native_path_target_frontier`); `maxLen: 2` over `RESOLVED+HAS_LOCKFILE` is exact
+      (RESOLVED is the closure) and runs in ~5 ms warm / ~1.8 s cold on the real graph.
+- [x] Relationship delete needs **anonymous endpoints and one edge type**:
+      `MATCH (a {id})-[r:T]->(b {id}) DELETE r` works; labels or an edge id in the
+      pattern are refused. `n.id` IS readable in `MATCH`/`RETURN` (only `<rel>.id` is not).
 
 Still unverified: HTTP `consistency: "strong"` round trip · weighted paths.
 

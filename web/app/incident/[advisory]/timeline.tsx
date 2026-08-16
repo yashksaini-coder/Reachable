@@ -44,7 +44,7 @@ export function Timeline({
         </text>
         {bounded.map((v, i) => {
           const y = 34 + i * rowH;
-          const ub = v.live_to_kind !== "exact";
+          const ub = v.live_to_kind === "upper_bound";
           const ticks = rows.filter((r) => r.version === v.version);
           return (
             <g key={v.version}>

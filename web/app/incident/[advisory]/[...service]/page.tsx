@@ -5,17 +5,17 @@ import { HydraCard, Level, Limits } from "@/app/ui";
 
 export const dynamic = "force-static";
 export async function generateStaticParams() {
-  const out: { advisory: string; service: string }[] = [];
+  const out: { advisory: string; service: string[] }[] = [];
   for (const inc of await listIncidents())
-    for (const s of inc.q1_exposed.services) out.push({ advisory: inc.advisory.key, service: svcSlug(s) });
+    for (const s of inc.q1_exposed.services) out.push({ advisory: inc.advisory.key, service: svcSlug(s).split("/") });
   return out;
 }
 
-export default async function ServicePage({ params }: PageProps<"/incident/[advisory]/[service]">) {
+export default async function ServicePage({ params }: PageProps<"/incident/[advisory]/[...service]">) {
   const { advisory, service } = await params;
   const inc = await readIncident(advisory);
   if (!inc) notFound();
-  const key = `svc:${decodeURIComponent(service)}`;
+  const key = `svc:${service.map(decodeURIComponent).join("/")}`;
   const rows = inc.q1_exposed.rows.filter((r) => r.service === key);
   if (rows.length === 0) notFound();
   const reach = inc.q7_reachability[key];

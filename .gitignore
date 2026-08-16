@@ -2,7 +2,7 @@
 .env.*
 !.env.example
 *.token
-.hydradb-plugin.json
+.hydradb-plugin*.json
 .hydradb-plugin.local.json
 .cache/
 data/

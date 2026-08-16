@@ -140,17 +140,23 @@ def q1_blast_radius_count(
 ) -> Result:
     """One algo.MSpaths call: N compromised versions x M services, reverse direction.
     The many-to-many demo query. Sources and targets are inline literals (engine rule), so both
-    lists must already have passed the allowlist. Returns distinct (bad, service) pairs."""
+    lists must already have passed the allowlist. Returns distinct (bad, service) pairs.
+
+    maxLen 2 (bad <-RESOLVED- lockfile <-HAS_LOCKFILE- service) is exact because RESOLVED is the
+    flattened tree. Anything longer lets the engine expand the TARGET frontier through every
+    lockfile's thousands of RESOLVED/DEPENDS_ON edges: measured on the real graph, maxLen 2 =
+    1.8 s cold / 5 ms warm, maxLen >= 3 = 30 s timeout (native_path_target_frontier).
+    """
     res = Result([], 0.0)
     q = (
         "CALL algo.MSpaths({sourceLabel: 'Version', sourceProperty: 'key', "
         f"sourceValues: {cypher_str_list(bad_version_keys)}, "
         f"targetLabel: 'Service', targetProperty: 'key', targetValues: {cypher_str_list(service_keys)}, "
-        "relTypes: ['DEPENDS_ON', 'RESOLVED', 'HAS_LOCKFILE'], relDirection: 'incoming', "
+        "relTypes: ['RESOLVED', 'HAS_LOCKFILE'], relDirection: 'incoming', "
         "maxLen: $maxlen, pathCount: $pathcount, resultLimit: $limit}) YIELD path RETURN path"
     )
     limit = len(bad_version_keys) * len(service_keys) * path_count
-    rows = _run(s, res, q, maxlen=10, pathcount=path_count, limit=limit + 1)
+    rows = _run(s, res, q, maxlen=2, pathcount=path_count, limit=limit + 1)
     res.truncated = len(rows) > limit
     pairs = {}
     for r in rows[:limit]:
@@ -158,6 +164,10 @@ def q1_blast_radius_count(
         pairs.setdefault((chain[0], chain[-1]), chain)
     res.rows = [{"bad": b, "service": sv, "chain": c} for (b, sv), c in sorted(pairs.items())]
     res.meta = {"sources": len(bad_version_keys), "targets": len(service_keys), "paths": len(rows)}
+    res.limitations.append(
+        "Membership only (maxLen 2 over the RESOLVED closure); the DEPENDS_ON explanation chain "
+        "is in q1_exposed. Longer maxLen expands the target frontier and times out on the real graph."
+    )
     if res.truncated:
         res.limitations.append("resultLimit reached — blast radius may be incomplete.")
     return res
@@ -342,6 +352,10 @@ def q7_reachability(s, advisory_key: str, service_key: str) -> Result:
         res.limitations.append("No source files ingested for this service; reachability unknown.")
     else:
         level = "L2" if symbols else "L1" if imports else "L0"
+        res.limitations.append(
+            "Import-level scan of first-party JS/TS at the exposed commit (regex, not a parser); "
+            "symbol-level (L2) needs tree-sitter and is only present in the fixture."
+        )
     res.rows = [{"level": level, "files_scanned": scanned, "imports": imports, "symbols": symbols}]
     res.meta["level"] = level
     return res

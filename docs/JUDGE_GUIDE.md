@@ -1,7 +1,7 @@
 # Judge guide — Reachable
 
 **Track 02A · supply chain blast radius · solo.** Everything below is reproducible from a clean
-clone with Docker + Python 3.11+ + Node 20+. Nothing on any page is estimated; every number is
+clone with Docker + Python 3.11+ + Node 20+ (`make venv` builds the worker env from `requirements.txt`). Nothing on any page is estimated; every number is
 recorded in a committed JSON with the statement that produced it.
 
 ## 90-second path
@@ -27,9 +27,9 @@ recorded in a committed JSON with the statement that produced it.
 | 2 | Which version introduced it? | incident page, Q2 table | `…-[:AFFECTS]->(v:Version) RETURN … ORDER BY v.published_at ASC LIMIT 1` (the engine has no `min()`); `Version.removed` from the registry’s time-vs-versions orphan rule | same | same |
 | 3 | Which apps resolved the bad version **while it was live**? ★ | incident page, Q3 timeline + table | one query per incident: `WHERE r.at >= af.live_from AND r.at <= af.live_to` — two **relationship** properties compared in-engine; second evidence class `WHERE v.removed = true` (pinning an erased version is only possible while live) | same | same |
 | 4 | Which packages share maintainers/infrastructure? ★ | incident page, Q4 | `(bad)-[:VERSION_OF]->(:Package)<-[:MAINTAINS]-(m)-[:MAINTAINS]->(other)` then per package `…<-[:RESOLVED]-(l)<-[:HAS_LOCKFILE]-(s) RETURN s.key, count(*)` (grouping key = the `count(DISTINCT)` substitute) | same | same |
-| 5 | Likely typosquats nearby? ★ | incident page, Q5 | `NAME_SIMILAR_TO` is **materialised at ingest** (Damerau-Levenshtein 1, scope/hyphen/homoglyph/affix kinds) so proximity is a traversal, not a scan | `make ingest` (stage `typosquats`) | — |
-| 6 | Complete blast radius | the incident page | all of the above composed by `worker/reachable/incident.py` with per-query ms | `make incident ID=<id> --out` | `worker/out/<id>.json` |
-| + | Which of these actually need action? | Q1 verdict column; service page | `File`/`CONTAINS`/`IMPORTS` from a first-party import scan at the exact exposed commit → L0/L1; `unscanned` when we could not read the source | `make ingest` (stage `reach`) | — |
+| 5 | Likely typosquats nearby? ★ | incident page, Q5 | `NAME_SIMILAR_TO` is **materialised at ingest** (Damerau-Levenshtein 1 — 2 for names ≥ 8 chars — plus scope/hyphen/homoglyph/affix kinds) so proximity is a traversal, not a scan | `make ingest ARGS="--only typosquats"` | — |
+| 6 | Complete blast radius | the incident page | all of the above composed by `worker/reachable/incident.py` with per-query ms | `make incident ID=<id> ARGS=--out` | `worker/out/<id>.json` |
+| + | Which of these actually need action? | Q1 verdict column; service page | `File`/`CONTAINS`/`IMPORTS` from a first-party import scan at the exact exposed commit → L0/L1; `unscanned` when we could not read the source | `make ingest ARGS="--only reach"` | — |
 
 ## What HydraDB does that a table could not
 
@@ -67,9 +67,13 @@ store: cold vs warm) · whole-type edge counts and node deletes are full scans.
 ## Reproduce
 
 ```bash
-make venv && make node          # terminal 1: HydraDB (Docker), stays in the foreground
-make fixture && make test       # terminal 2: 11 hand-verified golden tests
-make ingest                     # seeds.json -> graph (network-bound first time; disk-cached after)
-make incident ID=<advisory> --out
-make web-build && cd web && npm start
+make venv && make node          # terminal 1: HydraDB (Docker), stays in the foreground — leave it running
+make fixture && make test       # terminal 2 (node up): 11 hand-verified golden tests reload the fixture themselves
+make ingest                     # seeds.json -> graph (network-bound first time; disk-cached after; `export GITHUB_TOKEN=…` first — the worker reads env vars, not .env)
+make incident ID=<advisory> ARGS="--out --runs 5"   # ARGS=, not a bare --out (make eats it as --output-sync)
+make web-build && cd web && npm start               # renders from the committed worker/out/*.json
 ```
+
+`make test`, `make fixture`, `make ingest` and `make incident` all need the node from terminal 1
+on `7687`. The fixture lives under its own `pkg:fx/` / `svc:acme/` keys and its wipe deletes only
+its own edges, so it coexists with the ingested graph in either order.
