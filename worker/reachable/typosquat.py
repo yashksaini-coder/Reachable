@@ -63,7 +63,12 @@ def _edit_kind(s: str, p: str) -> str:
     if len(s) == len(p) - 1:
         return "deletion"
     diff = [i for i in range(len(s)) if s[i] != p[i]]
-    if len(diff) == 2 and diff[1] == diff[0] + 1 and s[diff[0]] == p[diff[1]] and s[diff[1]] == p[diff[0]]:
+    if (
+        len(diff) == 2
+        and diff[1] == diff[0] + 1
+        and s[diff[0]] == p[diff[1]]
+        and s[diff[1]] == p[diff[0]]
+    ):
         return "transposition"
     return "substitution"
 
@@ -154,11 +159,21 @@ if __name__ == "__main__":
     import random
 
     rng = random.Random(1)
-    big_pop = {"".join(rng.choices("abcdefghijklmnopqrstuvwxyz-", k=rng.randint(4, 14))) for _ in range(2000)}
-    big_names = list(big_pop)[:1000] + [
-        p[:i] + p[i + 1 :] for p in list(big_pop)[:3000] for i in (1,)
-    ] + ["".join(rng.choices("abcdefghijklmnopqrstuvwxyz-", k=rng.randint(4, 20))) for _ in range(6000)]
+    big_pop = {
+        "a" + "".join(rng.choices("abcdefghijklmnopqrstuvwxyz-", k=rng.randint(3, 13)))
+        for _ in range(2000)
+    }
+    big_names = (
+        list(big_pop)[:1000]
+        + [p[:i] + p[i + 1 :] for p in list(big_pop)[:3000] for i in (1,)]
+        + [
+            "a" + "".join(rng.choices("abcdefghijklmnopqrstuvwxyz-", k=rng.randint(3, 19)))
+            for _ in range(6000)
+        ]
+    )
     t1 = time.perf_counter()
     big = similar_names(big_names, big_pop)
     big_ms = (time.perf_counter() - t1) * 1000
-    print(f"typosquat ok: edges={len(rows)} elapsed={ms:.1f}ms | scale: names={len(big_names)} popular={len(big_pop)} edges={len(big)} elapsed={big_ms:.0f}ms")
+    print(
+        f"typosquat ok: edges={len(rows)} elapsed={ms:.1f}ms | scale: names={len(big_names)} popular={len(big_pop)} edges={len(big)} elapsed={big_ms:.0f}ms"
+    )

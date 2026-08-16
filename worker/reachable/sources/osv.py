@@ -67,25 +67,28 @@ def advisory_row(rec: dict) -> dict:
 
 
 def _expand(events: list[dict], known: list[str]) -> list[str]:
-    lo = hi = None
-    inclusive = False
+    # OSV events are ordered; each "introduced" opens a window, the next
+    # "fixed"/"last_affected" closes it. One range may hold several windows.
+    wins: list[list] = []  # [lo_key|None, hi_key|None, inclusive]
     for e in events:
         if "introduced" in e:
             lo = e["introduced"]
-        elif "fixed" in e:
-            hi = e["fixed"]
-        elif "last_affected" in e:
-            hi, inclusive = e["last_affected"], True
-    lo_k = _semver_key(lo) if lo and lo != "0" else None
-    hi_k = _semver_key(hi) if hi else None
+            wins.append([_semver_key(lo) if lo != "0" else None, None, False])
+        elif wins and ("fixed" in e or "last_affected" in e):
+            hi = e.get("fixed") or e["last_affected"]
+            wins[-1][1], wins[-1][2] = _semver_key(hi), "last_affected" in e
     out = []
     for v in known:
         k = _semver_key(v)
-        if k is None or (lo_k and k < lo_k):
+        if k is None:
             continue
-        if hi_k and (k > hi_k if inclusive else k >= hi_k):
-            continue
-        out.append(v)
+        for lo_k, hi_k, inclusive in wins:
+            if lo_k and k < lo_k:
+                continue
+            if hi_k and (k > hi_k if inclusive else k >= hi_k):
+                continue
+            out.append(v)
+            break
     return out
 
 
@@ -117,10 +120,14 @@ def affected_pairs(
     return sorted(pairs)
 
 
-def affects_edges(rec: dict, windows: dict[tuple[str, str], dict]) -> list[dict]:
+def affects_edges(
+    rec: dict,
+    windows: dict[tuple[str, str], dict],
+    known_versions: dict[str, list[str]] | None = None,
+) -> list[dict]:
     adv = advisory_row(rec)
     rows = []
-    for name, ver in affected_pairs(rec):
+    for name, ver in affected_pairs(rec, known_versions):
         w = windows.get((name, ver))
         if w is None:
             log(f"osv {rec['id']}: no window for {name}@{ver}, skipped")
@@ -158,14 +165,18 @@ def query_batch(pairs: list[tuple[str, str]]) -> dict[tuple[str, str], list[str]
     return out
 
 
-def ingest_advisory(vid: str, windows: dict[tuple[str, str], dict]) -> dict:
+def ingest_advisory(
+    vid: str,
+    windows: dict[tuple[str, str], dict],
+    known_versions: dict[str, list[str]] | None = None,
+) -> dict:
     rec = fetch_vuln(vid)
     if rec is None:
         raise KeyError(f"no OSV record {vid}")
     return {
         "advisory": advisory_row(rec),
-        "pairs": affected_pairs(rec),
-        "affects": affects_edges(rec, windows),
+        "pairs": affected_pairs(rec, known_versions),
+        "affects": affects_edges(rec, windows, known_versions),
     }
 
 
@@ -179,6 +190,30 @@ if __name__ == "__main__":
     assert _expand([{"introduced": "0"}, {"last_affected": "1.1.0"}], ["1.1.0", "1.1.1"]) == [
         "1.1.0"
     ]
+    # multi-window range and an open-ended tail
+    assert _expand(
+        [{"introduced": "1.0.0"}, {"fixed": "1.1.0"}, {"introduced": "2.0.0"}],
+        ["0.5.0", "1.0.5", "1.1.0", "1.5.0", "2.0.0", "3.0.0"],
+    ) == ["1.0.5", "2.0.0", "3.0.0"]
+    # affects_edges honours known_versions for range-only records
+    fake = {
+        "id": "MAL-0000-1",
+        "published": "2025-09-08T20:00:00Z",
+        "affected": [
+            {
+                "package": {"ecosystem": "npm", "name": "x"},
+                "ranges": [
+                    {"type": "SEMVER", "events": [{"introduced": "1.0.0"}, {"fixed": "1.0.2"}]}
+                ],
+            }
+        ],
+    }
+    fw = {("x", "1.0.1"): {"published_at": 100, "next_surviving": None}}
+    fr = affects_edges(fake, fw, {"x": ["0.9.0", "1.0.1", "1.0.2"]})
+    assert [r["dst"] for r in fr] == ["pkg:npm/x@1.0.1"] and fr[0]["live_to"] == _ts(
+        fake["published"]
+    )
+    assert affects_edges(fake, fw) == []
 
     ts = fetch_vuln("GHSA-g7cv-rxg3-hmpx")
     ta = advisory_row(ts)
