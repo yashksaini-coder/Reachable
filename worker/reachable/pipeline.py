@@ -27,6 +27,7 @@ import json
 import sys
 import time
 from collections import defaultdict
+from pathlib import Path
 
 from reachable import load, typosquat
 from reachable.db import run, session
@@ -58,17 +59,48 @@ def stage_services(s, seeds: dict) -> dict:
             f"{len(r['depends_on'])} DEPENDS_ON, {len(r['versions'])} versions, "
             f"{len(r['skipped_snapshots'])} skipped  ({time.perf_counter() - t0:.1f}s)"
         )
+    save_touched(touched)
     return touched
+
+
+TOUCHED = Path(".cache") / "touched.json"
+
+
+def save_touched(touched: dict[str, set[str]]) -> None:
+    TOUCHED.parent.mkdir(exist_ok=True)
+    TOUCHED.write_text(json.dumps({k: sorted(v) for k, v in touched.items()}))
+
+
+def resolved_versions(s) -> dict[str, set[str]]:
+    """{name: {versions}} that some lockfile actually resolved. On a resumed run, read from
+    the file the services stage wrote; falling back to the graph costs ~2.4 s per lockfile
+    (the engine pays per returned row on a high-degree expansion)."""
+    if TOUCHED.exists():
+        return defaultdict(set, {k: set(v) for k, v in json.loads(TOUCHED.read_text()).items()})
+    log("  rebuilding resolved-version set from the graph (slow; ~2.4 s per lockfile)")
+    out: dict[str, set[str]] = defaultdict(set)
+    for lf in run(s, "MATCH (l:Lockfile) RETURN l.id AS id"):
+        for r in run(
+            s, f"MATCH (l:Lockfile {{id: {lf['id']}}})-[:RESOLVED]->(v:Version) RETURN v.key AS k"
+        ):
+            name, _, version = r["k"][len("pkg:npm/") :].rpartition("@")
+            out[name].add(version)
+    save_touched(out)
+    return out
 
 
 def graph_packages(s) -> list[str]:
     return sorted(r["name"] for r in run(s, "MATCH (p:Package) RETURN p.name AS name"))
 
 
-def stage_packages(s, names: list[str], batch: int = 250) -> dict[str, list[str]]:
+def stage_packages(
+    s, names: list[str], keep: dict[str, set[str]] | None = None, batch: int = 250
+) -> dict[str, list[str]]:
     """Enrich every Package from its packument, streaming in batches so memory stays flat
-    (holding 6k packuments cost 9 GB RSS). Returns {name: [versions]} — the compact
-    thing the advisory stage needs for range expansion; windows re-read the cached doc."""
+    (holding 6k packuments cost 9 GB RSS). Only versions in keep[name] — the ones some
+    lockfile resolved — are written: a package's full history is ~200 versions and would be
+    ~1.2M dead nodes; affected-but-unresolved versions are written by the advisory stage.
+    Returns {name: [all versions]} for OSV range expansion; windows re-read the cached doc."""
     known: dict[str, list[str]] = {}
     total = 0
     for i in range(0, len(names), batch):
@@ -81,8 +113,11 @@ def stage_packages(s, names: list[str], batch: int = 250) -> dict[str, list[str]
                 continue
             known[name] = [v["version"] for v in r["versions"]]
             pkgs.append(r["package"])
-            vers.extend(r["versions"])
-            vof.extend(r["version_of"])
+            want = keep.get(name, set()) if keep is not None else None
+            vrows = [v for v in r["versions"] if want is None or v["version"] in want]
+            vkeys = {v["key"] for v in vrows}
+            vers.extend(vrows)
+            vof.extend(e for e in r["version_of"] if e["src"] in vkeys)
             maints.extend(r["maintainers"])
             medges.extend(r["maintains"])
         dl = npm.downloads([p["name"] for p in pkgs])
@@ -123,6 +158,7 @@ def _windows(pairs) -> dict:
             out[(name, version)] = {
                 "published_at": npm.epoch(t),
                 "next_surviving": npm.next_surviving_publish(doc, version),
+                "removed": version not in doc.get("versions", {}),
             }
     return out
 
@@ -147,6 +183,7 @@ def stage_advisories(
             ids.update(found)
     log(f"  {len(ids)} advisories touch the graph")
     advisories, affects, all_pairs = [], [], set()
+    all_windows: dict = {}
     for aid in sorted(ids):
         rec = osv.fetch_vuln(aid)
         if rec is None:
@@ -155,11 +192,20 @@ def stage_advisories(
         p = osv.affected_pairs(rec, known_versions=known)
         all_pairs.update(p)
         windows = _windows(p)
+        all_windows.update(windows)
         r = osv.ingest_advisory(aid, windows, known_versions=known)
         advisories.append(r["advisory"])
         affects.extend(r["affects"])
-    # affected versions that were not already in the graph need Version + Package nodes
-    stub_versions = [{"key": f"pkg:npm/{n}@{v}", "version": v} for n, v in sorted(all_pairs)]
+    # affected versions need Version + Package nodes with real published_at/removed — they were
+    # not necessarily resolved by any lockfile, so the packages stage did not write them
+    stub_versions = []
+    for n, v in sorted(all_pairs):
+        row = {"key": f"pkg:npm/{n}@{v}", "version": v}
+        w = all_windows.get((n, v))
+        if w:
+            row["published_at"] = w["published_at"]
+            row["removed"] = w["removed"]
+        stub_versions.append(row)
     stub_pkgs = _dedupe(
         [{"key": f"pkg:npm/{n}", "name": n, "ecosystem": "npm"} for n, _ in all_pairs]
     )
@@ -178,7 +224,10 @@ def stage_advisories(
     missing = sorted({n for n, _ in all_pairs} - set(known))
     if missing:
         log(f"  enriching {len(missing)} advisory-only packages")
-        known.update(stage_packages(s, missing))
+        keep: dict[str, set[str]] = defaultdict(set)
+        for n, v in all_pairs:
+            keep[n].add(v)
+        known.update(stage_packages(s, missing, keep=keep))
     # mark malicious versions
     mal = [
         {"key": a["dst"], "malicious": True}
@@ -287,15 +336,13 @@ def main(argv=None) -> None:
             touched = stage_services(s, seeds)
         if "packages" in only:
             log("== packages")
-            known = stage_packages(s, graph_packages(s))
+            if not touched:
+                touched = resolved_versions(s)
+            known = stage_packages(s, graph_packages(s), keep=touched)
         if "advisories" in only:
             log("== advisories")
-            if not touched:  # resumed run: rebuild the (name, version) set from the graph
-                for r in run(
-                    s,
-                    "MATCH (v:Version)-[:VERSION_OF]->(p:Package) RETURN p.name AS n, v.version AS v",
-                ):
-                    touched[r["n"]].add(r["v"])
+            if not touched:
+                touched = resolved_versions(s)
             if not known:  # resumed run: version lists from the graph
                 for r in run(
                     s,
