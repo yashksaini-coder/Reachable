@@ -1,4 +1,5 @@
-import { SNAPSHOT } from "@/lib/landing-data";
+import { listIncidents, readIncident } from "@/lib/incident";
+import { LANDING_INCIDENT, buildLanding } from "@/lib/landing-data";
 import { Header } from "@/components/landing/Header";
 import { Hero } from "@/components/landing/Hero";
 import { SixAnswers } from "@/components/landing/SixAnswers";
@@ -12,21 +13,25 @@ import { Footer } from "@/components/landing/Footer";
 
 export const metadata = { title: "Reachable — supply-chain incident console" };
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  // The landing narrates one committed report; if it is missing, the most exposed one stands in.
+  const inc = (await readIncident(LANDING_INCIDENT)) ?? (await listIncidents())[0];
+  if (!inc) throw new Error(`landing needs a committed report in worker/out/ (expected ${LANDING_INCIDENT}.json)`);
+  const m = buildLanding(inc);
   return (
     <>
       <Header />
       <main>
-        <Hero />
-        <SixAnswers />
-        <InstallWindow />
-        <Evidence />
-        <Verdicts />
-        <StatBand />
+        <Hero m={m} />
+        <SixAnswers questions={m.questions} />
+        <InstallWindow timeline={m.timeline} meta={m.windowMeta} notes={m.windowNotes} />
+        <Evidence evidence={m.evidence} />
+        <Verdicts dist={m.dist} />
+        <StatBand band={m.band} />
         <HowItRuns />
         <Cta />
       </main>
-      <Footer snapshot={SNAPSHOT} />
+      <Footer snapshot={m.snapshot} />
     </>
   );
 }

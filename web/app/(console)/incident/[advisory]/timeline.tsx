@@ -1,201 +1,153 @@
 import type { VersionRow, WhileLiveRow } from "@/lib/incident";
-import type { ReactNode } from "react";
-import { short, svcSlug } from "@/lib/format";
+import { svcSlug } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { Chip, ELEV } from "@/components/console/ui";
 
-// The temporal window, drawn. Each affected version gets a bar from live_from to live_to
-// (dashed edge when live_to is an upper bound). Each lockfile commit is a marker: inside the
-// bar = in_window; outside but pinning a removed version = pinned_removed. Advisory published
-// is the vertical line. A real time axis underneath. Server-rendered SVG, no client JS.
+// Q3 — the installable-window timeline (1180×190 viewBox). A real time axis; the installable
+// span as a --sigfill bar stroked --signal (one bar per bounded version at the same y, so gaps
+// between versions stay visible) with a 3px-dashed --signal edge where live_to is an upper bound;
+// amber up-triangles for lockfile writes inside the window, red triangles below the axis for
+// commits that pin a removed version, a grey rule for advisory-published. Markers closer than
+// ~45 user units cluster into one `name, name ×N` label so nothing overlaps or lies about count.
+// Server-rendered SVG, no client JS.
 
-const W = 960;
-const ROW = 34; // per version
-const TOP = 30; // room for the "advisory published" label
-const AXIS = 22; // axis line + tick labels
-const BAR = 12;
-const GUT = 96; // left gutter for version labels
-const MONO = "ui-monospace, monospace";
-// Tick steps in seconds; the first that yields < 8 ticks over the span wins.
-const STEPS = [10, 15, 30, 60, 120, 300, 600, 900, 1800, 3600, 7200, 10800, 21600, 43200, 86400, 172800, 604800, 1209600];
+const X0 = 60;
+const X1 = 1120;
+const AXIS = 130;
+const CLUSTER = 45;
+const STEPS = [60, 120, 300, 600, 900, 1800, 3600, 7200, 10800, 21600, 43200, 86400, 172800, 604800, 1209600, 2592000];
+const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
 
-export function Timeline({
-  rows,
-  versions,
-  advisoryPublished,
-}: {
-  rows: WhileLiveRow[];
-  versions: VersionRow[];
-  advisoryPublished: number;
-}) {
+export function Timeline({ rows, versions, advisoryPublished }: { rows: WhileLiveRow[]; versions: VersionRow[]; advisoryPublished: number }) {
   const bounded = versions.filter((v) => v.live_to < 4_000_000_000);
   if (bounded.length === 0) return null;
   const t0 = Math.min(...bounded.map((v) => v.live_from), ...rows.map((r) => r.resolved_at));
   const t1 = Math.max(...bounded.map((v) => v.live_to), ...rows.map((r) => r.resolved_at), advisoryPublished);
   const span = Math.max(t1 - t0, 60);
-  const pad = span * 0.04;
-  const lo = t0 - pad;
-  const hi = t1 + pad;
-  const x = (t: number) => GUT + ((t - lo) / (hi - lo)) * (W - GUT);
-  const H = TOP + bounded.length * ROW + AXIS;
-  const axisY = TOP + bounded.length * ROW + 2;
+  const lo = t0 - span * 0.12;
+  const hi = t1 + span * 0.18;
+  const x = (t: number) => X0 + ((t - lo) / (hi - lo)) * (X1 - X0);
 
-  const step = STEPS.find((s) => (hi - lo) / s < 8) ?? Math.ceil((hi - lo) / 8 / 86400) * 86400;
+  const step = STEPS.find((s) => (hi - lo) / s < 9) ?? Math.ceil((hi - lo) / 9 / 86400) * 86400;
   const ticks: number[] = [];
   for (let t = Math.ceil(lo / step) * step; t <= hi; t += step) ticks.push(t);
-  const dateMode = hi - lo > 2 * 86400;
-  const tickLabel = (t: number) => (dateMode || t % 86400 === 0 ? isoDate(t) : step < 60 ? isoTime(t, true) : isoTime(t));
+  const dateMode = step >= 86400;
+  const tickLabel = (t: number) => {
+    const d = new Date(t * 1000);
+    return dateMode ? `${MONTHS[d.getUTCMonth()]} ${String(d.getUTCDate()).padStart(2, "0")}` : d.toISOString().slice(11, 16);
+  };
+
+  const barStart = Math.min(...bounded.map((v) => v.live_from));
+  const barEnd = Math.max(...bounded.map((v) => v.live_to));
+  const upper = bounded.some((v) => v.live_to === barEnd && v.live_to_kind === "upper_bound");
+  const inWin = cluster(rows.filter((r) => r.evidence.includes("in_window")).map((r) => [x(r.resolved_at), r] as const));
+  const removed = cluster(rows.filter((r) => !r.evidence.includes("in_window")).map((r) => [x(r.resolved_at), r] as const));
+  const adX = x(advisoryPublished);
+  // A 90-minute window on a multi-day axis is a sliver: lift its label above the bar so it never
+  // collides with the `upper bound` label at the bar's right edge.
+  const narrow = x(barEnd) - x(barStart) < 170;
+  const adFlip = adX > X1 - 140;
 
   return (
-    <div className={cn("overflow-x-auto rounded-lg border border-border bg-card/70 p-3", ELEV)}>
-      {/* Bars draw left→right once (stroke-dashoffset over pathLength=1), markers fade in after them.
-          The global reduced-motion rule collapses these durations to ~0. */}
-      <style>{`@keyframes tl-draw{from{stroke-dashoffset:1;fill-opacity:0}to{stroke-dashoffset:0;fill-opacity:.35}}
-@keyframes tl-fade{from{opacity:0}to{opacity:1}}
-.tl-bar{stroke-dasharray:1;animation:tl-draw .6s ease-out both}
-.tl-tick{animation:tl-fade .3s ease-out both;cursor:default}
-.tl-tick .tl-mk{stroke:transparent;stroke-width:1.5;transition:stroke .15s}
-.tl-tick:hover .tl-mk{stroke:var(--color-foreground)}`}</style>
-      {/* min-w keeps the axis legible on narrow screens: the card scrolls instead of the SVG shrinking */}
-      <div className="min-w-[640px]">
-      <div className="mb-1 flex justify-between font-mono text-[10px] text-muted-foreground" style={{ paddingLeft: `${(GUT / W) * 100}%` }}>
-        <span className="num">{iso(lo)}</span>
-        <span className="num">{spanLabel(hi - lo)} shown</span>
-        <span className="num">{iso(hi)}</span>
-      </div>
+    <div className="overflow-x-auto overscroll-x-contain px-[10px] pt-3">
       <svg
-        viewBox={`0 0 ${W} ${H}`}
-        className="w-full"
+        viewBox="0 0 1180 190"
+        className="h-auto w-full min-w-[1000px]"
         role="img"
-        aria-label={`temporal window timeline: ${bounded.length} affected versions, ${rows.length} lockfile commits, ${spanLabel(hi - lo)} shown`}
+        aria-label={`installable window: ${bounded.length} version${bounded.length === 1 ? "" : "s"}, ${rows.length} lockfile commits`}
       >
-        {/* time axis: faint gridlines through the rows, tick marks and labels below */}
+        <line x1={X0} y1={AXIS} x2={X1} y2={AXIS} className="stroke-input" strokeWidth={1} />
         {ticks.map((t) => (
           <g key={t}>
-            <line x1={x(t)} x2={x(t)} y1={TOP - 6} y2={axisY} stroke="var(--color-border)" strokeOpacity={0.7} />
-            <line x1={x(t)} x2={x(t)} y1={axisY} y2={axisY + 4} stroke="var(--color-muted-foreground)" />
-            <text x={x(t)} y={axisY + 14} textAnchor="middle" fill="var(--color-muted-foreground)" fontSize="10" fontFamily={MONO}>
+            <line x1={x(t)} y1={AXIS} x2={x(t)} y2={AXIS + 6} className="stroke-input" strokeWidth={1} />
+            <text x={x(t)} y={AXIS + 22} textAnchor="middle" className="fill-dim font-mono text-[10.5px]">
               {tickLabel(t)}
             </text>
           </g>
         ))}
-        <line x1={GUT} x2={W} y1={axisY} y2={axisY} stroke="var(--color-border)" />
-        {/* advisory published */}
-        <line x1={x(advisoryPublished)} x2={x(advisoryPublished)} y1={10} y2={axisY} stroke="var(--color-muted-foreground)" strokeDasharray="3 3" />
-        <text
-          x={x(advisoryPublished) + 4}
-          y={16}
-          fill="var(--color-muted-foreground)"
-          fontSize="10"
-          fontFamily={MONO}
-          textAnchor={x(advisoryPublished) > W * 0.8 ? "end" : "start"}
-          dx={x(advisoryPublished) > W * 0.8 ? -8 : 0}
-        >
+        {bounded.map((v) => (
+          <rect key={v.version} x={x(v.live_from)} y={76} width={Math.max(x(v.live_to) - x(v.live_from), 2)} height={24} rx={4} className="fill-sigfill stroke-signal" strokeWidth={1}>
+            <title>{`${v.version.replace(/^pkg:npm\//, "")} · ${v.live_from_iso} → ${v.live_to_iso} (${v.live_to_kind.replace("_", " ")})`}</title>
+          </rect>
+        ))}
+        {upper && <line x1={x(barEnd)} y1={70} x2={x(barEnd)} y2={106} className="stroke-signal" strokeWidth={1.4} strokeDasharray="3 3" />}
+        <text x={narrow ? x(barStart) : x(barStart) + 8} y={narrow ? 66 : 92} className="fill-signal-2 font-mono text-[11px]">
+          installable · {bounded.length} version{bounded.length === 1 ? "" : "s"}
+        </text>
+        {upper && (
+          <text x={x(barEnd) + 8} y={92} className="fill-signal-2 font-mono text-[10.5px]">
+            upper bound
+          </text>
+        )}
+        <line x1={adX} y1={48} x2={adX} y2={AXIS} className="stroke-mut" strokeWidth={1} />
+        <text x={adX + (adFlip ? -8 : 8)} y={54} textAnchor={adFlip ? "end" : "start"} className="fill-mut font-mono text-[10.5px]">
           advisory published
         </text>
-        {bounded.map((v, i) => {
-          const y = TOP + i * ROW + 12;
-          const ub = v.live_to_kind === "upper_bound";
-          const marks = groupTicks(rows.filter((r) => r.version === v.version));
-          return (
-            <g key={v.version}>
-              <text x={0} y={y + BAR / 2 + 3.5} fill="var(--color-foreground)" fontSize="10" fontFamily={MONO}>
-                {trunc(short(v.version), 15)}
-              </text>
-              <rect
-                className="tl-bar"
-                pathLength={1}
-                style={{ animationDelay: `${i * 80}ms` }}
-                x={x(v.live_from)}
-                y={y}
-                width={Math.max(x(v.live_to) - x(v.live_from), 4)}
-                height={BAR}
-                rx={3}
-                fill="var(--color-signal)"
-                fillOpacity={0.35}
-                stroke="var(--color-signal)"
-                strokeOpacity={0.6}
-                strokeWidth={1}
-              />
-              <line x1={x(v.live_from)} x2={x(v.live_from)} y1={y - 2} y2={y + BAR + 2} stroke="var(--color-signal)" strokeWidth={2} />
-              <line
-                x1={x(v.live_to)}
-                x2={x(v.live_to)}
-                y1={y - 2}
-                y2={y + BAR + 2}
-                stroke="var(--color-signal)"
-                strokeWidth={2}
-                strokeDasharray={ub ? "2 2" : undefined}
-              />
-              {marks.map((m, j) => {
-                const cx = x(m.at);
-                const tone = m.inWin ? "var(--color-l1)" : "var(--color-l2)";
-                return (
-                  <g key={j} className="tl-tick" style={{ animationDelay: `${600 + i * 80 + j * 60}ms` }}>
-                    <line x1={cx} x2={cx} y1={y - 1} y2={y + BAR + 1} stroke={tone} strokeWidth={1.5} />
-                    <polygon className="tl-mk" points={`${cx - 4.5},${y - 9} ${cx + 4.5},${y - 9} ${cx},${y - 1.5}`} fill={tone} strokeLinejoin="round" />
-                    {m.rows.length > 1 && (
-                      <text x={cx + 6} y={y - 2} fill={tone} fontSize="9" fontFamily={MONO}>
-                        ×{m.rows.length}
-                      </text>
-                    )}
-                    <title>{m.rows.map((r) => `${svcSlug(r.service)} · ${r.sha.slice(0, 12)} · ${iso(r.resolved_at)} · ${r.evidence}`).join("\n")}</title>
-                  </g>
-                );
-              })}
-            </g>
-          );
-        })}
+        {inWin.map((c, i) => (
+          <g key={`w${i}`}>
+            <title>{c.rows.map(tip).join("\n")}</title>
+            <path d={`M${c.x} ${AXIS - 16} l6 11 h-12 z`} className="fill-l1" />
+            <text x={c.x} y={AXIS - 22} textAnchor="middle" className="fill-l1 font-mono text-[10px]">
+              {c.label}
+            </text>
+          </g>
+        ))}
+        {removed.map((c, i) => (
+          <g key={`r${i}`}>
+            <title>{c.rows.map(tip).join("\n")}</title>
+            <path d={`M${c.x} ${AXIS + 34} l6 -11 h-12 z`} className="fill-l2" />
+            <text x={c.x + 10} y={AXIS + 44} className="fill-l2 font-mono text-[10px]">
+              {c.label}
+            </text>
+          </g>
+        ))}
       </svg>
-      </div>
-      <ul className="mt-2 flex flex-wrap gap-1.5" aria-label="legend">
-        <Key swatch={<span className="block h-2 w-5 rounded-sm bg-signal/35 ring-1 ring-signal/60" />}>installable window</Key>
-        <Key swatch={<span className="block h-3 w-0.5 bg-signal" />}>exact edge</Key>
-        <Key swatch={<span className="block h-3 w-0.5 border-l-2 border-dashed border-signal" />}>upper bound · npm publishes no takedown time</Key>
-        <Key swatch={<Tri className="text-l1" />}>lockfile commit in window</Key>
-        <Key swatch={<Tri className="text-l2" />}>pins a removed version</Key>
-        <Key swatch={<span className="block h-3 w-0.5 border-l border-dashed border-muted-foreground" />}>advisory published</Key>
+      <ul className="mt-1.5 flex flex-wrap gap-[18px] px-2 pb-3.5 font-mono text-[10.5px] leading-none text-dim" aria-label="legend">
+        <li className="inline-flex items-center gap-1.5">
+          <span className="inline-block h-1.5 w-3.5 border border-signal bg-sigfill" aria-hidden />
+          installable window
+        </li>
+        <li className="inline-flex items-center gap-1.5">
+          <span className="inline-block h-2.5 w-0 border-l-[1.5px] border-dashed border-signal" aria-hidden />
+          upper bound · npm publishes no takedown time
+        </li>
+        <li className="inline-flex items-center gap-1.5">
+          <Tri className="fill-l1" />
+          lockfile resolved in window
+        </li>
+        <li className="inline-flex items-center gap-1.5">
+          <Tri className="fill-l2" />
+          pins a removed version
+        </li>
+        <li className="inline-flex items-center gap-1.5">
+          <span className="inline-block h-[9px] w-px bg-mut" aria-hidden />
+          advisory published
+        </li>
       </ul>
     </div>
   );
 }
 
-// Commits at the identical second with the same evidence collapse into one marker (×n) —
-// two overlapping triangles would hide each other and lie about the count.
-function groupTicks(rows: WhileLiveRow[]) {
-  const m = new Map<string, { at: number; inWin: boolean; rows: WhileLiveRow[] }>();
-  for (const r of rows) {
-    const inWin = r.evidence.includes("in_window");
-    const k = `${r.resolved_at}|${inWin}`;
-    (m.get(k) ?? m.set(k, { at: r.resolved_at, inWin, rows: [] }).get(k)!).rows.push(r);
+// Left-to-right sweep: a marker within CLUSTER units of the cluster's first marker joins it.
+function cluster(marks: readonly (readonly [number, WhileLiveRow])[]) {
+  const out: { x: number; rows: WhileLiveRow[]; label: string }[] = [];
+  for (const [mx, r] of [...marks].sort((a, b) => a[0] - b[0])) {
+    const last = out[out.length - 1];
+    if (last && mx - last.x < CLUSTER) last.rows.push(r);
+    else out.push({ x: mx, rows: [r], label: "" });
   }
-  return [...m.values()];
+  for (const c of out) {
+    const names = [...new Set(c.rows.map((r) => svcSlug(r.service).split("/").pop()!))];
+    c.label = (names.length > 2 ? names.slice(0, 2).join(", ") + ", …" : names.join(", ")) + (c.rows.length > 1 ? ` ×${c.rows.length}` : "");
+  }
+  return out;
 }
+
+const tip = (r: WhileLiveRow) => `${svcSlug(r.service)} · ${r.sha.slice(0, 12)} · ${r.resolved_at_iso} · ${r.evidence.replace(/_/g, " ").replace("+", " + ")}`;
 
 function Tri({ className }: { className: string }) {
   return (
-    <svg viewBox="0 0 10 8" className={cn("h-2 w-2.5", className)} aria-hidden>
-      <polygon points="0,0 10,0 5,8" fill="currentColor" />
+    <svg viewBox="0 0 12 11" className={cn("h-[9px] w-[10px]", className)} aria-hidden>
+      <path d="M6 0l6 11H0z" />
     </svg>
   );
 }
-
-function Key({ swatch, children }: { swatch: ReactNode; children: ReactNode }) {
-  return (
-    <li>
-      <Chip>
-        <span className="inline-flex w-5 justify-center" aria-hidden>
-          {swatch}
-        </span>
-        {children}
-      </Chip>
-    </li>
-  );
-}
-
-const spanLabel = (s: number) =>
-  s < 120 ? `${Math.round(s)} s` : s < 3600 ? `${Math.round(s / 60)} min` : s < 2 * 86400 ? `${Math.round((s / 3600) * 10) / 10} h` : `${Math.round((s / 86400) * 10) / 10} d`;
-const iso = (t: number) => new Date(t * 1000).toISOString().replace("T", " ").replace(/\.\d+Z$/, "Z");
-const isoDate = (t: number) => new Date(t * 1000).toISOString().slice(5, 10); // MM-DD
-const isoTime = (t: number, secs = false) => new Date(t * 1000).toISOString().slice(11, secs ? 19 : 16); // HH:MM[:SS]
-const trunc = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1) + "…" : s);

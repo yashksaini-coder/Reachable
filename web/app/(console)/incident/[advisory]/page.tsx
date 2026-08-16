@@ -1,14 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ExternalLink } from "lucide-react";
 import { readIncident, listIncidents, short, svcSlug, fmtMs, fmtUtc, type Incident } from "@/lib/incident";
-import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { HydraCard, Kind, Level, Limits, Notes, Question, ShowAll, Stat, Chip } from "@/components/console/ui";
+import { LEVEL } from "@/lib/level";
+import { HydraCard, Kind, Level, Limits, Notes, Question, ShowAll, Stat, StatStrip } from "@/components/console/ui";
 import { cn } from "@/lib/utils";
 import { Timeline } from "./timeline";
 import { BlastGraph } from "./graph";
-import { Rail } from "./rail";
+import { Rail, type RailEntry } from "./rail";
 import { Reveal } from "./reveal";
 import { FindVictims } from "./victims";
 
@@ -21,12 +19,33 @@ export async function generateMetadata({ params }: PageProps<"/incident/[advisor
   return { title: advisory };
 }
 
-const rank = (inc: Incident, svc: string) => ({ L2: 3, L1: 2, unscanned: 1, L0: 0 })[inc.q7_reachability[svc]?.level ?? "unscanned"] ?? 0;
+const RANK: Record<string, number> = { L2: 3, L1: 2, unscanned: 1, L0: 0 };
 const advisoryUrl = (id: string) => (id.startsWith("GHSA-") ? `https://github.com/advisories/${id}` : `https://osv.dev/vulnerability/${id}`);
 const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? "" : "s"}`;
-const DOT: Record<string, string> = { L2: "bg-l2", L1: "bg-l1", L0: "bg-l0", unscanned: "bg-unknown" };
-const LINK = "rounded-sm transition-colors hover:text-signal-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50";
+const epoch = (t: number) => fmtUtc(new Date(t * 1000).toISOString());
 const Q2_CAP = 40;
+const Q4_CAP = 15;
+// Q5 kinds as the worker emits them, grouped the way the spec reads them.
+const KIND_LABEL: Record<string, string> = {
+  insertion: "one character apart",
+  deletion: "one character apart",
+  substitution: "one character apart",
+  transposition: "one character apart",
+  edit2: "two edits apart",
+  scope: "scope confusion",
+  hyphen: "hyphen",
+  homoglyph: "homoglyph",
+  prefix_suffix: "prefix / suffix",
+};
+
+// Prototype table: th 10.5px tracked --dim on a --border rule; td 12px --mut on --line rules; row hover --hover.
+const TABLE =
+  "w-full border-collapse [&_th]:label [&_th]:whitespace-nowrap [&_th]:border-b [&_th]:border-border [&_th]:px-3 [&_th]:pb-[9px] [&_th]:text-left " +
+  "[&_td]:border-b [&_td]:border-line [&_td]:px-3 [&_td]:py-3 [&_td]:align-middle [&_td]:whitespace-nowrap [&_td]:text-[12.5px] [&_td]:text-mut " +
+  "[&_tbody_tr]:transition-colors [&_tbody_tr]:duration-[180ms] [&_tbody_tr:hover]:bg-hover [&_tbody_tr:last-child_td]:border-b-0";
+const CHIP = "inline-flex items-center gap-2 rounded-[7px] border border-border bg-card2 px-2.5 py-[7px] font-mono text-[11.5px] leading-none text-mut";
+const CODE = "inline-block rounded-md border border-border bg-code px-2.5 py-2 font-mono text-[11.5px] leading-none text-signal-2 [overflow-wrap:anywhere]";
+const LINK = "rounded-sm text-fg transition-colors duration-[180ms] hover:text-signal-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50";
 
 function SvcLink({ inc, svc, className }: { inc: Incident; svc: string; className?: string }) {
   return (
@@ -35,6 +54,14 @@ function SvcLink({ inc, svc, className }: { inc: Incident; svc: string; classNam
     </Link>
   );
 }
+
+const Two = ({ a, b }: { a: string; b: string }) => (
+  <>
+    {a}
+    <br />
+    {b}
+  </>
+);
 
 export default async function IncidentPage({ params }: PageProps<"/incident/[advisory]">) {
   const { advisory } = await params;
@@ -48,14 +75,17 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
   const q5 = Object.entries(inc.q5_typosquats);
   const byService = new Map<string, typeof q1.rows>();
   for (const r of q1.rows) byService.set(r.service, [...(byService.get(r.service) ?? []), r]);
-  const services = [...byService.keys()].sort((a, b) => rank(inc, b) - rank(inc, a) || a.localeCompare(b));
   const level = (svc: string) => inc.q7_reachability[svc]?.level ?? "unscanned";
+  const services = [...byService.keys()].sort((a, b) => RANK[level(b)] - RANK[level(a)] || a.localeCompare(b));
+  const worst = services.length ? level(services[0]) : null;
   const l2 = services.filter((s) => level(s) === "L2");
   const watched = inc.q1_mspaths.targets ?? inc.provenance.graph.Service;
   const q5Total = q5.reduce((n, [, s]) => n + s.rows.length, 0);
+  const q5Kinds = new Set(q5.flatMap(([, s]) => s.rows.map((r) => KIND_LABEL[r.kind] ?? r.kind)));
   const q4Max = Math.max(1, ...q4.rows.map((r) => r.services_at_risk?.length ?? 0));
   const liveBySvc = new Map<string, NonNullable<typeof q3>["rows"][number]>();
   for (const r of q3?.rows ?? []) if (!liveBySvc.has(r.service)) liveBySvc.set(r.service, r);
+  const packages = [...new Set(q2.rows.map((r) => short(r.package)))];
 
   // Plain-language verdict, computed from the headline — never hand-written per incident.
   const verdict = [
@@ -66,162 +96,171 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
     .filter(Boolean)
     .join("; ");
 
-  const summaries = {
-    q1: `${plural(services.length, "service")} · ${plural(q1.lockfiles, "lockfile")} · ${h.reachable_L2} act now`,
-    q2: `${plural(q2.rows.length, "affected version")}${q2.first ? ` · first ${short(q2.first.version).replace(/^.*@/, "")}` : ""} · ${q2.rows.filter((r) => r.removed).length} removed`,
-    q3: q3 ? `${plural(q3.services.length, "service")} · ${q3.in_window} in window · ${q3.pinned_removed} pin removed` : "n/a for CVE",
-    q4: `${plural(q4.maintainers.length, "maintainer")} · ${plural(q4.rows.length, "co-maintained package")} · up to ${q4Max} services at risk`,
-    q5: `${plural(q5Total, "near-name")} across ${plural(q5.length, "package")}`,
-    q6: `${h.services_exposed} exposed · ${q3 ? liveBySvc.size : "—"} while live · ${h.reachable_L2} act now`,
-  };
-  const railCounts = { q1: services.length, q2: q2.rows.length, q3: q3 ? q3.services.length : "—", q4: q4.rows.length, q5: q5Total, q6: h.reachable_L2 };
+  const sections = [q1, inc.q1_mspaths, q2, q3, q4, ...q5.map(([, s]) => s)].filter((s): s is NonNullable<typeof s> => s != null);
+  const statements = sections.reduce((n, s) => n + s.cypher.length, 0);
+  const rowsTotal = sections.reduce((n, s) => n + s.rows.length, 0);
+
+  const rail: RailEntry[] = [
+    { id: "graph", label: "blast radius", n: services.length, dot: "bg-signal" },
+    { id: "q1", label: "Q1 verdicts", n: services.length, dot: worst ? LEVEL[worst].dot : "bg-unknown" },
+    { id: "q2", label: "Q2 versions", n: q2.rows.length, dot: "bg-l1" },
+    { id: "q3", label: "Q3 in window", n: q3 ? q3.in_window : "n/a", dot: "bg-l1" },
+    { id: "q4", label: "Q4 maintainers", n: q4.rows.length, dot: "bg-signal-2" },
+    { id: "q5", label: "Q5 look-alikes", n: q5Total, dot: "bg-signal-2" },
+    { id: "q6", label: "Q6 blast radius", n: services.length, dot: "bg-l0" },
+  ];
 
   return (
-    <div className="md:grid md:grid-cols-[minmax(0,1fr)_120px] md:gap-8">
-      <div className="min-w-0 space-y-8">
-        <header className="space-y-4">
-          <Link
-            href="/incidents"
-            className="inline-flex min-h-10 items-center gap-1 rounded-md text-[12px] text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50"
-          >
-            <ArrowLeft className="size-3.5" /> incidents
+    <div className="mx-auto grid max-w-[1280px] grid-cols-[minmax(0,1fr)_188px] items-start gap-12 px-10 py-[52px] pb-[72px] max-[1180px]:grid-cols-1 max-[900px]:px-5">
+      <div className="min-w-0">
+        <div className="flex items-center gap-2 font-mono text-[11px] leading-none text-dim animate-[en_.3s_var(--ease)_both]">
+          <Link href="/incidents" className="-my-2 inline-flex min-h-10 items-center rounded-sm text-mut hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50">
+            incidents
           </Link>
-          <div className="flex flex-wrap items-baseline gap-3">
-            <h1 className="font-mono text-2xl text-signal-2">{inc.advisory.key}</h1>
-            <Badge variant="outline" className="rounded-full font-mono text-[10px] uppercase">
-              {inc.advisory.kind} · {inc.advisory.severity}
-            </Badge>
-            <span className="text-xs text-muted-foreground">published {fmtUtc(inc.advisory.published_at_iso)}</span>
-            <a
-              href={advisoryUrl(inc.advisory.key)}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex min-h-10 items-center gap-1 rounded-md text-xs text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50"
-            >
-              source <ExternalLink className="size-3" />
-            </a>
+          <span>/</span>
+          <span className="text-mut">{inc.advisory.key}</span>
+        </div>
+
+        <header className="mt-5 animate-[en_.3s_var(--ease)_both] [animation-delay:60ms]">
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="m-0 font-mono text-[30px] font-medium leading-[1.15] tracking-[-0.025em] text-fg">{inc.advisory.key}</h1>
+            {worst && <Level level={worst} className="rounded-md px-2 py-1.5" />}
+            <Kind kind={inc.advisory.kind} className="rounded-md px-2 py-1.5" />
+            <Kind kind={inc.advisory.severity} className="rounded-md px-2 py-1.5" />
           </div>
-          <p className="max-w-3xl text-pretty text-[14px] text-foreground/90">{inc.advisory.summary}</p>
-          <p className="max-w-3xl text-pretty text-[15px] leading-snug">{verdict}.</p>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-6">
-            <Stat n={h.services_exposed} label="services exposed" rule="bg-signal" />
-            <Stat n={h.resolved_while_live} label="resolved while live" tone="text-l1" rule="bg-l1" />
-            <Stat n={h.reachable_L2} label="reachable · L2 · act now" tone="text-l2" rule="bg-l2" />
-            <Stat n={h.imported_L1} label="imported · L1" tone="text-l1/80" rule="bg-l1/70" />
-            <Stat n={h.present_only_L0} label="present only · L0" tone="text-l0" rule="bg-l0" />
-            <Stat n={h.unscanned} label="unscanned" tone="text-unknown" rule="bg-unknown" />
+          <div className="mt-3.5 flex flex-wrap gap-x-[22px] gap-y-1.5 font-mono text-[11px] leading-[1.3] text-dim">
+            <span>
+              published <span className="text-mut">{fmtUtc(inc.advisory.published_at_iso)}</span>
+            </span>
+            <span>
+              source{" "}
+              <a href={advisoryUrl(inc.advisory.key)} target="_blank" rel="noreferrer" className="text-mut hover:text-signal-2">
+                {inc.advisory.key.startsWith("GHSA-") ? "github advisory database" : "osv.dev"}
+              </a>
+            </span>
+            {packages.length > 0 && (
+              <span>
+                package <span className="text-mut">{packages[0]}</span>
+                {packages.length > 1 && <span> +{packages.length - 1} more</span>}
+              </span>
+            )}
           </div>
+          <p className="m-0 mt-5 max-w-[70ch] text-pretty text-[14.5px] leading-[1.6] text-fg">
+            {inc.advisory.summary.replace(/\.$/, "")}. {verdict}.
+          </p>
         </header>
 
-        <BlastGraph inc={inc} />
+        <StatStrip className="mt-7 animate-[en_.3s_var(--ease)_both] [animation-delay:120ms]">
+          <Stat n={h.services_exposed} label="services exposed" rule="bg-signal" delay={0} />
+          <Stat n={h.reachable_L2} label="act now" rule="bg-l2" tone="text-l2" delay={90} />
+          <Stat n={q3 ? h.resolved_while_live : "n/a"} label="resolved while live" rule="bg-l1" tone="text-l1" delay={180} />
+          <Stat n={q4.rows.length} label="maintainer packages" rule="bg-signal-2" delay={270} />
+          <Stat n={q5Total} label="look-alike names" rule="bg-signal-2" delay={360} />
+          <Stat n={h.unscanned} label="unscanned" rule="bg-unknown" tone="text-unknown" delay={450} />
+        </StatStrip>
 
-        <Reveal>
-          <Question
-            n="1"
-            title="Which services are transitively exposed?"
-            summary={summaries.q1}
-            footer={
-              <>
-                <HydraCard flat title="who is exposed" cypher={q1.cypher} ms={q1.ms} rows={q1.rows.length} timing={q1.timing} />
-                {inc.q1_mspaths.cypher.length > 0 && (
-                  <HydraCard
-                    flat
-                    title={`blast radius in one call — ${inc.q1_mspaths.sources ?? "?"} versions × ${inc.q1_mspaths.targets ?? "?"} services`}
-                    cypher={inc.q1_mspaths.cypher}
-                    ms={inc.q1_mspaths.ms}
-                    rows={inc.q1_mspaths.rows.length}
-                    truncated={inc.q1_mspaths.truncated}
-                    timing={inc.q1_mspaths.timing}
-                  />
-                )}
-                {inc.q1_mspaths.truncated && <Limits items={["Path list truncated by resultLimit — membership above is still exact."]} />}
-                <Notes items={q1.limitations} />
-              </>
-            }
-          >
+        <div className="mt-8">
+          <BlastGraph inc={inc} />
+        </div>
+
+        <Reveal className="mt-7">
+          <Question n="1" title="Which of my services are exposed, and at what level?" summary={<Two a={plural(services.length, "service")} b={`${h.reachable_L2} act now`} />}>
             <Distribution
               parts={[
-                ["L2", h.reachable_L2, "bg-l2"],
-                ["L1", h.imported_L1, "bg-l1"],
-                ["L0", h.present_only_L0, "bg-l0"],
-                ["unscanned", h.unscanned, "bg-unknown"],
+                ["L2", h.reachable_L2],
+                ["L1", h.imported_L1],
+                ["L0", h.present_only_L0],
+                ["unscanned", h.unscanned],
               ]}
             />
-            <div className="overflow-hidden rounded-lg border border-border">
-              <Table>
-                <TableHeader>
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead>service</TableHead>
-                    <TableHead>verdict</TableHead>
-                    <TableHead className="text-right">lockfiles</TableHead>
-                    <TableHead>pulled in via</TableHead>
-                    <TableHead>latest exposed commit</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+            <div className="mt-5 overflow-x-auto">
+              <table className={TABLE}>
+                <thead>
+                  <tr>
+                    <th>service</th>
+                    <th>verdict</th>
+                    <th>lockfiles</th>
+                    <th>pulled in via</th>
+                    <th>latest commit</th>
+                    <th />
+                  </tr>
+                </thead>
+                <tbody>
                   {services.map((svc) => {
                     const rows = byService.get(svc)!;
                     const latest = rows[0];
                     return (
-                      <TableRow key={svc}>
-                        <TableCell className="font-mono">
+                      <tr key={svc}>
+                        <td className="font-mono !text-[12px] !text-fg">
                           <SvcLink inc={inc} svc={svc} />
-                        </TableCell>
-                        <TableCell>
+                        </td>
+                        <td>
                           <Level level={level(svc)} />
-                        </TableCell>
-                        <TableCell className="num text-right text-muted-foreground">{rows.length}</TableCell>
-                        <TableCell className="font-mono text-xs text-muted-foreground">
-                          {latest.via ? (
-                            <>
-                              <span className="text-foreground/90">{short(latest.via)}</span> · {latest.hops} hop{latest.hops === 1 ? "" : "s"}
-                            </>
-                          ) : (
-                            "direct dependency"
-                          )}
-                        </TableCell>
-                        <TableCell className="font-mono text-xs text-muted-foreground">
-                          {latest.sha.slice(0, 12)} · {fmtUtc(new Date(latest.committed_at * 1000).toISOString())}
-                        </TableCell>
-                      </TableRow>
+                        </td>
+                        <td className="num">{rows.length}</td>
+                        <td className="font-mono !text-[11.5px]">{latest.via ? `${short(latest.via)} · ${latest.hops} hop${latest.hops === 1 ? "" : "s"}` : "direct dependency"}</td>
+                        <td className="font-mono !text-[11.5px]">
+                          {latest.sha.slice(0, 7)} · {epoch(latest.committed_at)}
+                        </td>
+                        <td className="text-right">
+                          <Link href={`/incident/${inc.advisory.key}/${svcSlug(svc)}`} className="inline-flex min-h-10 items-center px-0.5 text-[11px] font-medium leading-none text-signal-2 hover:text-signal">
+                            open →
+                          </Link>
+                        </td>
+                      </tr>
                     );
                   })}
                   {services.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
-                        No watched service resolved an affected version.
-                      </TableCell>
-                    </TableRow>
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center font-mono !text-[11.5px] !text-dim">
+                        no watched service resolved an affected version
+                      </td>
+                    </tr>
                   )}
-                </TableBody>
-              </Table>
+                </tbody>
+              </table>
             </div>
+            <div className="mt-4 flex flex-col gap-2">
+              <HydraCard flat title="which services resolve an affected version, and at what level?" cypher={q1.cypher} ms={q1.ms} rows={q1.rows.length} timing={q1.timing} />
+              {inc.q1_mspaths.cypher.length > 0 && (
+                <HydraCard
+                  flat
+                  title={`blast radius in one call — ${inc.q1_mspaths.sources ?? "?"} versions × ${inc.q1_mspaths.targets ?? "?"} services`}
+                  cypher={inc.q1_mspaths.cypher}
+                  ms={inc.q1_mspaths.ms}
+                  rows={inc.q1_mspaths.rows.length}
+                  truncated={inc.q1_mspaths.truncated}
+                  timing={inc.q1_mspaths.timing}
+                />
+              )}
+            </div>
+            {inc.q1_mspaths.truncated && <Limits items={["Path list truncated by resultLimit — membership above is still exact."]} />}
+            <Notes
+              items={[
+                "verdict is per service, highest across its lockfiles. unscanned means the service resolves an affected version but its source was not read — not that it is clean.",
+                ...q1.limitations,
+              ]}
+            />
           </Question>
         </Reveal>
 
-        <Reveal>
+        <Reveal className="mt-6">
           <Question
             n="2"
-            title="Which version introduced it?"
-            summary={summaries.q2}
-            footer={
-              <>
-                <HydraCard flat title="which version" cypher={q2.cypher} ms={q2.ms} rows={q2.rows.length} />
-                <Notes items={q2.limitations} />
-              </>
-            }
+            title="Which versions were installable, and for how long?"
+            summary={<Two a={plural(q2.rows.length, "version")} b={`${q2.rows.filter((r) => r.removed).length} removed`} />}
           >
-            <div className="overflow-hidden rounded-lg border border-border">
-              <Table>
-                <TableHeader>
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead>version</TableHead>
-                    <TableHead>published (exact)</TableHead>
-                    <TableHead>live until</TableHead>
-                    <TableHead>registry</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+            <div className="overflow-x-auto">
+              <table className={TABLE}>
+                <thead>
+                  <tr>
+                    <th>version</th>
+                    <th>published (exact)</th>
+                    <th>live until</th>
+                    <th>state</th>
+                  </tr>
+                </thead>
+                <tbody>
                   {q2.rows.length > Q2_CAP ? (
                     <ShowAll n={q2.rows.length} cols={4} more={q2.rows.slice(Q2_CAP).map((r) => versionRow(r, q2.first?.version))}>
                       {q2.rows.slice(0, Q2_CAP).map((r) => versionRow(r, q2.first?.version))}
@@ -229,306 +268,339 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
                   ) : (
                     q2.rows.map((r) => versionRow(r, q2.first?.version))
                   )}
-                </TableBody>
-              </Table>
+                </tbody>
+              </table>
             </div>
+            <div className="mt-4">
+              <HydraCard flat title="which versions were affected, and when was each published?" cypher={q2.cypher} ms={q2.ms} rows={q2.rows.length} />
+            </div>
+            <Notes items={q2.limitations} />
           </Question>
         </Reveal>
 
-        <Reveal>
+        <Reveal className="mt-6">
           <Question
             n="3"
-            title="Which apps resolved the bad version while it was live?"
-            summary={summaries.q3}
-            star
-            footer={
-              q3 && (
-                <>
-                  <HydraCard flat title="resolved while live" cypher={q3.cypher} ms={q3.ms} rows={q3.rows.length} />
-                  <Notes items={[q3.note ?? "", ...q3.limitations]} />
-                </>
-              )
-            }
+            title="Who pulled it in while it was still installable?"
+            summary={q3 ? <Two a={`${q3.in_window} in window`} b={`${q3.pinned_removed} pin removed`} /> : <Two a="n/a" b="not time-bounded" />}
           >
             {q3 === null ? (
-              <p className="text-pretty text-sm text-muted-foreground">
-                Not applicable: this is a CVE — the artifact is still on the registry, so exposure is not time-bounded and “resolved while live” collapses into
-                “resolved at all” (question 1).
+              <p className="m-0 max-w-[64ch] text-pretty text-[12.5px] text-mut">
+                Not applicable: this is a CVE — the artifact is still on the registry, so exposure is not time-bounded and “resolved while live” collapses into “resolved at
+                all” (Q1).
               </p>
             ) : (
               <>
-                <Timeline rows={q3.rows} versions={q2.rows} advisoryPublished={inc.advisory.published_at} />
-                <div className="mt-3 overflow-hidden rounded-lg border border-border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="hover:bg-transparent">
-                        <TableHead>service</TableHead>
-                        <TableHead>lockfile committed</TableHead>
-                        <TableHead>version</TableHead>
-                        <TableHead>evidence</TableHead>
-                        <TableHead>window</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
+                <div className="-mx-2 -mt-1.5">
+                  <Timeline rows={q3.rows} versions={q2.rows} advisoryPublished={inc.advisory.published_at} />
+                </div>
+                <div className="overflow-x-auto">
+                  <table className={TABLE}>
+                    <thead>
+                      <tr>
+                        <th>service</th>
+                        <th>lockfile</th>
+                        <th>resolved at</th>
+                        <th>commit</th>
+                        <th>in window</th>
+                        <th>window</th>
+                      </tr>
+                    </thead>
+                    <tbody>
                       {q3.rows.map((r, i) => (
-                        <TableRow key={i}>
-                          <TableCell className="font-mono">
+                        <tr key={i}>
+                          <td className="font-mono !text-[12px] !text-fg">
                             <SvcLink inc={inc} svc={r.service} />
-                          </TableCell>
-                          <TableCell className="font-mono text-xs">
-                            {r.sha.slice(0, 12)} · {fmtUtc(r.resolved_at_iso)}
-                          </TableCell>
-                          <TableCell className="font-mono text-xs">{short(r.version)}</TableCell>
-                          <TableCell className="text-xs">
-                            {r.evidence.includes("in_window") && <span className="mr-2 text-l1">in window</span>}
-                            {r.evidence.includes("pinned_removed") && <span className="text-l2">pins a removed version</span>}
-                          </TableCell>
-                          <TableCell className="font-mono text-[11px] text-muted-foreground">
-                            {fmtUtc(r.live_from_iso)} → {fmtUtc(r.live_to_iso)} <Kind kind={r.live_to_kind} />
-                          </TableCell>
-                        </TableRow>
+                          </td>
+                          <td className="font-mono !text-[11.5px]">{short(r.version)}</td>
+                          <td className="font-mono !text-[11.5px]">{fmtUtc(r.resolved_at_iso)}</td>
+                          <td className="font-mono !text-[11.5px]">{r.sha.slice(0, 7)}</td>
+                          <td className="font-mono !text-[11.5px]">
+                            {r.evidence.includes("in_window") ? <span className="text-l1">yes</span> : <span className="text-dim">no</span>}
+                            {r.evidence.includes("pinned_removed") && <span className="text-l2"> · pins removed</span>}
+                          </td>
+                          <td className="font-mono !text-[11px]">
+                            {fmtUtc(r.live_from_iso)} → {fmtUtc(r.live_to_iso)} <Kind kind={r.live_to_kind} className="ml-1" />
+                          </td>
+                        </tr>
                       ))}
                       {q3.rows.length === 0 && (
-                        <TableRow>
-                          <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
-                            No watched lockfile was committed inside the window or pins a removed version.
-                          </TableCell>
-                        </TableRow>
+                        <tr>
+                          <td colSpan={6} className="py-8 text-center font-mono !text-[11.5px] !text-dim">
+                            no watched lockfile was committed inside the window or pins a removed version
+                          </td>
+                        </tr>
                       )}
-                    </TableBody>
-                  </Table>
+                    </tbody>
+                  </table>
                 </div>
+                <div className="mt-4">
+                  <HydraCard flat title="which lockfiles resolved the version inside its installable window?" cypher={q3.cypher} ms={q3.ms} rows={q3.rows.length} />
+                </div>
+                <Notes items={[q3.note ?? "", ...q3.limitations]} />
               </>
             )}
           </Question>
         </Reveal>
 
-        <Reveal>
+        <Reveal className="mt-6">
           <Question
             n="4"
-            title="Which packages share maintainers or infrastructure?"
-            summary={summaries.q4}
-            star
-            footer={
-              <>
-                <HydraCard flat title="maintainer fan-out" cypher={q4.cypher} ms={q4.ms} rows={q4.rows.length} />
-                <Notes items={q4.limitations} />
-              </>
-            }
+            title="What else could the same maintainers reach?"
+            summary={<Two a={plural(q4.maintainers.length, "maintainer")} b={plural(q4.rows.length, "package")} />}
           >
-            <div className="mb-3 flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2">
               {q4.maintainers.map((m) => (
-                <Chip key={m.login} tone={m.twofa === false ? "border-l1/40 text-l1" : ""}>
-                  {short(m.login)} · 2FA {m.twofa === null ? "unknown" : m.twofa ? "on" : "off"}
-                </Chip>
+                <span key={m.login} className={CHIP}>
+                  <span className="size-[5px] rounded-full bg-signal" aria-hidden />
+                  {short(m.login)}
+                  <span className="text-dim">{plural(q4.rows.filter((r) => r.maintainers.includes(m.login)).length, "package")}</span>
+                  <span className={m.twofa === false ? "text-l1" : "text-dim"}>2FA {m.twofa === null ? "unknown" : m.twofa ? "on" : "off"}</span>
+                </span>
+              ))}
+              {q4.maintainers.length === 0 && <span className="font-mono text-[11.5px] text-dim">no maintainer recorded</span>}
+            </div>
+            <div className="mt-[18px] overflow-x-auto">
+              <table className={TABLE}>
+                <thead>
+                  <tr>
+                    <th>package</th>
+                    <th>weekly downloads</th>
+                    <th className="w-[38%]">services that would be reached</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {q4.rows.length > Q4_CAP ? (
+                    <ShowAll n={q4.rows.length} cols={3} more={q4.rows.slice(Q4_CAP).map((r) => reachRow(r, q4Max))}>
+                      {q4.rows.slice(0, Q4_CAP).map((r) => reachRow(r, q4Max))}
+                    </ShowAll>
+                  ) : (
+                    q4.rows.map((r) => reachRow(r, q4Max))
+                  )}
+                  {q4.rows.length === 0 && (
+                    <tr>
+                      <td colSpan={3} className="py-8 text-center font-mono !text-[11.5px] !text-dim">
+                        no co-maintained packages in the ingested graph
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <div className="mt-4">
+              <HydraCard flat title="which other packages do these maintainers publish, and who resolves them?" cypher={q4.cypher} ms={q4.ms} rows={q4.rows.length} />
+            </div>
+            <Limits items={["past the computed cap the reach cell reads “— not computed” — never a 0.", ...q4.limitations]} />
+          </Question>
+        </Reveal>
+
+        <Reveal className="mt-6">
+          <Question n="5" title="Which look-alike names exist?" summary={<Two a={plural(q5Total, "name")} b={plural(q5Kinds.size, "kind")} />}>
+            <div className="flex flex-col gap-4">
+              {q5
+                .filter(([, sec]) => sec.rows.length > 0)
+                .map(([pkg, sec]) => {
+                  const groups = new Map<string, typeof sec.rows>();
+                  for (const r of sec.rows) {
+                    const k = KIND_LABEL[r.kind] ?? r.kind;
+                    groups.set(k, [...(groups.get(k) ?? []), r]);
+                  }
+                  return (
+                    <div key={pkg} className="flex flex-col gap-4">
+                      {q5.length > 1 && <div className="font-mono text-[11px] leading-none text-dim">near {short(pkg)}</div>}
+                      {[...groups].map(([kind, rs]) => (
+                        <div key={kind}>
+                          <div className="label mb-2.5">{kind}</div>
+                          <div className="flex flex-wrap gap-[7px]">
+                            {rs.map((r) => (
+                              <span key={r.package} className={cn(CHIP, "rounded-md px-[9px] py-1.5")}>
+                                {short(r.package)}
+                                <span className="text-[10.5px] text-dim">
+                                  d{r.distance}
+                                  {r.kind === "homoglyph" && " · homoglyph"}
+                                </span>
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
+              {q5Total === 0 && (
+                <p className="m-0 font-mono text-[11.5px] text-dim">
+                  no near-names in the ingested corpus{q5.length > 1 ? ` across ${plural(q5.length, "package")}` : q5[0] ? ` for ${short(q5[0][0])}` : ""}
+                </p>
+              )}
+            </div>
+            <div className="mt-4 flex flex-col gap-2">
+              {q5.map(([pkg, sec]) => (
+                <HydraCard flat key={pkg} title={`near-names of ${short(pkg)}`} cypher={sec.cypher} ms={sec.ms} rows={sec.rows.length} />
               ))}
             </div>
-            <div className="overflow-hidden rounded-lg border border-border">
-              <Table>
-                <TableHeader>
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead>co-maintained package</TableHead>
-                    <TableHead className="text-right">weekly downloads</TableHead>
-                    <TableHead>services resolving it today</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {q4.rows.slice(0, 15).map((r) => (
-                    <TableRow key={r.package}>
-                      <TableCell className="font-mono">{short(r.package)}</TableCell>
-                      <TableCell className="num text-right text-xs text-muted-foreground">{r.downloads?.toLocaleString() ?? "—"}</TableCell>
-                      <TableCell className="font-mono text-xs">
-                        {r.services_at_risk === null ? (
-                          <span className="text-muted-foreground/70">— not computed</span>
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            <span className="num w-5 text-right">{r.services_at_risk.length}</span>
-                            <span className="h-1.5 w-24 shrink-0 overflow-hidden rounded-full bg-border" aria-hidden>
-                              <span className="block h-full rounded-full bg-signal/80" style={{ width: `${(r.services_at_risk.length / q4Max) * 100}%` }} />
-                            </span>
-                            <span className="min-w-0 truncate text-muted-foreground">{r.services_at_risk.map(svcSlug).join(", ")}</span>
-                          </div>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {q4.rows.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={3} className="py-8 text-center text-muted-foreground">
-                        No co-maintained packages in the ingested graph.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+            <Notes items={[...new Set(q5.flatMap(([, s]) => s.limitations))]} />
           </Question>
         </Reveal>
 
-        <Reveal>
-          <Question
-            n="5"
-            title="Are there likely typosquats nearby?"
-            summary={summaries.q5}
-            star
-            footer={
-              <>
-                {q5.map(([pkg, sec]) => (
-                  <HydraCard flat key={pkg} title={`near-names of ${short(pkg)}`} cypher={sec.cypher} ms={sec.ms} rows={sec.rows.length} />
-                ))}
-                <Notes items={[...new Set(q5.flatMap(([, s]) => s.limitations))]} />
-              </>
-            }
-          >
-            <div className="space-y-4">
-              {q5.map(([pkg, sec]) => {
-                const kinds = [...new Set(sec.rows.map((r) => r.kind))];
-                return (
-                  <div key={pkg}>
-                    <div className="mb-1.5 flex flex-wrap items-baseline gap-x-3 font-mono text-xs text-muted-foreground">
-                      <span>near {short(pkg)}</span>
-                      {kinds.length > 0 && <span className="text-[10px] text-muted-foreground/70">{kinds.join(" · ")}</span>}
-                    </div>
-                    {sec.rows.length === 0 ? (
-                      <div className="text-xs text-muted-foreground">no near-names in the ingested corpus</div>
-                    ) : (
-                      <div className="flex flex-wrap gap-x-4 gap-y-2">
-                        {kinds.map((k) => (
-                          <div key={k} className="flex flex-wrap items-center gap-2">
-                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground/70">{k}</span>
-                            {sec.rows
-                              .filter((r) => r.kind === k)
-                              .slice(0, 12)
-                              .map((r) => (
-                                <Chip key={r.package} tone={r.distance <= 1 ? "border-signal/40 text-signal-2" : ""}>
-                                  {short(r.package)} · d{r.distance}
-                                </Chip>
-                              ))}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </Question>
-        </Reveal>
-
-        <Reveal>
+        <Reveal className="mt-6">
           <Question
             n="6"
-            title="Complete blast radius"
-            summary={summaries.q6}
+            title="What is the blast radius, service by service?"
+            summary={<Two a={plural(services.length, "service")} b={`${h.unscanned} unscanned`} />}
             footer={
-              <div className="grid gap-x-6 gap-y-2 border-t border-border px-4 py-3 font-mono text-[11px] text-muted-foreground md:grid-cols-2">
-                <div>
-                  <div className="mb-1 text-[10px] uppercase tracking-wider">regenerate this report</div>
-                  <code className="text-foreground/90">make incident ID={inc.advisory.key} ARGS=&quot;--out&quot;</code>
+              <div className="flex flex-wrap items-center justify-between gap-6 px-[18px] py-4">
+                <div className="min-w-0">
+                  <div className="label mb-[9px]">regenerate</div>
+                  <code className={CODE}>make incident ID={inc.advisory.key} ARGS=&quot;--out&quot;</code>
                 </div>
                 {services[0] && (
                   <div className="min-w-0">
-                    <div className="mb-1 text-[10px] uppercase tracking-wider">badge · {svcSlug(services[0])}</div>
-                    <code className="block truncate text-foreground/90">{`![reachable](/badge/${svcSlug(services[0])}.svg)`}</code>
+                    <div className="label mb-[9px]">badge · {svcSlug(services[0])}</div>
+                    <div className="flex flex-wrap items-center gap-3">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={`/badge/${svcSlug(services[0])}.svg`} alt={`reachable badge for ${svcSlug(services[0])}`} height={20} className="h-5 w-auto" />
+                      <code className="font-mono text-[11px] text-dim [overflow-wrap:anywhere]">{`![reachable](/badge/${svcSlug(services[0])}.svg)`}</code>
+                    </div>
                   </div>
                 )}
               </div>
             }
           >
-            <div className="grid gap-4 md:grid-cols-3">
-              <div>
-                <div className="mb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">exposed · {services.length}</div>
-                <ul className="space-y-1 font-mono text-xs">
-                  {services.map((s) => (
-                    <li key={s} className="flex items-center gap-2">
-                      <span className={cn("size-1.5 shrink-0 rounded-full", DOT[level(s)])} aria-hidden />
-                      <SvcLink inc={inc} svc={s} />
-                    </li>
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(196px,1fr))] gap-px overflow-hidden rounded-lg border border-border bg-border max-[760px]:grid-cols-1">
+              <Column dot="bg-l2" title="act now" n={l2.length}>
+                {l2.map((s) => (
+                  <SvcLink key={s} inc={inc} svc={s} className="font-mono text-[12px] leading-[1.3] !text-mut hover:!text-signal-2" />
+                ))}
+                {l2.length === 0 && <span className="font-mono text-[12px] text-dim">none</span>}
+              </Column>
+              <Column dot="bg-l1" title="resolved while live" n={q3 ? liveBySvc.size : "n/a"}>
+                {[...liveBySvc.values()].map((r) => (
+                  <span key={r.service} className="flex flex-wrap items-baseline gap-x-2 font-mono text-[12px] leading-[1.3]">
+                    <SvcLink inc={inc} svc={r.service} className="!text-mut hover:!text-signal-2" />
+                    <span className="text-[11px] text-dim">
+                      {r.sha.slice(0, 7)} · {fmtUtc(r.resolved_at_iso)}
+                    </span>
+                  </span>
+                ))}
+                {liveBySvc.size === 0 && <span className="font-mono text-[12px] text-dim">{q3 ? "none" : "not time-bounded (CVE)"}</span>}
+              </Column>
+              <Column dot="bg-l0" title="present only" n={services.filter((s) => level(s) === "L0" || level(s) === "L1").length}>
+                {services
+                  .filter((s) => level(s) === "L0" || level(s) === "L1")
+                  .map((s) => (
+                    <span key={s} className="flex flex-wrap items-baseline gap-x-2 font-mono text-[12px] leading-[1.3]">
+                      <SvcLink inc={inc} svc={s} className="!text-mut hover:!text-signal-2" />
+                      {level(s) === "L1" && <span className={cn("text-[11px]", LEVEL.L1.text)}>— {LEVEL.L1.label}</span>}
+                    </span>
                   ))}
-                  {services.length === 0 && <li className="text-muted-foreground">none</li>}
-                </ul>
-              </div>
-              <div>
-                <div className="mb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">while live · {q3 ? liveBySvc.size : "n/a"}</div>
-                <ul className="space-y-1 font-mono text-xs">
-                  {[...liveBySvc.values()].map((r) => (
-                    <li key={r.service} className="flex flex-wrap items-baseline gap-x-2">
-                      <SvcLink inc={inc} svc={r.service} />
-                      <span className="text-[11px] text-muted-foreground">
-                        {r.sha.slice(0, 12)} · {fmtUtc(r.resolved_at_iso)}
-                      </span>
-                    </li>
+                {services.filter((s) => level(s) === "L0" || level(s) === "L1").length === 0 && <span className="font-mono text-[12px] text-dim">none</span>}
+              </Column>
+              {/* unscanned gets its own column and its own grey dot: exposed, source not read — never under the green header */}
+              <Column dot="bg-unknown" title="unscanned" n={services.filter((s) => level(s) === "unscanned").length}>
+                {services
+                  .filter((s) => level(s) === "unscanned")
+                  .map((s) => (
+                    <SvcLink key={s} inc={inc} svc={s} className="font-mono text-[12px] leading-[1.3] !text-mut hover:!text-signal-2" />
                   ))}
-                  {liveBySvc.size === 0 && <li className="text-muted-foreground">{q3 ? "none" : "not time-bounded (CVE)"}</li>}
-                </ul>
-              </div>
-              <div>
-                <div className="mb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-l2">act now · {l2.length}</div>
-                <ul className="space-y-1 font-mono text-xs">
-                  {l2.map((s) => (
-                    <li key={s} className="flex items-center gap-2">
-                      <span className="size-1.5 shrink-0 rounded-full bg-l2" aria-hidden />
-                      <SvcLink inc={inc} svc={s} />
-                    </li>
-                  ))}
-                  {l2.length === 0 && <li className="text-muted-foreground">none</li>}
-                </ul>
-              </div>
+                {services.filter((s) => level(s) === "unscanned").length === 0 && <span className="font-mono text-[12px] text-dim">none</span>}
+              </Column>
             </div>
-            <p className="mt-4 text-[11px] text-muted-foreground">
-              {h.services_exposed} services · {h.lockfiles_exposed} lockfile snapshots · {q4.rows.length} co-maintained packages
-              {h.unscanned > 0 ? ` · ${h.unscanned} unscanned` : ""} · composed in <span className="num">{fmtMs(inc.timing_ms.total)}</span>
-            </p>
+            <Notes
+              items={[
+                `${plural(h.services_exposed, "service")} · ${plural(h.lockfiles_exposed, "lockfile snapshot")} · ${plural(q4.rows.length, "co-maintained package")}${h.unscanned > 0 ? ` · ${h.unscanned} unscanned` : ""} · composed in ${fmtMs(inc.timing_ms.total)}`,
+              ]}
+            />
           </Question>
         </Reveal>
 
-        <Reveal>
+        <div className="mt-6">
           <FindVictims advisory={inc.advisory.key} />
-        </Reveal>
+        </div>
 
-        <Provenance inc={inc} />
+        <Provenance inc={inc} statements={statements} rows={rowsTotal} />
       </div>
-      <aside className="hidden md:block">
-        <Rail counts={railCounts} />
+
+      <aside className="max-[1180px]:hidden">
+        <Rail entries={rail} />
       </aside>
+    </div>
+  );
+}
+
+function Column({ dot, title, n, children }: { dot: string; title: string; n: number | string; children: React.ReactNode }) {
+  return (
+    <div className="bg-card px-4 pb-4 pt-3.5">
+      <div className="mb-3 flex items-center gap-2">
+        <span className={cn("size-1.5 rounded-full", dot)} aria-hidden />
+        <span className="label !text-mut">{title}</span>
+        <span className="num text-[11px] leading-none text-dim">{n}</span>
+      </div>
+      <div className="flex flex-col gap-2">{children}</div>
     </div>
   );
 }
 
 function versionRow(r: Incident["q2_versions"]["rows"][number], first: string | undefined) {
   return (
-    <TableRow key={r.version}>
-      <TableCell className="font-mono">
+    <tr key={r.version}>
+      <td className="font-mono !text-[12px] !text-fg">
         {short(r.version)}
-        {first === r.version && <Chip tone="ml-2 border-signal/40 text-signal-2">first</Chip>}
-      </TableCell>
-      <TableCell className="font-mono text-xs">{fmtUtc(r.published_at_iso)}</TableCell>
-      <TableCell className="font-mono text-xs">
-        {r.live_to_kind === "unbounded" ? "still live" : fmtUtc(r.live_to_iso)} <Kind kind={r.live_to_kind} />
-      </TableCell>
-      <TableCell className="text-xs">{r.removed ? <span className="text-l2">removed</span> : <span className="text-muted-foreground">present</span>}</TableCell>
-    </TableRow>
+        {first === r.version && <Kind kind="first" className="ml-2" />}
+      </td>
+      <td className="font-mono !text-[11.5px]">{fmtUtc(r.published_at_iso)}</td>
+      <td className="font-mono !text-[11.5px]">
+        {r.live_to_kind === "unbounded" ? "still installable" : fmtUtc(r.live_to_iso)}
+        {r.live_to_kind !== "exact" && <Kind kind={r.live_to_kind} className="ml-1.5" />}
+      </td>
+      <td className="font-mono !text-[11.5px]">
+        {r.removed ? <span className="text-l2">removed</span> : r.removed === false ? "present" : <span className="text-dim">not recorded</span>}
+      </td>
+    </tr>
   );
 }
 
-// Verdict distribution: one segment per level, width ∝ count. Zero-count levels are listed, not drawn.
-function Distribution({ parts }: { parts: [string, number, string][] }) {
-  const total = parts.reduce((n, [, c]) => n + c, 0);
-  if (total === 0) return null;
+// Q4 reach cell: mono count + 84×5 bar + service names. Past the cap (services_at_risk === null)
+// the cell reads exactly `— not computed` with a zero-width --unknown bar — never a 0.
+function reachRow(r: Incident["q4_maintainers"]["rows"][number], max: number) {
+  const n = r.services_at_risk;
   return (
-    <div className="mb-3">
-      <div className="flex h-1.5 w-full gap-px overflow-hidden rounded-full bg-border" aria-hidden>
+    <tr key={r.package}>
+      <td className="font-mono !text-[12px] !text-fg">{short(r.package)}</td>
+      <td className="num !text-[11.5px]">{r.downloads == null ? <span className="font-mono text-dim">not recorded</span> : r.downloads.toLocaleString()}</td>
+      <td>
+        <div className="flex items-center gap-2.5">
+          <span className={cn("num min-w-[22px] text-[12px] font-medium leading-none", n === null || n.length === 0 ? "text-dim" : "text-fg")}>{n === null ? "" : n.length}</span>
+          <span className="h-[5px] w-[84px] shrink-0 overflow-hidden rounded-[3px] bg-hover" aria-hidden>
+            <span
+              className={cn("block h-full origin-left animate-[grow_.5s_var(--ease)_both]", n === null ? "w-0 bg-unknown" : "bg-signal/80")}
+              style={n === null ? undefined : { width: `${(n.length / max) * 100}%` }}
+            />
+          </span>
+          <span className="min-w-0 font-mono text-[11px] leading-[1.3] text-dim">{n === null ? "— not computed" : n.length === 0 ? "none" : n.map((s) => svcSlug(s).split("/").pop()).join(", ")}</span>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
+// Q1 verdict distribution: 8px bar on a --hover track, one segment per level growing from the
+// left, then a dot/label/count legend. Same numbers as the strip, at Q1's grain — deliberate.
+function Distribution({ parts }: { parts: [keyof typeof LEVEL, number][] }) {
+  const total = parts.reduce((n, [, c]) => n + c, 0);
+  return (
+    <div>
+      <div className="flex h-2 overflow-hidden rounded-xs bg-hover" aria-hidden>
         {parts
           .filter(([, c]) => c > 0)
-          .map(([k, c, bg]) => (
-            <span key={k} className={cn("h-full", bg)} style={{ width: `${(c / total) * 100}%` }} />
+          .map(([k, c]) => (
+            <span key={k} className={cn("origin-left animate-[grow_.5s_var(--ease)_both] [animation-delay:180ms]", LEVEL[k].dot)} style={{ width: `${(c / Math.max(total, 1)) * 100}%` }} />
           ))}
       </div>
-      <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 font-mono text-[10px] text-muted-foreground">
-        {parts.map(([k, c, bg]) => (
-          <span key={k} className="inline-flex items-center gap-1.5">
-            <span className={cn("size-1.5 rounded-full", c > 0 ? bg : "bg-border")} aria-hidden />
-            <span className="num">{c}</span> {k}
+      <div className="mt-[11px] flex flex-wrap gap-5 font-mono text-[11px] leading-none text-dim">
+        {parts.map(([k, c]) => (
+          <span key={k} className="inline-flex items-center gap-[7px]">
+            <span className={cn("size-1.5 rounded-full", LEVEL[k].dot)} aria-hidden />
+            {LEVEL[k].label} <span className="text-mut">{c}</span>
           </span>
         ))}
       </div>
@@ -536,31 +608,31 @@ function Distribution({ parts }: { parts: [string, number, string][] }) {
   );
 }
 
-function Provenance({ inc }: { inc: Incident }) {
+function Provenance({ inc, statements, rows }: { inc: Incident; statements: number; rows: number }) {
   const p = inc.provenance;
   const digest = p.hydradb_image?.match(/sha256:([0-9a-f]+)/)?.[1];
   return (
-    <footer className="border-t border-border pt-3 font-mono text-[11px] text-muted-foreground [overflow-wrap:anywhere]">
-      <div className="flex flex-wrap gap-x-4 gap-y-1">
-        <span>generated {fmtUtc(p.generated_at)}</span>
+    <footer className="mt-6 border-t border-line pt-[18px] font-mono text-[10.5px] leading-[1.6] text-dim [overflow-wrap:anywhere]">
+      <div className="flex flex-wrap gap-x-6 gap-y-1">
+        <span>report generated {fmtUtc(p.generated_at)}</span>
+        <span>
+          graph snapshot{" "}
+          {Object.entries(p.graph)
+            .map(([k, v]) => `${k.toLowerCase()} ${v?.toLocaleString() ?? "n/a"}`)
+            .join(" · ")}
+        </span>
+        <span className="num">
+          {statements} statements · {rows} rows · {fmtMs(inc.timing_ms.total)} total
+        </span>
+      </div>
+      <div className="mt-1 flex flex-wrap gap-x-6 gap-y-1">
         <span title={p.hydradb_image ?? undefined}>engine {digest ? `sha256:${digest.slice(0, 12)}` : "digest not recorded"}</span>
         <span>{p.bolt_uri}</span>
+        <span>
+          {p.host} · {p.platform}
+        </span>
       </div>
-      <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
-        {Object.entries(p.graph).map(([k, v]) => (
-          <span key={k}>
-            {k} <span className="num text-foreground/80">{v?.toLocaleString() ?? "n/a"}</span>
-          </span>
-        ))}
-      </div>
-      <details className="mt-2">
-        <summary className="inline-flex min-h-10 cursor-pointer items-center rounded-md transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50">
-          details
-        </summary>
-        <p className="max-w-3xl text-pretty font-sans">
-          {p.note} Host {p.host} · {p.platform}.
-        </p>
-      </details>
+      <p className="m-0 mt-1 max-w-[80ch] text-pretty">{p.note}</p>
     </footer>
   );
 }

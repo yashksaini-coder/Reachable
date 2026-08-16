@@ -1,9 +1,5 @@
-"use client";
-
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { animate, motion, useReducedMotion } from "motion/react";
-import { Chip, Level } from "@/components/console/ui";
+import { LEVEL } from "@/lib/level";
 import { cn } from "@/lib/utils";
 
 export type Card = {
@@ -12,72 +8,62 @@ export type Card = {
   advisory: string;
   level: string;
   whileLive: boolean;
-  meta: string;
+  via: string; // `via …` line — the direct/transitive dependency that pulled the version in
+  sha: string;
+  time: string;
+  lockfiles: number;
 };
 
-const SPRING = { type: "spring", duration: 0.3, bounce: 0 } as const;
-
-// One board column. Section header (title · hint · counted badge), cards enter with a
-// per-column stagger, count-up on the badge; the empty state is a dashed lane with one hint.
-export function Lane({ title, hint, tone, index, cards }: { title: string; hint: string; tone: string; index: number; cards: Card[] }) {
-  const reduce = useReducedMotion();
-  const base = index * 0.06;
+// One board lane: 2px verdict-coloured top rule, 0 0 12px 12px radii, header (title · count in the
+// lane colour · mono hint), then --card2 cards. Density is driven by the page-level compact switch
+// (`group-has-[:checked]`), so the lane stays a server component.
+export function Lane({ title, hint, tone, wide, cards }: { title: string; hint: string; tone: { border: string; text: string }; wide?: boolean; cards: Card[] }) {
   return (
-    <section className={cn("elev rounded-xl border border-border border-t-2 bg-card p-2", tone)}>
-      <header className="flex items-start justify-between gap-2 px-1.5 pt-1 pb-2.5">
-        <div className="min-w-0">
-          <div className="text-[10.5px] font-medium uppercase tracking-[0.14em] text-muted-foreground">{title}</div>
-          <div className="mt-0.5 text-[11px] leading-snug text-muted-foreground/80 text-pretty">{hint}</div>
+    <section
+      className={cn(
+        "flex min-w-[248px] flex-col rounded-b-xl border border-border border-t-2 bg-card",
+        wide ? "flex-[0_0_300px] group-has-[:checked]:flex-[0_0_272px]" : "flex-[0_0_272px]",
+        tone.border,
+      )}
+    >
+      <header className="border-b border-line px-3.5 pb-3 pt-3.5">
+        <div className="flex items-center justify-between gap-2.5">
+          <span className="text-[12.5px] font-medium leading-[1.2] text-fg">{title}</span>
+          <span className={cn("num text-[11px] font-medium leading-none", tone.text)} aria-label={`${cards.length} exposures`}>
+            {cards.length}
+          </span>
         </div>
-        <span
-          className={cn("num shrink-0 rounded-md border border-border px-1.5 py-0.5 text-[13px] leading-none", cards.length ? "text-foreground" : "text-muted-foreground")}
-          aria-label={`${cards.length} exposures`}
-        >
-          <CountUp n={cards.length} delay={base} />
-        </span>
+        <div className="mt-1.5 font-mono text-[10.5px] leading-[1.4] text-dim text-pretty">{hint}</div>
       </header>
-      {cards.length === 0 ? (
-        <div className="grid min-h-20 place-items-center rounded-lg border border-dashed border-border px-3 py-4 text-center text-[11px] text-muted-foreground/70 text-pretty">
-          nothing in this state
-        </div>
-      ) : (
-        <ol className="space-y-2">
-          {cards.map((c, i) => (
-            <motion.li
-              key={`${c.advisory}:${c.slug}`}
-              initial={reduce ? false : { opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ ...SPRING, delay: base + Math.min(i, 8) * 0.05 }}
-            >
+      <div className="flex flex-col gap-2 p-2.5">
+        {cards.length === 0 ? (
+          <div className="grid min-h-11 place-items-center rounded-[9px] border border-dashed border-input px-3 py-3 text-center font-mono text-[10.5px] text-dim">nothing in this state</div>
+        ) : (
+          cards.map((c) => {
+            const l = LEVEL[c.level] ?? LEVEL.unscanned;
+            return (
               <Link
+                key={`${c.advisory}:${c.slug}`}
                 href={c.href}
-                className="group block rounded-lg border border-border bg-background/70 px-3 py-2 transition-[border-color,transform,box-shadow] duration-200 hover:-translate-y-px hover:border-signal/40 hover:elev-2 focus-visible:ring-2 focus-visible:ring-signal/50 focus-visible:outline-none active:scale-[0.96]"
+                className="block min-h-11 w-full rounded-[9px] border border-border bg-card2 px-[13px] py-3 transition-[background-color,transform] duration-[180ms] ease-[var(--ease)] hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50 active:scale-[0.98] group-has-[:checked]:px-[11px] group-has-[:checked]:py-[9px]"
               >
-                <div className="truncate font-mono text-[12.5px] transition-colors group-hover:text-signal-2">{c.slug}</div>
-                <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                  <Level level={c.level} />
-                  {c.whileLive && <Chip tone="border-l1/40 text-l1">while live</Chip>}
-                  <Chip>{c.advisory}</Chip>
+                <div className="flex items-center justify-between gap-2.5">
+                  <span className="truncate font-mono text-[12px] font-medium leading-none text-fg">{c.slug}</span>
+                  <span className="shrink-0 font-mono text-[10.5px] leading-none text-signal">{c.advisory}</span>
                 </div>
-                <div className="num mt-1.5 truncate text-[10.5px] text-muted-foreground" title={c.meta}>
-                  {c.meta}
+                <div className="mt-[9px] font-mono text-[11px] leading-[1.5] text-dim group-has-[:checked]:hidden">
+                  via {c.via}
+                  <br />
+                  {c.sha} · {c.time}
+                  <br />
+                  <span className={l.text}>{l.label}</span>
+                  {c.whileLive && <> · while live</>} · {c.lockfiles} lockfile{c.lockfiles === 1 ? "" : "s"}
                 </div>
               </Link>
-            </motion.li>
-          ))}
-        </ol>
-      )}
+            );
+          })
+        )}
+      </div>
     </section>
   );
-}
-
-function CountUp({ n, delay }: { n: number; delay: number }) {
-  const reduce = useReducedMotion();
-  const [v, setV] = useState(0);
-  useEffect(() => {
-    if (reduce) return;
-    const ctrl = animate(0, n, { duration: 0.5, delay, ease: "easeOut", onUpdate: (x) => setV(Math.round(x)) });
-    return () => ctrl.stop();
-  }, [n, delay, reduce]);
-  return <>{reduce ? n : v}</>;
 }

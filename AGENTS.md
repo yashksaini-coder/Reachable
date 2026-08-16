@@ -485,6 +485,13 @@ page with six answer cards, Board, Services + add-by-URL jobs, Ask, Graph) ·
 (12 tools, `.mcp.json`) verified with a stdio client · README written as the
 submission text; JUDGE_GUIDE numbers filled from benchmarks.
 
+**UI (2026-08-17 00:xx IST):** design-handoff port landed — landing at `/`, console under
+`web/app/(console)/` (`/incidents`, `/incident/[advisory]`, service detail, `/board`,
+`/services`, `/ask`, `/graph`), shell in `web/components/console/nav.tsx`, primitives in
+`web/components/console/ui.tsx`, tokens in `web/app/globals.css`, verdict vocabulary in
+`web/lib/level.ts` (server-safe). Rules that bit: exports of a `"use client"` module are
+client references on the server (LEVEL had to move to `lib/`); `pkill -f` self-kill.
+
 **Known open items:** push to the public GitHub repo (owner action) · Vercel
 read-only deploy from committed JSON · video ≤ 3:00 in the prescribed order ·
 form · final disqualifier pass (private-window links, no pre-Aug-12 commits,

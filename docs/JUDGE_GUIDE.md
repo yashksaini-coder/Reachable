@@ -6,7 +6,7 @@ recorded in a committed JSON with the statement that produced it.
 
 ## 90-second path
 
-1. Open the console (deployed link in README, or `make up` → http://localhost:3000) → click **MAL-2025-46974** (debug@4.4.2).
+1. Open the console (deployed link in README, or `make up` → http://localhost:3000 — the landing; **Incidents** is `/incidents`) → click **MAL-2025-46974** (debug@4.4.2).
 2. Read the headline: services exposed · resolved **while live** · reachable (L2) · imported (L1) ·
    present only (L0) · **unscanned** (we never call an unscanned service safe).
 3. Scroll to **Q3** — the timeline strip. Orange bar = the window the malicious artifact was

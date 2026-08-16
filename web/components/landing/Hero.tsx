@@ -1,11 +1,11 @@
-import { LINKS } from '@/lib/landing-data';
+import { LINKS, type LandingModel } from '@/lib/landing-data';
 import { ArrowRight } from './Mark';
 import { HeroConsole } from './HeroConsole';
 import styles from './Hero.module.css';
 
-const TRUST = ['read-only access', 'lockfiles never leave your graph', 'answers in under 2s warm'];
+const TRUST = ['every answer carries its statement', 'numbers are measured, never estimated', 'dark, read-only console'];
 
-export function Hero() {
+export function Hero({ m }: { m: LandingModel }) {
   return (
     <section className={`container ${styles.hero}`}>
       <div className={styles.glow} aria-hidden="true" />
@@ -39,7 +39,7 @@ export function Hero() {
         ))}
       </div>
 
-      <HeroConsole />
+      <HeroConsole advisory={m.advisory} level={m.headLevel} meta={m.headMeta} strip={m.strip} blast={m.blast} />
     </section>
   );
 }

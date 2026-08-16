@@ -5,12 +5,12 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { ChevronDown } from "lucide-react";
 import { fmtMs } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { LEVEL } from "@/lib/level";
 import { CountUp } from "@/components/console/count-up";
 
 // Elevation utility (shadow + tint, never a thicker border) — see globals.css `.elev`.
 export const ELEV = "elev";
 
-const SPRING = { type: "spring", duration: 0.3, bounce: 0 } as const;
 
 // HydraCard — the engine-identity strip. Generated from the statements that were actually
 // executed, never a static string; if this card lies, the JSON lies, and the golden test catches it.
@@ -223,21 +223,7 @@ export function ShowAll({ n, cols, children, more }: { n: number; cols: number; 
   );
 }
 
-// Verdict vocabulary — the four levels and what each may claim. Colours are semantic only.
-export const LEVEL: Record<string, { label: string; short: string; text: string; bg: string; dot: string; hex: string; hint: string }> = {
-  L2: { label: "L2 act now", short: "L2", text: "text-l2", bg: "bg-l2/14", dot: "bg-l2", hex: "#ff5c5c", hint: "vulnerable symbol referenced in first-party code" },
-  L1: { label: "L1 imported", short: "L1", text: "text-l1", bg: "bg-l1/14", dot: "bg-l1", hex: "#f5b400", hint: "package imported by first-party code; symbol not referenced" },
-  L0: { label: "L0 present only", short: "L0", text: "text-l0", bg: "bg-l0/14", dot: "bg-l0", hex: "#2fd07f", hint: "in the install tree; never imported by scanned files" },
-  unscanned: {
-    label: "unscanned",
-    short: "unscanned",
-    text: "text-unknown",
-    bg: "bg-unknown/14",
-    dot: "bg-unknown",
-    hex: "#8b93a7",
-    hint: "no source files ingested — reachability unknown, never assumed safe",
-  },
-};
+export { LEVEL } from "@/lib/level";
 
 // Pill geometry (shared): 10px/500 uppercase, tracking .07em, padding 5px 7px, 5px radius.
 const PILL = "inline-flex items-center gap-1.5 whitespace-nowrap rounded-sm px-[7px] py-[5px] text-[10px] font-medium uppercase leading-none tracking-[0.07em]";

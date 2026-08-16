@@ -46,10 +46,12 @@ real and lets HydraDB do the walking.
   `RESOLVED` edges are the flattened install tree npm wrote — plus npm versions, publish and
   removal times, maintainers, OSV advisories with an **installable window on the `AFFECTS`
   edge**, first-party import scans, and a materialised near-name graph.
-- **A console** (`web/`, Next 16) — incident pages that answer the six questions with the
-  executed Cypher on every card, a triage **Board**, a **Services** registry with add-by-URL
-  ingest jobs, an **Ask** page (typed questions → Cypher, live), and a **Graph** page with a
-  live force-directed neighbourhood explorer.
+- **A console** (`web/`, Next 16) — a landing page at `/`, then `/incidents` and the incident
+  report that answers the six questions with the executed Cypher on every card, a triage
+  **Board**, a **Services** registry with add-by-URL ingest jobs, an **Ask** page (typed
+  questions → Cypher, live), and a **Graph** page with a live force-directed neighbourhood
+  explorer. Design: dark operations console, one accent, semantic verdict colours, every number
+  server-rendered true and never estimated.
 - **An MCP server** (`worker/reachable/mcp_server.py`) exposing twelve tools so Claude Code,
   Codex, OpenCode, Cursor or Copilot can ask the graph the same questions.
 - **A badge** (`/badge/{owner}/{repo}.svg`) for READMEs.

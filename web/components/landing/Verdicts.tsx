@@ -1,9 +1,10 @@
 import type { CSSProperties } from 'react';
-import { DIST, LEVELS } from '@/lib/landing-data';
+import { LEVELS, type LandingModel } from '@/lib/landing-data';
 import { Reveal } from './Reveal';
 import styles from './Verdicts.module.css';
 
-export function Verdicts() {
+export function Verdicts({ dist }: { dist: LandingModel['dist'] }) {
+  const total = dist.reduce((n, d) => n + d.n, 0);
   return (
     <section id="verdicts" className="container section">
       <Reveal className={styles.copy}>
@@ -16,8 +17,22 @@ export function Verdicts() {
       </Reveal>
 
       <Reveal className={styles.bar}>
-        {DIST.map((d) => (
-          <div key={d.color} className={styles.segment} style={{ width: d.w, background: d.color }} />
+        {dist
+          .filter((d) => d.n > 0)
+          .map((d) => (
+            <div
+              key={d.label}
+              className={styles.segment}
+              style={{ width: `${(100 * d.n) / total}%`, background: d.color }}
+            />
+          ))}
+      </Reveal>
+      <Reveal className={styles.legend}>
+        {dist.map((d) => (
+          <span key={d.label} className={styles.legendItem}>
+            <span className={styles.legendDot} style={{ background: d.color }} aria-hidden="true" />
+            <span style={{ color: d.color }}>{d.n}</span> {d.label}
+          </span>
         ))}
       </Reveal>
 

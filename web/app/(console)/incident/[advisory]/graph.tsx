@@ -1,209 +1,168 @@
-import type { ReactNode } from "react";
 import { short, svcSlug, type Incident } from "@/lib/incident";
+import { LEVEL } from "@/lib/level";
 import { cn } from "@/lib/utils";
-import { Chip, ELEV } from "@/components/console/ui";
 
-// Blast radius, drawn from the JSON paths HydraDB returned (algo.SPpaths chains + the
-// lockfile→service edge). Layered left→right: affected versions · intermediate dependency
-// versions · lockfiles · services. Server-rendered SVG, no client JS, no layout library — a
-// barycenter pass is enough to keep the crossings down at this size.
+// Blast radius — the report's hero. Drawn from the paths HydraDB returned for Q1 (chains
+// [bad, REL, …, REL, lockfile] plus the lockfile→service edge), laid out in the four columns of the
+// spec: version → dependency → lockfile → service. The dependency column is the one the lockfile
+// pulls the version in through (`via`, with its hop count as the sub-label) or the literal
+// "direct dependency" node when the lockfile pins the affected version itself. Server-rendered
+// SVG, 1180×300 viewBox, no client JS.
 
-type Kind = "bad" | "dep" | "lock" | "svc";
-type Node = { key: string; kind: Kind; layer: number; tone: string; y: number };
+type Box = { key: string; label: string; sub: string; stroke: string; title?: string };
+type Svc = { key: string; level: string };
 
+const X = [90, 350, 640, 990];
+const ROWS = 8; // 232/8 = 29 user units per row — the floor for label + sub-label
 const RANK: Record<string, number> = { L2: 3, L1: 2, unscanned: 1, L0: 0 };
-const LEVEL_TONE: Record<string, string> = { L2: "var(--color-l2)", L1: "var(--color-l1)", L0: "var(--color-l0)", unscanned: "var(--color-unknown)" };
-const GREY = "var(--color-muted-foreground)";
-const CAP = 60;
+const trunc = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1) + "…" : s);
+const lockLabel = (key: string) => {
+  const [repo, sha = ""] = short(key).split("@");
+  return `${repo.split("/").pop()}@${sha.slice(0, 7)}`;
+};
 
 export function BlastGraph({ inc }: { inc: Incident }) {
   const rows = inc.q1_exposed.rows;
-  if (rows.length === 0) return null;
   const level = (svc: string) => inc.q7_reachability[svc]?.level ?? "unscanned";
-  const inWindow = new Set((inc.q3_while_live?.rows ?? []).map((r) => r.lockfile));
+  const q3 = inc.q3_while_live;
+  const inWindow = new Set((q3?.rows ?? []).filter((r) => r.evidence.includes("in_window")).map((r) => r.lockfile));
+  const pinsRemoved = new Set((q3?.rows ?? []).filter((r) => r.evidence.includes("pinned_removed")).map((r) => r.lockfile));
 
-  // Worst verdict first, so the cap keeps what matters.
+  // Worst verdict first, so the row cap keeps what matters.
   const services = [...new Set(rows.map((r) => r.service))].sort((a, b) => (RANK[level(b)] ?? 0) - (RANK[level(a)] ?? 0) || a.localeCompare(b));
 
-  const nodes = new Map<string, Node>();
-  const edges = new Set<string>(); // "src|dst"
-  const add = (key: string, kind: Kind, layer: number, tone: string) => {
-    const n = nodes.get(key);
-    if (n) n.layer = Math.max(n.layer, layer);
-    else nodes.set(key, { key, kind, layer, tone, y: 0 });
-  };
-  const link = (a: string, b: string) => edges.add(`${a}|${b}`);
-
-  // Every chain in the JSON: [bad, REL, ver, REL, ..., REL, lock]; keys sit at even indices.
-  const chainsOf = (r: (typeof rows)[number]) =>
-    r.paths.length ? r.paths.map((p) => p.chain) : r.bad_versions.map((b) => [b, "RESOLVED", r.lockfile]);
-  const keysOf = (chain: string[]) => chain.filter((_, i) => i % 2 === 0);
-
+  const bad = new Map<string, Box>();
+  const via = new Map<string, Box>();
+  const lock = new Map<string, Box>();
+  const svc: Svc[] = [];
+  const edges = new Set<string>(); // "col|src|dst"
   let shown = 0;
-  for (const svc of services) {
-    const mine = rows.filter((r) => r.service === svc);
-    const need = new Set<string>([svc]);
-    for (const r of mine) for (const c of chainsOf(r)) for (const k of keysOf(c)) need.add(k);
-    const fresh = [...need].filter((k) => !nodes.has(k)).length;
-    if (nodes.size > 0 && nodes.size + fresh > CAP) break;
-    shown++;
-    add(svc, "svc", 0, LEVEL_TONE[level(svc)] ?? GREY);
+  for (const s of services) {
+    const mine = rows.filter((r) => r.service === s);
+    const nb = new Set(bad.keys()), nv = new Set(via.keys()), nl = new Set(lock.keys());
     for (const r of mine) {
-      add(r.lockfile, "lock", 0, inWindow.has(r.lockfile) ? "var(--color-l1)" : GREY);
-      link(r.lockfile, svc);
-      for (const c of chainsOf(r)) {
-        const keys = keysOf(c);
-        keys.forEach((k, i) => {
-          if (i === 0) add(k, "bad", 0, "var(--color-l2)");
-          else if (i < keys.length - 1) add(k, "dep", i, GREY);
-          if (i > 0) link(keys[i - 1], k);
-        });
+      nl.add(r.lockfile);
+      nv.add(r.via ?? "direct");
+      for (const b of r.bad_versions) nb.add(b);
+    }
+    if (shown > 0 && Math.max(nb.size, nv.size, nl.size, svc.length + 1) > ROWS) break;
+    shown++;
+    svc.push({ key: s, level: level(s) });
+    for (const r of mine) {
+      const v = r.via ?? "direct";
+      const sub = !q3 ? "resolved" : inWindow.has(r.lockfile) ? "in window" : pinsRemoved.has(r.lockfile) ? "pins removed" : "outside window";
+      if (!lock.has(r.lockfile)) lock.set(r.lockfile, { key: r.lockfile, label: trunc(lockLabel(r.lockfile), 30), sub, stroke: inWindow.has(r.lockfile) ? "stroke-l1" : "stroke-unknown", title: short(r.lockfile) });
+      if (!via.has(v))
+        via.set(v, r.via ? { key: v, label: trunc(short(r.via), 30), sub: `${r.hops} hop${r.hops === 1 ? "" : "s"}`, stroke: "stroke-unknown", title: short(r.via) } : { key: v, label: "direct dependency", sub: "declared", stroke: "stroke-unknown" });
+      for (const b of r.bad_versions) {
+        if (!bad.has(b)) bad.set(b, { key: b, label: trunc(short(b), 30), sub: "affected", stroke: "stroke-l2", title: short(b) });
+        edges.add(`0|${b}|${v}`);
       }
+      edges.add(`1|${v}|${r.lockfile}`);
+      edges.add(`2|${r.lockfile}|${s}`);
     }
   }
-  // Lockfiles sit after the deepest dependency; services one column further.
-  const depMax = Math.max(0, ...[...nodes.values()].filter((n) => n.kind === "dep").map((n) => n.layer));
-  for (const n of nodes.values()) {
-    if (n.kind === "lock") n.layer = depMax + 1;
-    if (n.kind === "svc") n.layer = depMax + 2;
-  }
-  const L = depMax + 3;
-  const layers: Node[][] = Array.from({ length: L }, () => []);
-  for (const n of nodes.values()) layers[n.layer].push(n);
-  for (const l of layers) l.sort((a, b) => a.key.localeCompare(b.key));
-
-  // Barycenter ordering: forward pass then backward pass.
-  const adj = new Map<string, string[]>();
-  for (const e of edges) {
-    const [a, b] = e.split("|");
-    adj.set(a, [...(adj.get(a) ?? []), b]);
-    adj.set(b, [...(adj.get(b) ?? []), a]);
-  }
+  const cols: string[][] = [[...bad.keys()], [...via.keys()], [...lock.keys()], svc.map((s) => s.key)];
+  const yOf = (i: number, n: number) => 46 + (i + 0.5) * (232 / n);
   const pos = new Map<string, number>();
-  const index = () => layers.forEach((l) => l.forEach((n, i) => pos.set(n.key, i)));
-  const sweep = (order: number[]) => {
-    for (const li of order) {
-      const ref = layers[li + (order[0] === 0 ? -1 : 1)];
-      if (!ref) continue;
-      const refKeys = new Set(ref.map((n) => n.key));
-      const bary = (n: Node) => {
-        const nb = (adj.get(n.key) ?? []).filter((k) => refKeys.has(k)).map((k) => pos.get(k)!);
-        return nb.length ? nb.reduce((a, b) => a + b, 0) / nb.length : pos.get(n.key)!;
-      };
-      layers[li].sort((a, b) => bary(a) - bary(b));
-      index();
-    }
-  };
-  index();
-  sweep([...layers.keys()]); // forward: layer 1..L-1 against left neighbour
-  sweep([...layers.keys()].reverse()); // backward: L-2..0 against right neighbour
-
-  const rowH = 26;
-  const colW = 210;
-  const padX = 12;
-  const H = Math.max(...layers.map((l) => l.length)) * rowH + 24;
-  const W = L * colW;
-  for (const l of layers) {
-    const off = (H - l.length * rowH) / 2 + rowH / 2;
-    l.forEach((n, i) => (n.y = off + i * rowH));
-  }
-  const x = (n: Node) => padX + n.layer * colW;
-  const heads = ["affected version", ...Array.from({ length: depMax }, (_, i) => `dependent · ${i + 1} hop${i ? "s" : ""}`), "lockfile", "service"];
-  const label = (n: Node) => {
-    const s = n.kind === "svc" ? svcSlug(n.key) : n.kind === "lock" ? short(n.key).replace(/^.*@/, "@").slice(0, 13) : short(n.key);
-    return s.length > 26 ? s.slice(0, 25) + "…" : s;
-  };
+  cols.forEach((c, ci) => c.forEach((k, i) => pos.set(`${ci}|${k}`, yOf(i, c.length))));
+  const heads = ["version", "dependency", "lockfile", "service"];
 
   return (
-    <section className={cn("rounded-lg border border-border bg-card/70 p-3", ELEV)} aria-label="blast radius">
-      <div className="mb-1 flex flex-wrap justify-between gap-x-4 font-mono text-[10px] text-muted-foreground">
-        <span>blast radius · from the paths HydraDB returned</span>
-        <span className="num">
-          {nodes.size} nodes · {edges.size} edges
-          {shown < services.length && ` · showing ${shown} of ${services.length} services (worst verdicts first)`}
+    <section
+      id="graph"
+      data-sect="graph"
+      aria-label="blast radius"
+      className="scroll-mt-24 overflow-hidden rounded-2xl border border-border bg-linear-to-b from-card to-bg elev"
+    >
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-[18px] pt-4">
+        <span className="label tracking-[0.11em]">blast radius</span>
+        <span className="font-mono text-[11px] leading-none text-dim">
+          version → dependency → lockfile → service
+          {shown < services.length && <span className="num"> · showing {shown} of {services.length} services, worst verdicts first</span>}
         </span>
       </div>
-      <div className="overflow-x-auto">
-        <svg
-          viewBox={`0 0 ${W} ${H}`}
-          width={W}
-          height={H}
-          className="max-w-none"
-          role="img"
-          aria-label={`blast radius graph: ${nodes.size} nodes, ${edges.size} edges, ${shown} services`}
-        >
-          {heads.map((_, i) => (
-            <rect key={`b${i}`} x={i * colW} y={0} width={colW} height={H} fill="var(--color-muted-foreground)" fillOpacity={i % 2 ? 0.045 : 0.02} />
-          ))}
-          {heads.map((h, i) => (
-            <text key={i} x={padX + i * colW} y={11} fill={GREY} fontSize="9" fontFamily="ui-monospace, monospace" letterSpacing="0.1em">
-              {h.toUpperCase()}
-            </text>
-          ))}
-          {[...edges].map((e) => {
-            const [a, b] = e.split("|");
-            const s = nodes.get(a)!;
-            const t = nodes.get(b)!;
-            const x1 = x(s) + 6;
-            const x2 = x(t) - 6;
-            const mx = (x1 + x2) / 2;
-            return <path key={e} d={`M${x1},${s.y} C${mx},${s.y} ${mx},${t.y} ${x2},${t.y}`} fill="none" stroke={t.tone} strokeOpacity={0.4} strokeWidth={1.25} />;
-          })}
-          {[...nodes.values()].map((n) => (
-            <g key={n.key}>
-              <title>{n.key}</title>
-              {n.kind === "svc" ? (
-                <rect x={x(n) - 5} y={n.y - 5} width={10} height={10} rx={2.5} fill={n.tone} stroke="var(--color-card)" strokeWidth={1.5} />
-              ) : (
-                <circle cx={x(n)} cy={n.y} r={n.kind === "bad" ? 5 : 3.5} fill={n.tone} stroke="var(--color-card)" strokeWidth={1.5} />
-              )}
-              <text
-                x={x(n) + 10}
-                y={n.y + 3.5}
-                fill="var(--color-foreground)"
-                fontSize="10"
-                fontFamily="ui-monospace, monospace"
-                paintOrder="stroke"
-                stroke="var(--color-card)"
-                strokeWidth={4}
-                strokeLinejoin="round"
-              >
-                {label(n)}
+      {rows.length === 0 ? (
+        <p className="px-[18px] py-10 text-center font-mono text-[11.5px] text-dim">no watched service resolves an affected version — nothing to draw</p>
+      ) : (
+        <div className="overflow-x-auto overscroll-x-contain px-2 pt-1">
+          <svg viewBox="0 0 1180 300" className="h-auto w-full min-w-[1000px]" role="img" aria-label={`blast radius graph: ${shown} services, ${lock.size} lockfiles, ${edges.size} edges`}>
+            {heads.map((h, i) => (
+              <text key={h} x={X[i] - 6} y={26} className="fill-dim text-[9.5px] font-medium uppercase tracking-[0.11em]">
+                {h}
               </text>
-            </g>
-          ))}
-        </svg>
-      </div>
-      <ul className="mt-2 flex flex-wrap gap-1.5" aria-label="legend">
-        <Key swatch={<span className="block size-2.5 rounded-full bg-l2" />}>affected version</Key>
-        <Key swatch={<span className="block size-2 rounded-full bg-muted-foreground" />}>dependency / lockfile</Key>
-        <Key swatch={<span className="block size-2 rounded-full bg-l1" />}>lockfile committed while live</Key>
-        <Key
-          swatch={
-            <span className="flex gap-0.5">
-              <span className="block size-2 rounded-[2px] bg-l2" />
-              <span className="block size-2 rounded-[2px] bg-l1" />
-              <span className="block size-2 rounded-[2px] bg-l0" />
-              <span className="block size-2 rounded-[2px] bg-unknown" />
-            </span>
-          }
-        >
-          service · verdict L2 / L1 / L0 / unscanned
-        </Key>
+            ))}
+            {[...edges].map((e) => {
+              const [c, a, b] = e.split("|");
+              const ci = Number(c);
+              const y1 = pos.get(`${ci}|${a}`)!;
+              const y2 = pos.get(`${ci + 1}|${b}`)!;
+              const x1 = X[ci] + 8;
+              const x2 = X[ci + 1] - 8;
+              const mx = (x1 + x2) / 2;
+              const amber = ci === 1 && inWindow.has(b);
+              return (
+                <path
+                  key={e}
+                  d={`M${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`}
+                  fill="none"
+                  className={amber ? "stroke-l1" : "stroke-unknown"}
+                  strokeOpacity={amber ? 0.5 : 0.28}
+                  strokeWidth={amber ? 1.4 : 1}
+                />
+              );
+            })}
+            {[bad, via, lock].map((m, ci) =>
+              [...m.values()].map((n) => {
+                const y = pos.get(`${ci}|${n.key}`)!;
+                const x = X[ci];
+                return (
+                  <g key={`${ci}|${n.key}`}>
+                    {n.title && <title>{n.title}</title>}
+                    <rect x={x - 6} y={y - 6} width={12} height={12} rx={3} className={cn("fill-card2", n.stroke)} strokeWidth={1.2} />
+                    <text x={x + 13} y={y + 1} className={cn("font-mono text-[11.5px]", ci === 0 ? "fill-fg" : "fill-mut")}>
+                      {n.label}
+                    </text>
+                    <text x={x + 13} y={y + 15} className={cn("font-mono text-[9.5px]", n.sub === "in window" ? "fill-l1" : "fill-dim")}>
+                      {n.sub}
+                    </text>
+                  </g>
+                );
+              }),
+            )}
+            {svc.map((s) => {
+              const y = pos.get(`3|${s.key}`)!;
+              const x = X[3];
+              const l = LEVEL[s.level] ?? LEVEL.unscanned;
+              const fill = l.dot.replace("bg-", "fill-");
+              return (
+                <g key={s.key}>
+                  <title>{svcSlug(s.key)}</title>
+                  <circle cx={x} cy={y} r={3.5} className={fill} />
+                  <text x={x + 12} y={y + 4} className="fill-mut font-mono text-[11.5px]">
+                    {trunc(svcSlug(s.key), 22)}
+                  </text>
+                  <text x={x + 12} y={y + 18} className={cn("text-[9.5px] font-medium uppercase tracking-[0.08em]", fill)}>
+                    {l.label}
+                  </text>
+                </g>
+              );
+            })}
+          </svg>
+        </div>
+      )}
+      <ul className="mt-1 flex flex-wrap gap-[18px] border-t border-line px-[18px] pb-4 pt-2 font-mono text-[10.5px] leading-none text-dim" aria-label="legend">
+        <li className="inline-flex items-center gap-1.5">
+          <span className="inline-block h-0.5 w-2 bg-l1" aria-hidden />
+          lockfile resolved while installable
+        </li>
+        {(["L2", "L1", "L0", "unscanned"] as const).map((k) => (
+          <li key={k} className="inline-flex items-center gap-1.5">
+            <span className={cn("inline-block size-1.5 rounded-full", LEVEL[k].dot)} aria-hidden />
+            {LEVEL[k].label}
+          </li>
+        ))}
       </ul>
     </section>
-  );
-}
-
-function Key({ swatch, children }: { swatch: ReactNode; children: ReactNode }) {
-  return (
-    <li>
-      <Chip>
-        <span className="inline-flex items-center justify-center" aria-hidden>
-          {swatch}
-        </span>
-        {children}
-      </Chip>
-    </li>
   );
 }

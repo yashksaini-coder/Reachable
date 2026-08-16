@@ -19,18 +19,16 @@ export function useCountUp<K extends string>(
   targets: Record<K, number>,
   { autoStart = false }: { autoStart?: boolean } = {},
 ) {
-  const keys = Object.keys(targets) as K[];
-  const format = useCallback(
-    (key: K, n: number) => {
-      const decimals = Number.isInteger(targets[key]) ? 0 : 1;
-      return n.toFixed(decimals);
-    },
-    [targets],
-  );
+  // Callers may pass a fresh object every render; the ref keeps `start` stable.
+  const targetsRef = useRef(targets);
+  useEffect(() => {
+    targetsRef.current = targets;
+  });
+  const fmt = (target: number, n: number) => n.toFixed(Number.isInteger(target) ? 0 : 1);
 
   const [values, setValues] = useState<Record<K, string>>(() => {
     const seed = {} as Record<K, string>;
-    for (const key of keys) seed[key] = format(key, targets[key]);
+    for (const key of Object.keys(targets) as K[]) seed[key] = fmt(targets[key], targets[key]);
     return seed;
   });
 
@@ -39,6 +37,8 @@ export function useCountUp<K extends string>(
   const start = useCallback(() => {
     cancelAnimationFrame(raf.current);
     const t0 = performance.now();
+    const targets = targetsRef.current;
+    const keys = Object.keys(targets) as K[];
     const tick = () => {
       const t = performance.now() - t0;
       const next = {} as Record<K, string>;
@@ -46,15 +46,14 @@ export function useCountUp<K extends string>(
       keys.forEach((key, i) => {
         const k = Math.max(0, Math.min(1, (t - i * 90) / 760));
         const eased = 1 - Math.pow(1 - k, 3);
-        next[key] = format(key, targets[key] * eased);
+        next[key] = fmt(targets[key], targets[key] * eased);
         if (k < 1) done = false;
       });
       setValues(next);
       if (!done) raf.current = requestAnimationFrame(tick);
     };
     raf.current = requestAnimationFrame(tick);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [format]);
+  }, []);
 
   useEffect(() => {
     if (autoStart && !prefersReducedMotion() && document.visibilityState === 'visible') start();
@@ -68,7 +67,9 @@ export function useCountUp<K extends string>(
 export function useInViewOnce<T extends Element>(onEnter: () => void, threshold = 0.35) {
   const ref = useRef<T>(null);
   const handler = useRef(onEnter);
-  handler.current = onEnter;
+  useEffect(() => {
+    handler.current = onEnter;
+  });
 
   useEffect(() => {
     const el = ref.current;
@@ -96,7 +97,9 @@ export function useInViewOnce<T extends Element>(onEnter: () => void, threshold 
 export function useReenter<T extends Element>(onEnter: () => void, threshold = 0.35) {
   const ref = useRef<T>(null);
   const handler = useRef(onEnter);
-  handler.current = onEnter;
+  useEffect(() => {
+    handler.current = onEnter;
+  });
 
   useEffect(() => {
     const el = ref.current;

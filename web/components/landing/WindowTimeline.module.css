@@ -12,7 +12,7 @@
   }
   78%,
   100% {
-    transform: translateX(118px);
+    transform: translateX(var(--bar-w, 118px));
   }
 }
 

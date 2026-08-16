@@ -1,21 +1,12 @@
 'use client';
 
 import type { CSSProperties } from 'react';
-import { ADVISORY, COUNTS, STRIP, type StripKey } from '@/lib/landing-data';
+import { NOT_COMPUTED, type BlastData, type CountStat } from '@/lib/landing-data';
 import { C } from '@/lib/verdict';
 import { useCountUp, useReenter } from '@/lib/hooks';
 import { BlastGraph } from './BlastGraph';
 import { Reveal } from './Reveal';
 import styles from './HeroConsole.module.css';
-
-const STRIP_TARGETS: Record<StripKey, number> = {
-  s1: COUNTS.s1,
-  s2: COUNTS.s2,
-  s3: COUNTS.s3,
-  s4: COUNTS.s4,
-  s5: COUNTS.s5,
-  s6: COUNTS.s6,
-};
 
 const LEGEND: { bar?: string; dot?: string; text: string }[] = [
   { bar: C.l1, text: 'resolved while installable' },
@@ -25,13 +16,25 @@ const LEGEND: { bar?: string; dot?: string; text: string }[] = [
   { dot: C.unk, text: 'unscanned' },
 ];
 
+type Props = {
+  advisory: string;
+  level: { label: string; color: string; bg: string };
+  meta: string;
+  strip: CountStat[];
+  blast: BlastData | null;
+};
+
+/** Only the measured numbers animate; a null (not computed) stays the literal. */
+export const countTargets = (stats: CountStat[]) =>
+  Object.fromEntries(stats.filter((s) => s.n != null).map((s) => [s.key, s.n as number]));
+
 /**
  * The report's own stat strip and blast graph, shown as a product card rather
  * than a marketing illustration. The numerals render their true values and are
  * animated by script; the odometer re-arms when the card scrolls back in.
  */
-export function HeroConsole() {
-  const { values, start } = useCountUp(STRIP_TARGETS, { autoStart: true });
+export function HeroConsole({ advisory, level, meta, strip, blast }: Props) {
+  const { values, start } = useCountUp(countTargets(strip), { autoStart: true });
   const ref = useReenter<HTMLDivElement>(start);
 
   return (
@@ -40,21 +43,23 @@ export function HeroConsole() {
         <div className={styles.scan} aria-hidden="true" />
 
         <div className={styles.head}>
-          <span className={styles.advisory}>{ADVISORY}</span>
-          <span className={styles.level}>act now</span>
+          <span className={styles.advisory}>{advisory}</span>
+          <span className={styles.level} style={{ color: level.color, background: level.bg }}>
+            {level.label}
+          </span>
           <span className={styles.spacer} />
-          <span className="metaMono">8 statements · 214 rows · 1.9s</span>
+          <span className="metaMono">{meta}</span>
         </div>
 
         <div className={styles.strip}>
-          {STRIP.map((stat) => (
+          {strip.map((stat) => (
             <div key={stat.key} className={styles.cell}>
               <div
                 className={`statRule ${styles.rule}`}
                 style={{ '--rule-color': stat.rule } as CSSProperties}
               />
-              <div className={styles.value} style={{ color: stat.fg }}>
-                {values[stat.key]}
+              <div className={styles.value} style={{ color: stat.n == null ? C.dim : stat.fg }}>
+                {stat.n == null ? NOT_COMPUTED : values[stat.key]}
               </div>
               <div className={styles.label}>{stat.label}</div>
             </div>
@@ -62,11 +67,13 @@ export function HeroConsole() {
         </div>
 
         <div className={styles.graphHead}>
-          <div className={`eyebrow ${styles.graphLabel}`}>blast radius</div>
+          <div className={`eyebrow ${styles.graphLabel}`}>
+            blast radius{blast?.note ? ` · ${blast.note}` : ''}
+          </div>
         </div>
 
         <div className={styles.graphBody}>
-          <BlastGraph />
+          {blast ? <BlastGraph data={blast} /> : <p className="metaMono">no service resolves an affected version</p>}
         </div>
 
         <div className={styles.legend}>

@@ -3,60 +3,57 @@
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
-// The six questions are the product; this makes them navigable. Sections carry ids q1…q6;
-// the rail highlights whichever is highest on screen inside the reading band.
-export const QUESTIONS: [string, string][] = [
-  ["q1", "exposed"],
-  ["q2", "introduced"],
-  ["q3", "while live"],
-  ["q4", "maintainers"],
-  ["q5", "typosquats"],
-  ["q6", "blast radius"],
-];
+// Right rail — a mini-map of the report: blast radius + Q1–Q6. Each entry carries a 2px left
+// border (--signal when active), a dot in that section's verdict colour, the label and its count.
+// The active section comes from a scroll listener on #console-main (the scroll container is
+// <main>, never window): the last section whose top is above 220px wins. Clicking sets
+// main.scrollTop with a 96px offset — no scrollIntoView, no hash jumps.
+export type RailEntry = { id: string; label: string; n: number | string; dot: string };
 
-// `counts`: the answer summary number per question (q1 → 2 …), shown tiny beside the label.
-export function Rail({ counts = {} }: { counts?: Record<string, number | string | null> }) {
-  const [active, setActive] = useState("q1");
+const OFFSET = 96;
+
+export function Rail({ entries }: { entries: RailEntry[] }) {
+  const [active, setActive] = useState(entries[0]?.id ?? "graph");
   useEffect(() => {
-    const seen = new Set<string>();
-    const io = new IntersectionObserver(
-      (es) => {
-        for (const e of es) e.isIntersecting ? seen.add(e.target.id) : seen.delete(e.target.id);
-        const first = QUESTIONS.find(([id]) => seen.has(id));
-        if (first) setActive(first[0]);
-      },
-      { rootMargin: "-15% 0px -55% 0px" },
-    );
-    for (const [id] of QUESTIONS) {
-      const el = document.getElementById(id);
-      if (el) io.observe(el);
-    }
-    return () => io.disconnect();
+    const main = document.getElementById("console-main");
+    if (!main) return;
+    const onScroll = () => {
+      let act: string | null = null;
+      for (const s of document.querySelectorAll<HTMLElement>("[data-sect]")) if (s.getBoundingClientRect().top < 220) act = s.dataset.sect ?? null;
+      if (act) setActive(act);
+    };
+    onScroll();
+    main.addEventListener("scroll", onScroll, { passive: true });
+    return () => main.removeEventListener("scroll", onScroll);
   }, []);
+  const go = (id: string) => {
+    const main = document.getElementById("console-main");
+    const el = document.querySelector<HTMLElement>(`[data-sect="${id}"]`);
+    if (!main || !el) return;
+    main.scrollTop += el.getBoundingClientRect().top - OFFSET;
+  };
   return (
-    <nav aria-label="Questions" className="sticky top-6">
-      <div className="mb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">questions</div>
-      <ol>
-        {QUESTIONS.map(([id, label], i) => {
-          const on = id === active;
-          return (
-            <li key={id}>
-              <a
-                href={`#${id}`}
-                aria-current={on ? "location" : undefined}
-                className={cn(
-                  "flex min-h-10 items-center gap-2 border-l-2 pl-3 text-[11px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50",
-                  on ? "border-signal text-foreground" : "border-border text-muted-foreground hover:text-foreground",
-                )}
-              >
-                <span className={cn("num w-5 shrink-0", on ? "text-signal" : "")}>Q{i + 1}</span>
-                <span>{label}</span>
-                {counts[id] != null && <span className="num ml-auto pr-1 text-[10px] text-muted-foreground/80">{counts[id]}</span>}
-              </a>
-            </li>
-          );
-        })}
-      </ol>
+    <nav aria-label="this report" className="sticky top-9 flex flex-col gap-0.5">
+      <div className="label pb-3 pl-3 tracking-[0.11em]">this report</div>
+      {entries.map((e) => {
+        const on = e.id === active;
+        return (
+          <button
+            key={e.id}
+            type="button"
+            onClick={() => go(e.id)}
+            aria-current={on ? "location" : undefined}
+            className={cn(
+              "flex min-h-10 items-center gap-2.5 border-l-2 px-3 py-2 text-left transition-colors duration-[180ms] ease-[var(--ease)] hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-signal/50",
+              on ? "border-signal" : "border-transparent",
+            )}
+          >
+            <span className={cn("size-[5px] shrink-0 rounded-full", e.dot)} aria-hidden />
+            <span className={cn("min-w-0 flex-1 truncate text-[11.5px] leading-[1.3]", on ? "text-fg" : "text-mut")}>{e.label}</span>
+            <span className="num text-[10.5px] leading-none text-dim">{e.n}</span>
+          </button>
+        );
+      })}
     </nav>
   );
 }

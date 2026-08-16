@@ -16,6 +16,27 @@
   animation: grow 0.6s var(--ease) both;
 }
 
+.legend {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  font: 400 10.5px/1 var(--mono);
+  color: var(--dim);
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legendDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
 .grid {
   margin-top: 18px;
   grid-template-columns: repeat(auto-fit, minmax(232px, 1fr));

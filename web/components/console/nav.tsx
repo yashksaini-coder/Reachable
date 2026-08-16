@@ -34,8 +34,7 @@ export function Shell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const idx = Math.max(0, NAV.findIndex((n) => n.match(path)));
 
-  // Route change closes the sheet; Escape closes it too.
-  useEffect(() => setOpen(false), [path]);
+  // Route change closes the sheet (Link onClick), Escape closes it too.
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
@@ -91,6 +90,7 @@ export function Shell({ children }: { children: ReactNode }) {
                 key={n.href}
                 href={n.href}
                 aria-current={active ? "page" : undefined}
+                onClick={() => setOpen(false)}
                 className="flex h-11 flex-col justify-center rounded-lg px-3 transition-colors duration-[180ms] ease-[var(--ease)] hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-signal/50"
               >
                 <span className={cn("text-[12.5px] font-medium leading-[1.35]", active ? "text-fg" : "text-mut")}>{n.label}</span>

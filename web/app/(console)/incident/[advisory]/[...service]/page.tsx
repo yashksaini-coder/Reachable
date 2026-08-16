@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ExternalLink, FileCode2, GitCommitHorizontal } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { readIncident, listIncidents, short, svcSlug, fmtUtc } from "@/lib/incident";
-import { HydraCard, Level, Chip, Notes, Question, ELEV } from "@/components/console/ui";
+import { HydraCard, Level, Chip, Notes } from "@/components/console/ui";
 import { cn } from "@/lib/utils";
-import { Card, CardContent } from "@/components/ui/card";
+import { Chain } from "./chain";
 
 export const dynamic = "force-static";
 export async function generateStaticParams() {
@@ -25,16 +25,19 @@ const VERDICT: Record<string, string> = {
   unscanned:
     "Unknown. No source files were ingested for this service, so reachability could not be assessed — this is not a clean bill of health.",
 };
-const RAIL: Record<string, string> = { L2: "border-l-l2", L1: "border-l-l1", L0: "border-l-l0", unscanned: "border-l-unknown" };
 const LEVEL_WHY: Record<string, string> = {
-  L2: "A scanned first-party file references a symbol the advisory names as vulnerable.",
-  L1: "A scanned first-party file imports the package, but no vulnerable symbol is referenced.",
-  L0: "Files were scanned and none import the package. It only sits in the install tree.",
-  unscanned: "No first-party files were ingested, so imports and symbol use could not be checked.",
+  L2: "a scanned first-party file references a symbol the advisory names as vulnerable",
+  L1: "a scanned first-party file imports the package, but no vulnerable symbol is referenced",
+  L0: "files were scanned and none import the package; it only sits in the install tree",
+  unscanned: "no first-party files were ingested, so imports and symbol use could not be checked",
 };
 
 const linkCls =
-  "inline-flex min-h-10 items-center gap-1 rounded-md transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50";
+  "inline-flex min-h-10 items-center gap-1 rounded-md text-mut transition-colors duration-[180ms] ease-[var(--ease)] hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50";
+const CARD = "overflow-hidden rounded-xl border border-border bg-card elev";
+const CARD_HEAD = "flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-line px-4 py-3.5";
+const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? "" : "s"}`;
+const hops = (n: number) => (n === 0 ? "direct" : plural(n, "hop"));
 
 export default async function ServicePage({ params }: PageProps<"/incident/[advisory]/[...service]">) {
   const { advisory, service } = await params;
@@ -49,162 +52,164 @@ export default async function ServicePage({ params }: PageProps<"/incident/[advi
   const live = (inc.q3_while_live?.rows ?? []).filter((r) => r.service === key);
   const nPaths = rows.reduce((n, r) => n + r.paths.length, 0);
   const versions = [...new Set(rows.flatMap((r) => r.bad_versions))];
+  const reachNote = reach
+    ? `${LEVEL_WHY[level]} · ${plural(reach.files_scanned, "file")} scanned · ${plural(reach.imports.length, "import")} · ${plural(reach.symbols.length, "symbol use")}`
+    : `unscanned — ${LEVEL_WHY.unscanned}`;
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-wrap items-center gap-2 text-[12px] text-muted-foreground">
+    <div className="mx-auto max-w-[1000px] px-10 pb-24 pt-9 max-[900px]:px-5">
+      <nav aria-label="breadcrumb" className="flex flex-wrap items-center gap-2 font-mono text-[11px] leading-none text-dim">
         <Link href="/incidents" className={linkCls}>
-          <ArrowLeft className="size-3.5" /> incidents
+          incidents
         </Link>
         <span>/</span>
-        <Link href={`/incident/${inc.advisory.key}`} className={cn(linkCls, "font-mono")}>
+        <Link href={`/incident/${inc.advisory.key}`} className={linkCls}>
           {inc.advisory.key}
         </Link>
         <span>/</span>
-        <span className="font-mono text-foreground">{slug}</span>
-      </div>
+        <span className="text-mut">{slug}</span>
+      </nav>
 
-      <header className="space-y-3">
+      <header className="mt-5 animate-[en_.3s_var(--ease)_both] motion-reduce:animate-none">
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="font-mono text-2xl">{slug}</h1>
-          <a href={`https://github.com/${slug}`} target="_blank" rel="noreferrer" className={cn(linkCls, "text-xs text-muted-foreground")}>
-            github <ExternalLink className="size-3" />
+          <h1 className="text-balance font-mono text-[26px] font-medium leading-[1.2] tracking-[-0.02em] text-fg">{slug}</h1>
+          <Level level={level} />
+          <a href={`https://github.com/${slug}`} target="_blank" rel="noreferrer" className={cn(linkCls, "text-[11px]")}>
+            github <ExternalLink className="size-3" strokeWidth={1.75} />
           </a>
         </div>
-        <Card className={cn("border-l-4", ELEV, RAIL[level])}>
-          <CardContent className="flex flex-wrap items-center gap-3 p-4">
-            <Level level={level} />
-            <span className="text-pretty text-[14px] text-foreground/90">{VERDICT[level]}</span>
-            <span className="num basis-full text-xs text-muted-foreground md:ml-auto md:basis-auto">
-              {rows.length} lockfile{rows.length === 1 ? "" : "s"} · {versions.length} compromised version{versions.length === 1 ? "" : "s"}
-              {live.length > 0 && ` · ${live.length} resolved while live`}
+        <div className="mt-3.5 flex flex-wrap gap-x-[22px] gap-y-1.5 font-mono text-[11px] leading-[1.3] text-dim">
+          <span>
+            lockfiles <span className="num text-mut">{rows.length}</span>
+          </span>
+          <span>
+            latest commit <span className="text-mut">{rows[0].sha.slice(0, 12)}</span>
+          </span>
+          <span>
+            compromised versions <span className="text-mut">{versions.map(short).join(", ")}</span>
+          </span>
+          {live.length > 0 && (
+            <span>
+              resolved while live <span className="num text-l1">{live.length}</span>
             </span>
-          </CardContent>
-        </Card>
+          )}
+        </div>
+        <p className="mt-[18px] max-w-[70ch] text-pretty text-[14px] leading-[1.6] text-fg">{VERDICT[level]}</p>
       </header>
 
-      <Question
-        n="1"
-        title="Why is this service exposed?"
-        summary={`${rows.length} lockfile${rows.length === 1 ? "" : "s"} · ${nPaths} proving path${nPaths === 1 ? "" : "s"}`}
-        footer={
-          <>
-            <HydraCard flat title="proving path" cypher={inc.q1_exposed.cypher} ms={inc.q1_exposed.ms} rows={inc.q1_exposed.rows.length} truncated={inc.q1_exposed.truncated} />
-            <Notes items={inc.q1_exposed.limitations} />
-          </>
-        }
-      >
-        <div className="divide-y divide-border">
-          {rows.map((r) => (
-            <div key={r.lockfile} className="py-3 first:pt-0 last:pb-0">
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-xs text-muted-foreground">
-                <span className="inline-flex items-center gap-1 text-foreground/90">
-                  <GitCommitHorizontal className="size-3.5" /> {r.sha.slice(0, 12)}
-                </span>
-                <span>committed {fmtUtc(new Date(r.committed_at * 1000).toISOString())}</span>
-                <span>resolves {r.bad_versions.map(short).join(", ")}</span>
-                {live.some((l) => l.lockfile === r.lockfile) && <Chip tone="border-l1/40 text-l1">resolved while live</Chip>}
-              </div>
-              <div className="mt-2 space-y-1.5">
-                {r.paths.length === 0 && <div className="text-xs text-muted-foreground">direct RESOLVED edge (no explanation path requested)</div>}
-                {r.paths.map((p, i) => (
-                  <div key={i} className="flex flex-wrap items-center gap-1 font-mono text-xs">
-                    {p.chain.map((el, j) =>
-                      j % 2 === 0 ? (
-                        <span
-                          key={j}
-                          style={{ animationDelay: `${j * 40}ms` }}
-                          className={cn(
-                            "animate-in fade-in slide-in-from-left-1 fill-mode-backwards rounded-md px-1.5 py-0.5 duration-300 motion-reduce:animate-none",
-                            j === 0 ? "bg-l2/15 text-l2" : j === p.chain.length - 1 ? "bg-secondary text-foreground" : "bg-secondary/70 text-muted-foreground",
-                          )}
-                        >
-                          {short(el)}
-                        </span>
-                      ) : (
-                        <span key={j} style={{ animationDelay: `${j * 40}ms` }} className="animate-in fade-in fill-mode-backwards text-muted-foreground duration-300 motion-reduce:animate-none">
-                          ←{el}←
-                        </span>
-                      ),
-                    )}
-                    <span className="ml-2 text-muted-foreground">{p.hops === 0 ? "direct dependency" : `${p.hops} hop${p.hops === 1 ? "" : "s"}`}</span>
-                  </div>
-                ))}
-              </div>
+      {/* one card per exposed lockfile — the proving-path chain is the signature */}
+      <div className="mt-7 flex flex-col gap-3">
+        {rows.map((r, idx) => (
+          <div key={r.lockfile} className={cn(CARD, "animate-[en_.3s_var(--ease)_both] motion-reduce:animate-none")} style={{ animationDelay: `${80 + idx * 60}ms` }}>
+            <div className={CARD_HEAD}>
+              <span className="flex flex-wrap items-center gap-2 font-mono text-[12px] leading-none text-fg">
+                {short(r.lockfile)}
+                {live.some((l) => l.lockfile === r.lockfile) && <Chip tone="text-l1">resolved while live</Chip>}
+              </span>
+              <span className="num font-mono text-[11px] leading-none text-dim">
+                {hops(r.hops)} · {r.sha.slice(0, 7)} · {fmtUtc(new Date(r.committed_at * 1000).toISOString())}
+              </span>
             </div>
-          ))}
-        </div>
-      </Question>
+            <div className="overflow-x-auto overscroll-x-contain p-4">
+              {r.paths.length === 0 ? (
+                <div className="font-mono text-[11px] text-dim">
+                  direct RESOLVED edge to {r.bad_versions.map(short).join(", ")} (no explanation path requested)
+                </div>
+              ) : (
+                <div className="flex min-w-max flex-col gap-2.5">
+                  {r.paths.map((p, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                      <Chain chain={p.chain} />
+                      <span className="num shrink-0 font-mono text-[10.5px] text-dim">{hops(p.hops)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="px-4 pb-4 font-mono text-[11px] leading-[1.6] text-dim">
+              <span className={cn("mr-1", level === "L2" && "text-l2")}>reachability ·</span>
+              {reachNote}
+            </div>
+          </div>
+        ))}
+      </div>
 
-      {reach && (
-        <Question
-          n="2"
-          title="Is the compromised code reachable?"
-          summary={`${reach.files_scanned} file${reach.files_scanned === 1 ? "" : "s"} · ${reach.imports.length} import${reach.imports.length === 1 ? "" : "s"} · ${reach.symbols.length} symbol use${reach.symbols.length === 1 ? "" : "s"}`}
-          footer={
-            <>
-              <HydraCard flat title="reachability" cypher={reach.cypher} ms={reach.ms} rows={reach.imports.length + reach.symbols.length} />
-              <Notes items={reach.limitations} />
-            </>
-          }
-        >
-          <div className="flex flex-wrap items-center gap-3">
-            <Level level={level} />
-            <span className="text-pretty text-sm text-foreground/90">{LEVEL_WHY[level]}</span>
+      {/* reachability evidence — the scanned files behind the verdict */}
+      {reach && (reach.imports.length > 0 || reach.symbols.length > 0 || reach.files_scanned > 0) && (
+        <div className={cn(CARD, "mt-3")}>
+          <div className={CARD_HEAD}>
+            <span className="text-[12.5px] text-fg">reachability</span>
+            <span className="num font-mono text-[11px] leading-none text-dim">
+              {plural(reach.files_scanned, "first-party file")} scanned · {plural(reach.imports.length, "import")} · {plural(reach.symbols.length, "symbol use")}
+            </span>
           </div>
-          <div className="mt-3 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-            <FileCode2 className="size-3.5" /> <span className="num">{reach.files_scanned}</span> first-party files scanned
+          <div className="space-y-3 p-4">
+            {reach.imports.length > 0 && (
+              <div>
+                <div className="label mb-1.5">imports</div>
+                <ul className="space-y-1 font-mono text-[12px] text-fg">
+                  {reach.imports.map((i, k) => (
+                    <li key={k}>
+                      {i.path}:{i.line} <span className="text-dim">imports {short(i.package)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {reach.symbols.length > 0 && (
+              <div>
+                <div className="label mb-1.5">vulnerable symbols</div>
+                <ul className="space-y-1 font-mono text-[12px] text-l2">
+                  {reach.symbols.map((s, k) => (
+                    <li key={k}>
+                      {s.path}:{s.line} uses {s.symbol}
+                      {s.inferred && <span className="ml-2 text-dim">(symbol inferred from advisory prose)</span>}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {reach.imports.length === 0 && reach.symbols.length === 0 && (
+              <div className="font-mono text-[11px] text-dim">no scanned file imports the package</div>
+            )}
           </div>
-          {reach.imports.length > 0 && (
-            <div className="mt-3">
-              <div className="mb-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">imports</div>
-              <ul className="space-y-1 font-mono text-xs">
-                {reach.imports.map((i, k) => (
-                  <li key={k}>
-                    {i.path}:{i.line} <span className="text-muted-foreground">imports {short(i.package)}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-          {reach.symbols.length > 0 && (
-            <div className="mt-3">
-              <div className="mb-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">vulnerable symbols</div>
-              <ul className="space-y-1 font-mono text-xs text-l2">
-                {reach.symbols.map((s, k) => (
-                  <li key={k}>
-                    {s.path}:{s.line} uses {s.symbol}
-                    {s.inferred && <span className="ml-2 text-muted-foreground">(symbol inferred from advisory prose)</span>}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-          {reach.imports.length === 0 && reach.symbols.length === 0 && reach.files_scanned > 0 && (
-            <div className="mt-3 text-xs text-muted-foreground">No scanned file imports the package.</div>
-          )}
-        </Question>
+        </div>
       )}
 
+      {/* resolved while the version was still installable */}
       {live.length > 0 && (
-        <Question n="3" title="Was it resolved while the version was live?" summary={`${live.length} lockfile${live.length === 1 ? "" : "s"}`}>
-          <ul className="divide-y divide-border font-mono text-xs">
+        <div className={cn(CARD, "mt-3")}>
+          <div className={CARD_HEAD}>
+            <span className="text-[12.5px] text-fg">resolved while live</span>
+            <span className="num font-mono text-[11px] leading-none text-dim">{plural(live.length, "lockfile")}</span>
+          </div>
+          <ul className="divide-y divide-line font-mono text-[11.5px]">
             {live.map((l, i) => (
-              <li key={i} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2 first:pt-0 last:pb-0">
-                <span className="inline-flex items-center gap-1 text-foreground/90">
-                  <GitCommitHorizontal className="size-3.5" /> {l.sha.slice(0, 12)}
-                </span>
-                <span className="text-muted-foreground">committed {fmtUtc(l.resolved_at_iso)}</span>
-                <span className="text-muted-foreground">{short(l.version)}</span>
-                <Chip tone={l.evidence.includes("in_window") ? "border-l1/40 text-l1" : "border-l2/40 text-l2"}>{l.evidence.replace("+", " + ")}</Chip>
-                <span className="num basis-full text-muted-foreground md:ml-auto md:basis-auto">
+              <li key={i} className="flex min-h-10 flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5">
+                <span className="text-fg">{l.sha.slice(0, 12)}</span>
+                <span className="text-dim">committed {fmtUtc(l.resolved_at_iso)}</span>
+                <span className="text-dim">{short(l.version)}</span>
+                <Chip tone={l.evidence.includes("in_window") ? "text-l1" : "text-l2"}>{l.evidence.replace("+", " + ")}</Chip>
+                <span className="num basis-full text-dim md:ml-auto md:basis-auto">
                   window {fmtUtc(l.live_from_iso)} → {fmtUtc(l.live_to_iso)} ({l.live_to_kind.replace("_", " ")})
                 </span>
               </li>
             ))}
           </ul>
-        </Question>
+        </div>
       )}
+
+      <div className="mt-4 flex flex-col gap-2">
+        <HydraCard flat title="all proving paths from this service to the affected version" cypher={inc.q1_exposed.cypher} ms={inc.q1_exposed.ms} rows={inc.q1_exposed.rows.length} truncated={inc.q1_exposed.truncated} timing={inc.q1_exposed.timing} />
+        {reach && <HydraCard flat title="which first-party files import the package or reference the vulnerable symbol?" cypher={reach.cypher} ms={reach.ms} rows={reach.imports.length + reach.symbols.length} />}
+        {live.length > 0 && inc.q3_while_live && (
+          <HydraCard flat title="which lockfiles resolved the version while it was still installable?" cypher={inc.q3_while_live.cypher} ms={inc.q3_while_live.ms} rows={inc.q3_while_live.rows.length} truncated={inc.q3_while_live.truncated} />
+        )}
+      </div>
+      <Notes items={[...inc.q1_exposed.limitations, ...(reach?.limitations ?? [])]} />
+      <div className="mt-2 font-mono text-[10.5px] text-dim">
+        {plural(rows.length, "lockfile")} · {plural(nPaths, "proving path")}
+      </div>
     </div>
   );
 }

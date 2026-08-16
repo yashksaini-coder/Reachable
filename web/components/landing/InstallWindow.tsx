@@ -1,15 +1,11 @@
-import { C } from '@/lib/verdict';
+import type { LandingModel } from '@/lib/landing-data';
 import { Reveal } from './Reveal';
 import { WindowTimeline } from './WindowTimeline';
 import styles from './InstallWindow.module.css';
 
-const NOTES = [
-  { glyph: '▲', color: C.l1, text: 'five lockfiles resolved inside the window' },
-  { glyph: '▲', color: C.l2, text: 'one commit removed the pins after the fact' },
-  { glyph: '◌', mono: true, text: 'the dashed edge is an upper bound, never a claim' },
-];
+type Props = { timeline: LandingModel['timeline']; meta: string; notes: LandingModel['windowNotes'] };
 
-export function InstallWindow() {
+export function InstallWindow({ timeline, meta, notes }: Props) {
   return (
     <section id="window" className="container section">
       <div className={styles.split}>
@@ -22,7 +18,7 @@ export function InstallWindow() {
             window as an upper bound, because registries do not record removal times.
           </p>
           <div className={styles.notes}>
-            {NOTES.map((note) => (
+            {notes.map((note) => (
               <div key={note.text} className={styles.note}>
                 <span
                   className={note.mono ? styles.markerMono : styles.marker}
@@ -40,10 +36,14 @@ export function InstallWindow() {
         <Reveal index={1} className={styles.card}>
           <div className={styles.cardHead}>
             <span className="eyebrow">Q3 · installable window</span>
-            <span className="metaMono">6 rows · 47ms · warm</span>
+            <span className="metaMono">{meta}</span>
           </div>
           <div className={styles.cardBody}>
-            <WindowTimeline />
+            {timeline ? (
+              <WindowTimeline data={timeline} />
+            ) : (
+              <p className="metaMono">this advisory is not time-bounded — no installable window to draw</p>
+            )}
           </div>
         </Reveal>
       </div>

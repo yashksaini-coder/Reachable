@@ -9,8 +9,8 @@ export function Cta() {
         <div className={styles.glow} aria-hidden="true" />
         <h2 className={styles.h2}>Point it at one repository and read the first report tonight.</h2>
         <p className={`lead ${styles.lead}`}>
-          Read-only access, lockfiles parsed in your own graph namespace, six answers per advisory
-          from the first scan onward.
+          Read-only GitHub access, lockfiles and commit metadata linked into one graph, six answers
+          per advisory from the first ingest onward.
         </p>
         <div className={styles.actions}>
           <a className="btn btnPrimary" href={LINKS.connect}>

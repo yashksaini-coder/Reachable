@@ -30,7 +30,7 @@ export function Header() {
           <a className={styles.docs} href={LINKS.docs}>
             Docs
           </a>
-          <a className={`btn btnPrimary ${styles.cta}`} href="#cta">
+          <a className={`btn btnOutline ${styles.cta}`} href="#cta">
             Start a scan
           </a>
         </div>

@@ -9,10 +9,8 @@ export function CountUp({ n, delay = 0, className, format }: { n: number; delay?
   const [v, setV] = useState(n);
   const fmt = format ?? ((x: number) => Math.round(x).toLocaleString());
   useEffect(() => {
-    if (n === 0 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setV(n);
-      return;
-    }
+    // reduced motion / zero: the server-rendered true value simply stays (no state change needed)
+    if (n === 0 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     let raf = 0;
     const t0 = performance.now() + delay;
     const tick = () => {

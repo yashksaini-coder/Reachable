@@ -1,8 +1,8 @@
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { Chip, HydraCard, Limits } from "@/components/console/ui";
-import { short, svcSlug, fmtMs, fmtUtc } from "@/lib/format";
+import { Chip, Kind } from "@/components/console/ui";
+import { short, svcSlug } from "@/lib/format";
 import type { Ask } from "@/lib/ask";
-
 
 export type Row = Record<string, unknown>;
 export type AskData = { rows?: Row[]; meta?: Record<string, unknown>; cypher?: string[]; ms?: number; total_ms?: number; limitations?: string[] } & Record<
@@ -68,26 +68,33 @@ export function sentence(ask: Ask, data: AskData): string {
   }
 }
 
-// Row hover + sticky first column (the identifying cell stays put when the table scrolls sideways).
+// Token table: th 10.5px uppercase tracked --dim on a --border rule; td 12.5px --mut on --line rules;
+// row hover --hover. Wide tables scroll inside their card (rule 7).
 const TABLE =
-  "w-full text-[13px] [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_th]:text-[11px] [&_th]:font-medium [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-muted-foreground [&_td]:border-t [&_td]:border-border [&_td]:px-3 [&_td]:py-2 [&_td]:align-top [&_td]:whitespace-nowrap [&_td]:transition-colors [&_tbody_tr:hover_td]:bg-accent/40 [&_th:first-child]:sticky [&_th:first-child]:left-0 [&_th:first-child]:bg-card [&_td:first-child]:sticky [&_td:first-child]:left-0 [&_td:first-child]:bg-card [&_tbody_tr:hover_td:first-child]:bg-accent";
+  "w-full border-collapse [&_th]:whitespace-nowrap [&_th]:px-3 [&_th]:pb-[9px] [&_th]:pt-3.5 [&_th]:text-left [&_th]:text-[10.5px] [&_th]:font-medium [&_th]:uppercase [&_th]:leading-none [&_th]:tracking-[0.09em] [&_th]:text-dim [&_th]:border-b [&_th]:border-border [&_td]:whitespace-nowrap [&_td]:border-b [&_td]:border-line [&_td]:p-3 [&_td]:align-middle [&_td]:text-[12.5px] [&_td]:text-mut [&_tbody_tr:last-child_td]:border-b-0 [&_tbody_tr]:transition-colors [&_tbody_tr]:duration-[180ms] [&_tbody_tr:hover]:bg-hover";
 
+// The typed result sits in a --card box, 10px radius, scrolling sideways inside itself.
+const Box = ({ children, pad = false }: { children: ReactNode; pad?: boolean }) => (
+  <div className={cn("overflow-x-auto rounded-[10px] border border-border bg-card", pad && "p-3")}>{children}</div>
+);
 
 export function Answer({ ask, data }: { ask: Ask; data: AskData }) {
   const rows = (data.rows ?? []) as Row[];
   if (rows.length === 0) {
     return (
-      <div className="rounded-lg border border-border bg-card px-4 py-3 text-[13px] text-muted-foreground">
-        <Chip tone="mr-2 border-l0/40 text-l0">none</Chip>
-        Nothing in the graph matches. For an advisory this means no watched service resolved an affected version; for a package it means no watched lockfile pins it.
-      </div>
+      <Box pad>
+        <div className="text-[12.5px] text-mut text-pretty">
+          <Chip className="mr-2">none</Chip>
+          Nothing in the graph matches. For an advisory this means no watched service resolved an affected version; for a package it means no watched lockfile pins it.
+        </div>
+      </Box>
     );
   }
   switch (ask.kind) {
     case "exposed":
     case "depends":
       return (
-        <div className="overflow-x-auto">
+        <Box>
           <table className={TABLE}>
             <thead>
               <tr>
@@ -101,48 +108,48 @@ export function Answer({ ask, data }: { ask: Ask; data: AskData }) {
             <tbody>
               {rows.map((r, i) => (
                 <tr key={i}>
-                  <td className="font-mono">{svcSlug(String(r.service))}</td>
-                  <td className="font-mono text-muted-foreground">{String(r.sha).slice(0, 12)}</td>
-                  <td className="font-mono text-muted-foreground">{fmtEpoch(r.committed_at)}</td>
-                  <td className="font-mono text-muted-foreground">{r.via ? short(String(r.via)) : "direct"}</td>
-                  <td className="num">{String(r.hops ?? 0)}</td>
+                  <td className="font-mono text-[12px] text-fg">{svcSlug(String(r.service))}</td>
+                  <td className="font-mono text-dim">{String(r.sha).slice(0, 12)}</td>
+                  <td className="font-mono text-dim">{fmtEpoch(r.committed_at)}</td>
+                  <td className="font-mono text-dim">{r.via ? short(String(r.via)) : "direct"}</td>
+                  <td className="num">{r.hops == null ? <span className="text-dim">direct</span> : String(r.hops)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </div>
+        </Box>
       );
     case "pulls":
       return (
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           {rows.map((r, i) => (
-            <div key={i} className="rounded-lg border border-border bg-card px-3 py-2">
-              <div className="font-mono text-[12px] text-muted-foreground">
+            <Box key={i} pad>
+              <div className="font-mono text-[11px] text-dim">
                 {String(r.sha).slice(0, 12)} · {fmtEpoch(r.committed_at)} · resolves {short(String(r.version))}
               </div>
               {((r.paths as { chain: string[]; hops: number }[] | undefined) ?? []).map((p, j) => (
-                <div key={j} className="mt-1 flex flex-wrap items-center gap-1 font-mono text-[12px]">
+                <div key={j} className="mt-1.5 flex flex-wrap items-center gap-1 font-mono text-[11.5px]">
                   {p.chain.map((el, k) =>
                     k % 2 === 0 ? (
-                      <span key={k} className={`rounded px-1.5 py-0.5 ${k === 0 ? "bg-l2/15 text-l2" : "bg-secondary text-muted-foreground"}`}>
+                      <span key={k} className={cn("rounded-sm px-1.5 py-[3px]", k === 0 ? "bg-sigfill text-signal-2" : "bg-hover text-mut")}>
                         {short(el)}
                       </span>
                     ) : (
-                      <span key={k} className="text-muted-foreground">
+                      <span key={k} className="text-[10px] text-dim">
                         ←{el}←
                       </span>
                     ),
                   )}
-                  <span className="text-muted-foreground">{p.hops === 0 ? "direct" : `${p.hops} hop${p.hops === 1 ? "" : "s"}`}</span>
+                  <span className="text-[10.5px] text-dim">{p.hops === 0 ? "direct" : `${p.hops} hop${p.hops === 1 ? "" : "s"}`}</span>
                 </div>
               ))}
-            </div>
+            </Box>
           ))}
         </div>
       );
     case "while-live":
       return (
-        <div className="overflow-x-auto">
+        <Box>
           <table className={TABLE}>
             <thead>
               <tr>
@@ -156,24 +163,24 @@ export function Answer({ ask, data }: { ask: Ask; data: AskData }) {
             <tbody>
               {rows.map((r, i) => (
                 <tr key={i}>
-                  <td className="font-mono">{svcSlug(String(r.service))}</td>
-                  <td className="font-mono text-muted-foreground">{fmtEpoch(r.resolved_at)}</td>
-                  <td className="font-mono text-muted-foreground">{short(String(r.version))}</td>
-                  <td className="text-[12px]">
-                    <span className={String(r.evidence).includes("in_window") ? "text-l1" : "text-l2"}>{String(r.evidence).replace("+", " + ")}</span>
+                  <td className="font-mono text-[12px] text-fg">{svcSlug(String(r.service))}</td>
+                  <td className="font-mono text-dim">{fmtEpoch(r.resolved_at)}</td>
+                  <td className="font-mono text-dim">{short(String(r.version))}</td>
+                  <td>
+                    <span className={String(r.evidence).includes("in_window") ? "text-l1" : "text-l2"}>{String(r.evidence).replace(/_/g, " ").replace("+", " + ")}</span>
                   </td>
-                  <td className="font-mono text-[11px] text-muted-foreground">
-                    {fmtEpoch(r.live_from)} → {fmtEpoch(r.live_to)} ({String(r.live_to_kind)})
+                  <td className="font-mono text-[11px] text-dim">
+                    {fmtEpoch(r.live_from)} → {fmtEpoch(r.live_to)} <Kind kind={String(r.live_to_kind)} className="ml-1" />
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </div>
+        </Box>
       );
     case "versions":
       return (
-        <div className="overflow-x-auto">
+        <Box>
           <table className={TABLE}>
             <thead>
               <tr>
@@ -186,27 +193,27 @@ export function Answer({ ask, data }: { ask: Ask; data: AskData }) {
             <tbody>
               {rows.map((r, i) => (
                 <tr key={i}>
-                  <td className="font-mono">{short(String(r.version))}</td>
-                  <td className="font-mono text-muted-foreground">{fmtEpoch(r.published_at)}</td>
-                  <td>{r.removed ? <span className="text-l2">yes</span> : <span className="text-muted-foreground">no</span>}</td>
-                  <td className="font-mono text-[11px] text-muted-foreground">{String(r.live_to_kind)}</td>
+                  <td className="font-mono text-[12px] text-fg">{short(String(r.version))}</td>
+                  <td className="font-mono text-dim">{fmtEpoch(r.published_at)}</td>
+                  <td>{r.removed ? <span className="text-l2">yes</span> : <span className="text-dim">no</span>}</td>
+                  <td><Kind kind={String(r.live_to_kind)} /></td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </div>
+        </Box>
       );
     case "maintainers":
       return (
         <div>
-          <div className="mb-2 flex flex-wrap gap-2">
+          <div className="mb-2.5 flex flex-wrap gap-2">
             {((data.meta?.maintainers as { login: string; twofa: boolean | null }[] | undefined) ?? []).map((m) => (
               <Chip key={m.login}>
                 {short(m.login)} · 2FA {m.twofa === null || m.twofa === undefined ? "unknown" : m.twofa ? "on" : "off"}
               </Chip>
             ))}
           </div>
-          <div className="overflow-x-auto">
+          <Box>
             <table className={TABLE}>
               <thead>
                 <tr>
@@ -217,33 +224,41 @@ export function Answer({ ask, data }: { ask: Ask; data: AskData }) {
               <tbody>
                 {rows.slice(0, 25).map((r, i) => (
                   <tr key={i}>
-                    <td className="font-mono">{short(String(r.package))}</td>
-                    <td className="font-mono text-muted-foreground">
-                      <span className="num mr-2">{((r.services_at_risk as string[] | null | undefined) ?? []).length}</span>
-                      {((r.services_at_risk as string[] | null | undefined) ?? []).map(svcSlug).join(", ")}
+                    <td className="font-mono text-[12px] text-fg">{short(String(r.package))}</td>
+                    <td className="font-mono text-dim">
+                      {r.services_at_risk == null ? (
+                        <span className="text-dim">— not computed</span>
+                      ) : (
+                        <>
+                          <span className="num mr-2">{(r.services_at_risk as string[]).length}</span>
+                          {(r.services_at_risk as string[]).map(svcSlug).join(", ")}
+                        </>
+                      )}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </div>
+          </Box>
         </div>
       );
     case "typosquats":
       return (
-        <div className="flex flex-wrap gap-2">
-          {rows.map((r, i) => (
-            <Chip key={i}>
-              {short(String(r.package))} · {String(r.kind)} · d{String(r.distance)}
-            </Chip>
-          ))}
-        </div>
+        <Box pad>
+          <div className="flex flex-wrap gap-2">
+            {rows.map((r, i) => (
+              <Chip key={i}>
+                {short(String(r.package))} · {String(r.kind)} · <span className="text-dim">d{String(r.distance)}</span>
+              </Chip>
+            ))}
+          </div>
+        </Box>
       );
     case "cypher": {
       const cols = Object.keys(rows[0]);
       return (
-        <div className="overflow-x-auto">
-          <table className={cn(TABLE, "text-[12.5px]")}>
+        <Box>
+          <table className={TABLE}>
             <thead>
               <tr>
                 {cols.map((c) => (
@@ -255,7 +270,7 @@ export function Answer({ ask, data }: { ask: Ask; data: AskData }) {
               {rows.map((r, i) => (
                 <tr key={i}>
                   {cols.map((c) => (
-                    <td key={c} className="font-mono text-muted-foreground">
+                    <td key={c} className="font-mono text-dim">
                       {typeof r[c] === "object" ? JSON.stringify(r[c]).slice(0, 200) : String(r[c])}
                     </td>
                   ))}
@@ -263,7 +278,7 @@ export function Answer({ ask, data }: { ask: Ask; data: AskData }) {
               ))}
             </tbody>
           </table>
-        </div>
+        </Box>
       );
     }
   }

@@ -1,8 +1,8 @@
-import { QUESTIONS } from '@/lib/landing-data';
+import type { LandingModel } from '@/lib/landing-data';
 import { Reveal } from './Reveal';
 import styles from './SixAnswers.module.css';
 
-export function SixAnswers() {
+export function SixAnswers({ questions }: { questions: LandingModel['questions'] }) {
   return (
     <section id="answers" className="container section">
       <Reveal>
@@ -11,7 +11,7 @@ export function SixAnswers() {
       </Reveal>
 
       <div className={`cellGrid ${styles.grid}`}>
-        {QUESTIONS.map((q, i) => (
+        {questions.map((q, i) => (
           <Reveal key={q.tag} index={i} className={styles.card}>
             <div className={styles.cardHead}>
               <span className={styles.tag}>{q.tag}</span>
