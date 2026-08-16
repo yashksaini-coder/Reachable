@@ -110,7 +110,8 @@ worker/
     fixture.py         ~30-node hand-verified test graph, loaded via UNWIND
     sources/           npm.py depsdev.py osv.py github.py (lockfile history)
     typosquat.py       materialises NAME_SIMILAR_TO edges
-    load.py            batched UNWIND MERGE, idempotent, resumable
+    load.py            UNWIND MERGE write primitives, idempotent by deterministic id
+    pipeline.py        seeds.json -> graph, five resumable stages
     queries.py         Q1–Q7, one function each, typed results
     incident.py        composes the six answers into one payload
   tests/               golden-file tests against the fixture
@@ -289,8 +290,12 @@ Everything below was run against the live node. Full detail in the
       — the pattern must carry **no** label. `UNWIND MATCH` must end in
       `RETURN` or `DELETE`, so no `REMOVE`.
 
-Still unverified: HTTP `consistency: "strong"` round trip · an 84-arm `UNION`
-(decides one round trip vs 85 for Q3's transitive arm) · weighted paths.
+- [x] **N-arm `UNION` scales linearly and buys nothing.** 84 arms parse and
+      run (200 arms / 62 KB verified) but cost is per-arm: 84-arm UNION 664 ms
+      vs 84 sequential single-arm queries 766 ms on the fixture. Q3's
+      transitive arm stays a per-version loop — simpler, same speed.
+
+Still unverified: HTTP `consistency: "strong"` round trip · weighted paths.
 
 **Workflow when unsure:** add a case to `make probe` and run it. Ten seconds of
 probing beats an hour of debugging a wrong assumption. Never infer support from

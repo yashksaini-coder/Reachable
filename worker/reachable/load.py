@@ -45,21 +45,30 @@ def _check(rows: list[dict], label: str) -> None:
                 raise TypeError(f"{label}.{k} must be int epoch, got {type(v).__name__}: {v!r}")
 
 
+def _by_shape(rows: list[dict], drop: tuple[str, ...]) -> dict[tuple[str, ...], list[dict]]:
+    """Group rows by their exact property set. Each group is its own SET clause, so a
+    partial row (e.g. a Version stub with only key+version) never nulls out properties
+    that a fuller row wrote earlier — MERGE unions properties across statements."""
+    groups: dict[tuple[str, ...], list[dict]] = {}
+    for r in rows:
+        groups.setdefault(tuple(sorted(set(r) - set(drop))), []).append(r)
+    return groups
+
+
 def upsert_nodes(s, label: str, rows: list[dict]) -> int:
-    """rows: dicts with 'key' + properties. Property set is taken from the union of keys."""
+    """rows: dicts with 'key' + properties. Only the properties present on a row are written."""
     if not rows:
         return 0
     _check(rows, label)
-    keys = sorted({k for r in rows for k in r} - {"id"})
-    assert "key" in keys, f"{label} rows need a 'key'"
-    sets = ", ".join(f"n.{k} = row.{k}" for k in keys)
-    q = f"UNWIND $rows AS row MERGE (n {{id: row.id}}) SET n:{label}, {sets}"
     n = 0
-    for batch in _batches(rows):
-        # every row must carry every key: missing -> None, which the engine stores as null
-        full = [{"id": _gid(r["key"]), **{k: r.get(k) for k in keys}} for r in batch]
-        run(s, q, rows=full)
-        n += len(full)
+    for keys, group in _by_shape(rows, ("id",)).items():
+        assert "key" in keys, f"{label} rows need a 'key'"
+        sets = ", ".join(f"n.{k} = row.{k}" for k in keys)
+        q = f"UNWIND $rows AS row MERGE (n {{id: row.id}}) SET n:{label}, {sets}"
+        for batch in _batches(group):
+            full = [{"id": _gid(r["key"]), **{k: r[k] for k in keys}} for r in batch]
+            run(s, q, rows=full)
+            n += len(full)
     return n
 
 
@@ -68,25 +77,26 @@ def upsert_edges(s, rel_type: str, src_label: str, dst_label: str, rows: list[di
     if not rows:
         return 0
     _check(rows, rel_type)
-    props = sorted({k for r in rows for k in r} - {"src", "dst", "id", "rid"})
-    sets = ", ".join(["r.eid = row.rid"] + [f"r.{k} = row.{k}" for k in props])
-    q = (
-        f"UNWIND $rows AS row MATCH (a:{src_label} {{id: row.src}}), (b:{dst_label} {{id: row.dst}}) "
-        f"MERGE (a)-[r:{rel_type} {{id: row.rid}}]->(b) SET {sets}"
-    )
     n = 0
-    for batch in _batches(rows):
-        full = [
-            {
-                "src": _gid(r["src"]),
-                "dst": _gid(r["dst"]),
-                "rid": eid(r["src"], rel_type, r["dst"]),
-                **{k: r.get(k) for k in props},
-            }
-            for r in batch
-        ]
-        run(s, q, rows=full)
-        n += len(full)
+    for props, group in _by_shape(rows, ("src", "dst", "id", "rid")).items():
+        sets = ", ".join(["r.eid = row.rid"] + [f"r.{k} = row.{k}" for k in props])
+        q = (
+            f"UNWIND $rows AS row "
+            f"MATCH (a:{src_label} {{id: row.src}}), (b:{dst_label} {{id: row.dst}}) "
+            f"MERGE (a)-[r:{rel_type} {{id: row.rid}}]->(b) SET {sets}"
+        )
+        for batch in _batches(group):
+            full = [
+                {
+                    "src": _gid(r["src"]),
+                    "dst": _gid(r["dst"]),
+                    "rid": eid(r["src"], rel_type, r["dst"]),
+                    **{k: r[k] for k in props},
+                }
+                for r in batch
+            ]
+            run(s, q, rows=full)
+            n += len(full)
     return n
 
 

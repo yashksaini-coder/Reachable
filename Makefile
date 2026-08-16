@@ -51,7 +51,7 @@ fixture:
 	$(PY) -m reachable.fixture
 
 ingest:
-	$(PY) -m reachable.load --seeds seeds.json
+	$(PY) -m reachable.pipeline --seeds seeds.json
 
 incident:
 	$(PY) -m reachable.incident $(ID)
