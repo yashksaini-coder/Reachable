@@ -1,4 +1,4 @@
-# Blast Radius — Spec v3
+# Reachable — Spec v3
 
 **Supply chain incident response on a graph.**
 Hack Hydra · Track 02A · Solo · Phase-based, start immediately
@@ -38,7 +38,7 @@ entirely to de-risk this.
 
 ### One sentence
 
-> When a package is compromised, Blast Radius tells you which of your services
+> When a package is compromised, Reachable tells you which of your services
 > are exposed, which actually need action tonight, and what's likely to be hit next.
 
 ### Three surfaces (no desktop app)
@@ -46,7 +46,7 @@ entirely to de-risk this.
 | Surface | Purpose | Why not desktop |
 |---|---|---|
 | **Web** `blastradius.dev` | Incident console. Judges click a link. | An unsigned binary triggers Gatekeeper/SmartScreen. Judges won't install. |
-| **CLI** `npx blast-radius scan` | Reads local lockfiles; checks `.claude/` and `.vscode/` for worm persistence. | Delivers the only thing desktop uniquely offers, at ~5% of the cost. |
+| **CLI** `npx reachable-scan` | Reads local lockfiles; checks `.claude/` and `.vscode/` for worm persistence. | Delivers the only thing desktop uniquely offers, at ~5% of the cost. |
 | **Badge** `/badge/{owner}/{repo}.svg` | Distribution. Every README that adds it markets the product. | — |
 
 Maintainers live on GitHub and in the terminal. Meeting them there *is* the
@@ -116,8 +116,8 @@ is hard to do relationally. §4 and §5 are written to win this specifically.
 
 ```python
 from neo4j import GraphDatabase
-driver = GraphDatabase.driver("neo4j://127.0.0.1:7687",
-                              auth=("neo4j", TOKEN))
+
+driver = GraphDatabase.driver("bolt://127.0.0.1:7687", auth=("neo4j", TOKEN))
 ```
 
 or HTTP:
@@ -144,6 +144,12 @@ README, and **ask in Discord to confirm**. Not legal advice; confirm it.
 ---
 
 ## 4. Data model
+
+> **Superseded 2026-08-16 by [`schema.md`](./schema.md)** after probing the
+> engine: ids are integers (hashed purls), the temporal window lives on the
+> `AFFECTS` edge, there is no `CREATE INDEX`, and no `.cypher` files exist.
+> The tables below are the original draft, kept for the reasoning; build from
+> `schema.md`.
 
 This is the artifact the Best-Use award judges. Make it clean.
 
@@ -432,8 +438,8 @@ write is.
 ### Phase 1 · Lock the model
 **~3–4 h**
 
-- [ ] Write `schema.cypher`: all indexes + constraints
-- [ ] Hand-write a 30-node fixture covering every label and relationship
+- [x] ~~Write `schema.cypher`~~ — no DDL in the engine; the schema is `docs/schema.md` + `ids.py`
+- [ ] Hand-write a 30-node fixture (`fixture.py`, UNWIND batches) covering every label and relationship
 - [ ] Write Q1–Q5 against the fixture; **verify each returns correct results by hand**
 - [ ] Freeze the ID convention
 
@@ -454,10 +460,10 @@ pipeline first.
 - [ ] `lockfile.py` — parse `package-lock.json` + `git log` for `committed_at`
 - [ ] `typosquat.py` — materialise `NAME_SIMILAR_TO` over top ~2,000 packages
 - [ ] `load.py` — batched `UNWIND MERGE`, resumable, idempotent
-- [ ] On-disk HTTP cache (`requests-cache` or hand-rolled) — you will re-run this
+- [ ] On-disk HTTP cache (hand-rolled, sha256(url) → `.cache/`) — you will re-run this
       many times and registry calls are the slow part
 
-**Done when:** `python -m ingest --seed seeds.yaml` builds the full graph from
+**Done when:** `make ingest` (`python -m reachable.load --seeds seeds.json`) builds the full graph from
 cold in under ~20 minutes, and re-running changes nothing.
 
 **Cut if late:** drop typosquat ingestion to top 500 packages.
@@ -472,7 +478,7 @@ cold in under ~20 minutes, and re-running changes nothing.
 - [ ] **Measure and record p50/p95 latency for Q1** — this is your 09:00→09:06 number
 - [ ] Golden-file tests for each query against the seed graph
 
-**Done when:** `python -m incident GHSA-xxxx` prints the complete blast radius,
+**Done when:** `make incident ID=GHSA-xxxx` prints the complete blast radius,
 with timings.
 
 This phase *is* the project. If everything after it were cut, you would still
@@ -544,7 +550,7 @@ least necessary thing on this list.
 ### Phase 7 · CLI + badge
 **~3–4 h**
 
-- [ ] `npx blast-radius scan` — reads local `package-lock.json`, POSTs the
+- [ ] `npx reachable-scan` — reads local `package-lock.json`, POSTs the
       dependency set, prints the verdict table
 - [ ] Local worm check: flag suspicious persistence in `.claude/` and `.vscode/`
 - [ ] `/badge/{owner}/{repo}.svg` → `reachable alerts · 2 of 17`
@@ -645,7 +651,7 @@ When you fall behind — and you will — cut in this order:
 
 ```
 Repo        github.com/hydra-db/hydradb          (AGPL-3.0, Rust 1.91+)
-Bolt        neo4j://127.0.0.1:7687               Neo4j drivers, Bolt 5.x
+Bolt        bolt://127.0.0.1:7687               Neo4j drivers, Bolt 5.x
 HTTP        127.0.0.1:8443/v1/graphs/{g}/query   JSON + NDJSON
 Admin       127.0.0.1:9090/readyz  /metrics
 Health      /healthz on the public server

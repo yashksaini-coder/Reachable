@@ -7,9 +7,10 @@ you are about to assume something.
     make probe
 """
 
+import itertools
 import time
 
-from hydra import DATABASE, driver
+from reachable.db import DATABASE, driver
 
 CASES = []
 
@@ -42,7 +43,7 @@ def seed(s):
     ).consume()
     # Relationships need their own integer id in the UNWIND MERGE form:
     # "UNWIND relationship MERGE requires id: row.<field>".
-    pairs = list(zip(CHAIN, CHAIN[1:])) + SERVICES
+    pairs = list(itertools.pairwise(CHAIN)) + SERVICES
     edges = [{"src": a, "dst": b, "rid": 900000 + i} for i, (a, b) in enumerate(pairs)]
     s.run(
         "UNWIND $rows AS row MATCH (s:Pkg {id: row.src}), (d:Pkg {id: row.dst}) "
@@ -95,9 +96,9 @@ def _(s):
 
 @case("bounded var-length *1..8 with rel-type filter")
 def _(s):
-    row = s.run(
-        "MATCH (a:Pkg {id: 201})-[:DEPENDS_ON*1..8]->(v) RETURN count(*) AS n"
-    ).single(strict=True)
+    row = s.run("MATCH (a:Pkg {id: 201})-[:DEPENDS_ON*1..8]->(v) RETURN count(*) AS n").single(
+        strict=True
+    )
     return f"count={row['n']}"
 
 
@@ -125,9 +126,9 @@ def _(s):
         "MERGE (a)-[r:RESOLVED_TO {id: row.rid}]->(b) SET r.version = row.version",
         rows=[{"src": 201, "dst": 101, "rid": 910000, "version": "4.17.21"}],
     ).consume()
-    row = s.run(
-        "MATCH (a:Pkg {id: 201})-[r:RESOLVED_TO]->(b) RETURN r.version AS v"
-    ).single(strict=True)
+    row = s.run("MATCH (a:Pkg {id: 201})-[r:RESOLVED_TO]->(b) RETURN r.version AS v").single(
+        strict=True
+    )
     return f"rel prop read back = {row['v']}"
 
 
@@ -154,9 +155,7 @@ def _(s):
 
 @case("WHERE ... STARTS WITH $prefix (typosquat prefilter)")
 def _(s):
-    rows = list(
-        s.run("MATCH (n:Pkg) WHERE n.name STARTS WITH $p RETURN n.id AS id", p="p10")
-    )
+    rows = list(s.run("MATCH (n:Pkg) WHERE n.name STARTS WITH $p RETURN n.id AS id", p="p10"))
     return f"{len(rows)} rows"
 
 
@@ -196,8 +195,7 @@ def _(s):
 def _(s):
     rows = list(
         s.run(
-            "MATCH (a:Pkg {id: 201}) OPTIONAL MATCH (a)-[:DEPENDS_ON]->(b) "
-            "RETURN count(*) AS deps"
+            "MATCH (a:Pkg {id: 201}) OPTIONAL MATCH (a)-[:DEPENDS_ON]->(b) RETURN count(*) AS deps"
         )
     )
     return f"{len(rows)} rows, deps={rows[0]['deps']}"
@@ -306,7 +304,7 @@ def main():
             with d.session(database=DATABASE) as s:
                 try:
                     detail, refused = fn(s), False
-                except Exception as exc:
+                except Exception as exc:  # noqa: BLE001 — the probe exists to catch refusals
                     detail = str(exc).split("{message: ")[-1].split("} {gql")[0][:150]
                     refused = True
             as_expected = refused == (expect == "reject")

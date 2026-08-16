@@ -1,0 +1,11 @@
+# Tool config only. This project is not a package and is never built.
+[tool.pytest.ini_options]
+pythonpath = ["worker"]
+testpaths = ["worker/tests"]
+
+[tool.ruff]
+line-length = 100
+extend-exclude = ["web", "cli", "*.md"]
+
+[tool.ruff.lint]
+extend-select = ["I"]

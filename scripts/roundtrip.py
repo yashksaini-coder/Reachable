@@ -3,7 +3,7 @@
 A listening port is not proof the node works. This is.
 """
 
-from hydra import DATABASE, URI, driver
+from reachable.db import DATABASE, URI, driver
 
 
 def main():

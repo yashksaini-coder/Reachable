@@ -1,4 +1,6 @@
 .env
+.env.*
+!.env.example
 *.token
 .hydradb-plugin.json
 .hydradb-plugin.local.json
@@ -6,6 +8,8 @@
 data/
 node_modules/
 __pycache__/
+.pytest_cache/
+.ruff_cache/
 .venv/
 .next/
 *.pyc

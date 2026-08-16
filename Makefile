@@ -1,14 +1,15 @@
-.PHONY: venv node node-stop node-logs roundtrip probe test
+.PHONY: venv node node-stop node-logs roundtrip probe fixture ingest incident lint test web
 
 DATA    := $(CURDIR)/.hydradb
 PY      := $(CURDIR)/.venv/bin/python
 IMAGE   := ghcr.io/hydra-db/hydradb:latest
 # Local dev token only. Real deployments read it from the environment.
 TOKEN   ?= local-development-token-32-bytes
+export PYTHONPATH := $(CURDIR)/worker
 
 # .venv and .hydradb are gitignored, so a clean checkout has neither.
 venv:
-	python3 -m venv .venv && $(PY) -m pip install -q neo4j httpx
+	python3 -m venv .venv && $(PY) -m pip install -qr requirements.txt
 
 # Runs in the foreground and does not return — that is it working, not hanging.
 # Use a second shell for everything else.
@@ -41,10 +42,26 @@ node-logs:
 	docker logs -f reachable-hydradb
 
 roundtrip:
-	PYTHONPATH=scripts $(PY) scripts/roundtrip.py
+	$(PY) scripts/roundtrip.py
 
 probe:
-	PYTHONPATH=scripts $(PY) scripts/probe.py
+	$(PY) scripts/probe.py
 
-test:
-	@echo "no tests yet — Phase 1"
+fixture:
+	$(PY) -m reachable.fixture
+
+ingest:
+	$(PY) -m reachable.load --seeds seeds.json
+
+incident:
+	$(PY) -m reachable.incident $(ID)
+
+lint:
+	$(PY) -m ruff check . && $(PY) -m ruff format --check .
+
+test: lint
+	$(PY) -m pytest -q
+	@! grep -rn "NEXT_PUBLIC" web/ cli/ 2>/dev/null || (echo "NEXT_PUBLIC_ var found — token leak risk"; exit 1)
+
+web:
+	cd web && npm run dev

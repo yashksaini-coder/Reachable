@@ -7,7 +7,7 @@ Canonical instructions for any AI agent working in this repository.
 
 ## 1. What this project is
 
-**Blast Radius** — supply chain incident response on a graph.
+**Reachable** — supply chain incident response on a graph.
 
 When an npm package is compromised, answer in seconds: which services are
 transitively exposed, which resolved the bad version while it was live, which
@@ -18,7 +18,7 @@ first-party code and need action tonight.
 Built for **Hack Hydra** (Aug 12–20, 2026), Track 02A. Solo project.
 Full plan: `docs/spec-v3.md`. Read it before making architectural decisions.
 
-Surfaces: web console (primary) · CLI (`npx blast-radius scan`) · README badge.
+Surfaces: web console (primary) · CLI (`npx reachable-scan`) · README badge.
 **There is no desktop app.** Do not propose one.
 
 ---
@@ -85,8 +85,8 @@ repo docs, then `cypher-compat.md`, then a probe against the running node.
 | Layer | Tech | Notes |
 |---|---|---|
 | Graph | HydraDB OS (`graph-node`) | Rust, AGPL-3.0, self-hosted, S3/local object store |
-| Access | `neo4j` Python driver over Bolt | `neo4j://127.0.0.1:7687` |
-| Worker | Python 3.11+ | ingestion, queries, incident composition |
+| Access | `neo4j` Python driver over Bolt | `bolt://127.0.0.1:7687 — `bolt://`, not `neo4j://` (that triggers routing discovery)` |
+| Worker | Python 3.11+ (developed and tested on 3.14.7) | ingestion, queries, incident composition |
 | Web | Next.js App Router + Tailwind + shadcn/ui | server-side DB access only |
 | CLI | Node, published via `npx` | reads local lockfiles |
 | Deploy | Vercel (web) + small VM (graph-node) | precomputed JSON as fallback |
@@ -100,41 +100,47 @@ Data sources: `registry.npmjs.org` (versions, maintainers, publish times) ·
 ## 5. Repo layout
 
 ```
-schema/
-  schema.cypher        indexes + constraints — apply before any ingest
-  fixture.cypher       ~30-node hand-verified test graph
+docs/
+  spec-v3.md           the plan (its §4 data model is superseded by schema.md)
+  schema.md            THE frozen graph schema — labels, properties, id scheme
 worker/
-  blast_radius/
-    config.py          env loading, no hardcoded secrets
-    db.py              driver wrapper, retries, query timing
-    sources/           npm.py depsdev.py osv.py lockfile.py
+  reachable/
+    db.py              driver + env; the only place HYDRA_TOKEN is read
+    ids.py             gid()/eid() integer ids, safe_purl() allowlist
+    fixture.py         ~30-node hand-verified test graph, loaded via UNWIND
+    sources/           npm.py depsdev.py osv.py github.py (lockfile history)
     typosquat.py       materialises NAME_SIMILAR_TO edges
     load.py            batched UNWIND MERGE, idempotent, resumable
     queries.py         Q1–Q7, one function each, typed results
     incident.py        composes the six answers into one payload
-    cli.py
-  tests/               golden-file tests against fixture.cypher
+  tests/               golden-file tests against the fixture
   out/                 precomputed incident JSON (committed)
+scripts/               probe.py, roundtrip.py — Phase 0 harnesses, kept
 web/
   app/                 / · /incident/[advisory] · /incident/[advisory]/[service]
-  lib/                 server-only DB + data loading
-cli/                   npx blast-radius
-docs/spec-v3.md        the plan
-seeds.yaml             the 6–8 seed repos
+  lib/                 server-only DB + data loading (env.ts imports "server-only")
+cli/                   npx reachable-scan  (`reachable` itself is a taken 2015 npm name)
+seeds.json             the 8 seed repos (JSON, not YAML — no dependency)
 ```
+
+There is deliberately **no `schema/` directory and no `.cypher` files.** The
+engine has no DDL (§8), and its writes need bound `UNWIND` parameters that a
+flat `.cypher` file cannot carry. The schema is a table in `docs/schema.md`
+plus the id functions in `ids.py`; the fixture is Python.
 
 ---
 
 ## 6. Commands
 
 ```bash
+make venv        # python venv from requirements.txt
 make node        # start local graph-node with correct env (foreground)
-make probe       # run a minimal Cypher feature probe against the node
-make schema      # apply schema/schema.cypher
-make fixture     # wipe + load schema/fixture.cypher
-make ingest      # full pipeline from seeds.yaml
+make probe       # run the Cypher feature probe against the node
+make fixture     # wipe + load the hand-verified fixture graph
+make ingest      # full pipeline from seeds.json
 make incident ID=GHSA-xxxx-yyyy-zzzz
-make test        # pytest against fixture
+make lint        # ruff
+make test        # lint + pytest against fixture + NEXT_PUBLIC leak check
 make web         # next dev
 ```
 
@@ -206,8 +212,85 @@ Four further findings that constrain the schema, all newly discovered:
       This is a Cypher-injection surface fed by registry data; validate npm
       names against a strict allowlist and reject, never escape.
 
-Still unverified: HTTP `consistency: "strong"` round trip · `sum` / `avg` ·
-`UNION` arms · weighted paths · behaviour with `graph-indexer` running.
+### Second probe round — 2026-08-16 afternoon (three parallel probe agents)
+
+Everything below was run against the live node. Full detail in the
+`hydradb-cypher` skill; this is the list that shapes queries.
+
+**Comparisons and WHERE**
+- [x] **Property-vs-property comparison works** — node-vs-node, rel-vs-node,
+      rel-vs-rel, all six operators, `AND`/`OR`/`NOT`. Q3's window predicate
+      `r.at >= af.live_from AND r.at <= af.live_to` runs unmodified in-engine.
+- [x] Comparison operands must be the **same type family**. One string
+      timestamp in an int column errors the whole query. Missing property →
+      `null` → row silently dropped, no error. Coerce to int at ingest, assert
+      coverage.
+- [x] `WHERE` evaluates **zero arithmetic** — `n.ts >= $from + 100` refused.
+- [x] `<relationship>.id` is unusable in `WHERE`/`RETURN`/`ORDER BY` (parsed as
+      a node-id expression → `unbound variable r`). Mirror it as `r.eid`.
+- [x] A node's `id` is the vertex id, **not a property** — `'id' in node` is
+      `False`. Every node stores its human key as `key`.
+
+**Aggregates and RETURN**
+- [x] `ORDER BY … LIMIT 1` works as a `min()`/`max()` substitute, including
+      across a var-length traversal. Multi-key `ORDER BY`, `SKIP`, `LIMIT` fine.
+- [x] `sum()` and `avg()` **work** (previously listed unverified).
+- [x] `count(*)` with a grouping key works. `count(x)`, `min`, `max`,
+      `count(DISTINCT …)`, `collect(DISTINCT …)` refused. `collect(v)` of a
+      whole node refused — scalar properties only.
+- [x] `RETURN` supports `<binding>.<property>`, `count(*)`, `sum`, `avg`,
+      `collect`, and **nothing else** — no literal constants, no arithmetic,
+      no `CASE`, no `coalesce`, no `toString`, no `id(n)`, no `labels(n)`.
+      Anything the UI shows must be a stored property.
+- [x] `WITH` exists but is pass-through only. `UNION`/`UNION ALL` work
+      (3 arms verified) — but a trailing `ORDER BY`/`LIMIT` after `UNION`
+      applies to the **last arm only**, silently. Sort every arm, or in Python.
+
+**Variable-length paths**
+- [x] The **source of a var-length segment must be an inline integer literal.**
+      `{id: $param}` refused; a node bound by an earlier hop or an earlier
+      `MATCH` refused: `variable-length MATCH requires a fixed source id`.
+      Format the int into the query text; assert `isinstance(v, int)` there.
+- [x] An **incoming** var-length (`<-[*1..8]-(x)`) is refused unless `x` also
+      appears in a second pattern segment (comma pattern or next `MATCH`).
+      Outgoing has no such rule. Mechanism unknown; the empirical rule holds
+      across 15 probes. Q3/Q4 always continue to `Lockfile`, so unaffected.
+- [x] `MATCH p = …` path binding and `length(p)` are refused. Hop counts come
+      from `len(path.relationships)` on an `algo.*` result, or not at all.
+
+**algo.MSpaths / SSpaths / SPpaths**
+- [x] It is a **complete standalone query**: `CALL algo.X({…}) YIELD path
+      RETURN path` and nothing may follow — no `WHERE`, `WITH`, `MATCH`,
+      `LIMIT`. Filtering the blast radius happens client-side.
+- [x] **`pathCount` defaults to 1.** Omit it and a 40-fanout node returns one
+      path and looks correct. Required argument in our helper.
+- [x] **`resultLimit` truncates silently** — `has_more` is `False` in both the
+      truncated and complete case, no notification. Always request `N+1`,
+      treat `len(rows) > N` as capped, render a banner.
+- [x] `sourceLabel`, `sourceProperty`, `sourceValues`, `relTypes` must be
+      inline literals; every scalar (`maxLen`, `pathCount`, `resultLimit`,
+      `relDirection`, `maxCost`, `sourceNode`, `targetNode`) may be a bound
+      parameter. `SSpaths`/`SPpaths` take integer node ids as parameters — no
+      string interpolation at all; prefer them when the id is known.
+- [x] Unknown source value, label, or relType → **0 rows, no error.**
+      Relationship types are case-sensitive and fail the same way.
+- [x] Measured on a 250-node fixture: single-source bounded traversal
+      0.25–3.11 ms; 250 sources / 1000 paths 71–86 ms; a fresh string property
+      worked as a selector immediately (graph-indexer indexes on write).
+      **Not measured at real scale — pitch numbers stay `TBD` until Phase 3.**
+- [x] Ids: full signed-64 range accepted; `2^63` refused. We use **52 bits** so
+      JSON never loses precision in the browser.
+
+**Ingestion**
+- [x] Edge-write `MATCH` endpoints need **exactly one label each.**
+- [x] `SET` values must read from the row map — `SET n.dead = true` refused;
+      `SET n.dead = row.dead` fine. Booleans round-trip.
+- [x] Delete works: `UNWIND $rows AS row MATCH (n {id: row.id}) DETACH DELETE n`
+      — the pattern must carry **no** label. `UNWIND MATCH` must end in
+      `RETURN` or `DELETE`, so no `REMOVE`.
+
+Still unverified: HTTP `consistency: "strong"` round trip · an 84-arm `UNION`
+(decides one round trip vs 85 for Q3's transitive arm) · weighted paths.
 
 **Workflow when unsure:** add a case to `make probe` and run it. Ten seconds of
 probing beats an hour of debugging a wrong assumption. Never infer support from
