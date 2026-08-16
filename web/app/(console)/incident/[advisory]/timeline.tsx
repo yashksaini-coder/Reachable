@@ -82,24 +82,30 @@ export function Timeline({ rows, versions, advisoryPublished }: { rows: WhileLiv
         <text x={adX + (adFlip ? -8 : 8)} y={54} textAnchor={adFlip ? "end" : "start"} className="fill-mut font-mono text-[10.5px]">
           advisory published
         </text>
-        {inWin.map((c, i) => (
-          <g key={`w${i}`}>
-            <title>{c.rows.map(tip).join("\n")}</title>
-            <path d={`M${c.x} ${AXIS - 16} l6 11 h-12 z`} className="fill-l1" />
-            <text x={c.x} y={AXIS - 22} textAnchor="middle" className="fill-l1 font-mono text-[10px]">
-              {c.label}
-            </text>
-          </g>
-        ))}
-        {removed.map((c, i) => (
-          <g key={`r${i}`}>
-            <title>{c.rows.map(tip).join("\n")}</title>
-            <path d={`M${c.x} ${AXIS + 34} l6 -11 h-12 z`} className="fill-l2" />
-            <text x={c.x + 10} y={AXIS + 44} className="fill-l2 font-mono text-[10px]">
-              {c.label}
-            </text>
-          </g>
-        ))}
+        {inWin.map((c, i) => {
+          const flip = c.x > X1 - 140; // labels near the right edge anchor end so they stay in the viewBox
+          return (
+            <g key={`w${i}`}>
+              <title>{c.rows.map(tip).join("\n")}</title>
+              <path d={`M${c.x} ${AXIS - 16} l6 11 h-12 z`} className="fill-l1" />
+              <text x={c.x + (flip ? -10 : 0)} y={AXIS - 22} textAnchor={flip ? "end" : "middle"} className="fill-l1 font-mono text-[10.5px]">
+                {c.label}
+              </text>
+            </g>
+          );
+        })}
+        {removed.map((c, i) => {
+          const flip = c.x > X1 - 140;
+          return (
+            <g key={`r${i}`}>
+              <title>{c.rows.map(tip).join("\n")}</title>
+              <path d={`M${c.x} ${AXIS + 34} l6 -11 h-12 z`} className="fill-l2" />
+              <text x={c.x + (flip ? -10 : 10)} y={AXIS + 44} textAnchor={flip ? "end" : "start"} className="fill-l2 font-mono text-[10.5px]">
+                {c.label}
+              </text>
+            </g>
+          );
+        })}
       </svg>
       <ul className="mt-1.5 flex flex-wrap gap-[18px] px-2 pb-3.5 font-mono text-[10.5px] leading-none text-dim" aria-label="legend">
         <li className="inline-flex items-center gap-1.5">

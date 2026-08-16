@@ -31,11 +31,13 @@ import json
 import sys
 import time
 from collections import defaultdict
+from dataclasses import asdict
 from datetime import UTC, datetime
 from pathlib import Path
 
 from reachable import load, typosquat
 from reachable.db import run, session
+from reachable.http import HttpError
 from reachable.load import log, upsert_edges, upsert_nodes
 from reachable.sources import github, npm, osv, reach
 
@@ -149,20 +151,31 @@ def graph_packages(s) -> list[str]:
 
 
 def stage_packages(
-    s, names: list[str], keep: dict[str, set[str]] | None = None, batch: int = 250
+    s,
+    names: list[str],
+    keep: dict[str, set[str]] | None = None,
+    batch: int = 250,
+    step: dict | None = None,
 ) -> dict[str, list[str]]:
     """Enrich every Package from its packument, streaming in batches so memory stays flat
     (holding 6k packuments cost 9 GB RSS). Only versions in keep[name] — the ones some
     lockfile resolved — are written: a package's full history is ~200 versions and would be
     ~1.2M dead nodes; affected-but-unresolved versions are written by the advisory stage.
-    Returns {name: [all versions]} for OSV range expansion; windows re-read the cached doc."""
+    Returns {name: [all versions]} for OSV range expansion; windows re-read the cached doc.
+    `step` (a job step dict) gets live `i/n packuments` progress."""
     known: dict[str, list[str]] = {}
     total = 0
     for i in range(0, len(names), batch):
         chunk = names[i : i + batch]
         pkgs, vers, vof, maints, medges = [], [], [], [], []
-        for name in chunk:
-            r = npm.ingest_package(name)
+        for j, name in enumerate(chunk, i + 1):
+            if step is not None:
+                step["detail"] = f"{j}/{len(names)} packuments"
+            try:
+                r = npm.ingest_package(name)
+            except HttpError as e:  # one registry refusal must not fail the whole job
+                log(f"  packument {name}: {e!s:.120} — skipped")
+                continue
             if r is None:
                 log(f"  no packument: {name}")
                 continue
@@ -232,7 +245,11 @@ def stage_advisories(
 
 
 def ingest_advisories(
-    s, pairs: list[tuple[str, str]], known: dict[str, list[str]], ids: set[str] | None = None
+    s,
+    pairs: list[tuple[str, str]],
+    known: dict[str, list[str]],
+    ids: set[str] | None = None,
+    step: dict | None = None,
 ) -> dict[str, int]:
     """OSV querybatch over (name, version) pairs (+ any explicit advisory ids) -> Advisory,
     AFFECTS with the temporal window, stub Package/Version for affected-but-unresolved
@@ -243,7 +260,9 @@ def ingest_advisories(
     log(f"  {len(ids)} advisories touch the graph")
     advisories, affects, all_pairs = [], [], set()
     all_windows: dict = {}
-    for aid in sorted(ids):
+    for i, aid in enumerate(sorted(ids), 1):
+        if step is not None:
+            step["detail"] = f"{i}/{len(ids)} advisories"
         rec = osv.fetch_vuln(aid)
         if rec is None:
             log(f"  missing advisory {aid}")
@@ -286,7 +305,7 @@ def ingest_advisories(
         keep: dict[str, set[str]] = defaultdict(set)
         for n, v in all_pairs:
             keep[n].add(v)
-        known.update(stage_packages(s, missing, keep=keep))
+        known.update(stage_packages(s, missing, keep=keep, step=step))
     # mark malicious versions
     mal = [
         {"key": a["dst"], "malicious": True}
@@ -420,8 +439,7 @@ def main(argv=None) -> None:
         from reachable import jobs  # circular at module level
 
         job = jobs.run_repo(a.repo)
-        for st in job.steps:
-            log(f"  {st['name']:10} {st['status']:7} {st['ms']:>8.0f} ms  {st['detail']}")
+        jobs.print_job(asdict(job))
         return 0 if job.status == "done" else 1
     seeds = load_seeds(a.seeds)
     only = set(a.only or STAGES)

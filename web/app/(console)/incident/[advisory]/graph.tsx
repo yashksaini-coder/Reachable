@@ -88,7 +88,7 @@ export function BlastGraph({ inc }: { inc: Incident }) {
         <div className="overflow-x-auto overscroll-x-contain px-2 pt-1">
           <svg viewBox="0 0 1180 300" className="h-auto w-full min-w-[1000px]" role="img" aria-label={`blast radius graph: ${shown} services, ${lock.size} lockfiles, ${edges.size} edges`}>
             {heads.map((h, i) => (
-              <text key={h} x={X[i] - 6} y={26} className="fill-dim text-[9.5px] font-medium uppercase tracking-[0.11em]">
+              <text key={h} x={X[i] - 6} y={26} className="fill-dim text-[10.5px] font-medium uppercase tracking-[0.11em]">
                 {h}
               </text>
             ))}
@@ -123,7 +123,7 @@ export function BlastGraph({ inc }: { inc: Incident }) {
                     <text x={x + 13} y={y + 1} className={cn("font-mono text-[11.5px]", ci === 0 ? "fill-fg" : "fill-mut")}>
                       {n.label}
                     </text>
-                    <text x={x + 13} y={y + 15} className={cn("font-mono text-[9.5px]", n.sub === "in window" ? "fill-l1" : "fill-dim")}>
+                    <text x={x + 13} y={y + 15} className={cn("font-mono text-[10.5px]", n.sub === "in window" ? "fill-l1" : "fill-dim")}>
                       {n.sub}
                     </text>
                   </g>
@@ -142,7 +142,7 @@ export function BlastGraph({ inc }: { inc: Incident }) {
                   <text x={x + 12} y={y + 4} className="fill-mut font-mono text-[11.5px]">
                     {trunc(svcSlug(s.key), 22)}
                   </text>
-                  <text x={x + 12} y={y + 18} className={cn("text-[9.5px] font-medium uppercase tracking-[0.08em]", fill)}>
+                  <text x={x + 12} y={y + 18} className={cn("text-[10.5px] font-medium uppercase tracking-[0.08em]", fill)}>
                     {l.label}
                   </text>
                 </g>

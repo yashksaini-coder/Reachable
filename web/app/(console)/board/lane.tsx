@@ -51,7 +51,7 @@ export function Lane({ title, hint, tone, wide, cards }: { title: string; hint: 
                   <span className="truncate font-mono text-[12px] font-medium leading-none text-fg">{c.slug}</span>
                   <span className="shrink-0 font-mono text-[10.5px] leading-none text-signal">{c.advisory}</span>
                 </div>
-                <div className="mt-[9px] font-mono text-[11px] leading-[1.5] text-dim group-has-[:checked]:hidden">
+                <div className="mt-[9px] font-mono text-[11px] leading-[1.5] text-dim [overflow-wrap:anywhere] group-has-[:checked]:hidden">
                   via {c.via}
                   <br />
                   {c.sha} · {c.time}

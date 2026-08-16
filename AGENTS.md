@@ -506,6 +506,14 @@ victims, ask, graph explorer); designed states (`components/console/states.tsx`:
 shell for both unmatched URLs and `notFound()`, route `error.tsx` with retry, loading skeletons for
 services/graph/ask). Landing "Docs" → `/docs`.
 
+**2026-08-17 ~01:40 IST:** UI audit fixes landed (overflow sites, one type scale, 40/44px
+controls, 18px cards, single h1 tiers); landing copy has no CLI funnel; report has print mode
+(`?print=1` / Export PDF button, `@media print` in globals.css); ingest reads pnpm-lock.yaml
+v6/v9 and npm lockfileVersion 2/3 (`sources/github.py parse_pnpm_lock`, pyyaml), never caches
+401/403, marks jobs `interrupted` on worker restart, retries via `POST /jobs/<id>/retry`, streams
+`i/n` step progress; parser tests in `worker/tests/test_lockfiles.py`. Verified live: the pnpm repo
+`yashksaini-coder/DevNotion` ingests end to end (10 lockfile commits, 791 versions, 71 advisories).
+
 **Known open items:** push to the public GitHub repo (owner action) · Vercel
 read-only deploy from committed JSON · video ≤ 3:00 in the prescribed order ·
 form · final disqualifier pass (private-window links, no pre-Aug-12 commits,

@@ -49,13 +49,13 @@ export type JobStep = { name: string; status: "pending" | "running" | "done" | "
 export type Job = {
   job_id: string;
   repo: string;
-  status: "queued" | "running" | "done" | "failed";
+  status: "queued" | "running" | "done" | "failed" | "interrupted"; // interrupted = the worker restarted mid-job
   started_at: string | number | null;
   ended_at: string | number | null;
   step: string | null;
   steps: JobStep[];
   log?: string[];
-  error?: string | null;
+  error?: string | null; // failure reason verbatim (also set on interrupted)
 };
 
 export type GraphStats = {
@@ -94,6 +94,11 @@ export async function jobs(): Promise<Job[] | null> {
 
 export async function job(id: string): Promise<{ status: number; body: Job | { error?: string } }> {
   return json(`/jobs/${encodeURIComponent(id)}`);
+}
+
+// Re-submits the job's repo (same criticality); 409 carries the id of the job already running.
+export async function retryJob(id: string): Promise<{ status: number; body: { job_id?: string; repo?: string; error?: string } }> {
+  return json(`/jobs/${encodeURIComponent(id)}/retry`, { method: "POST" });
 }
 
 export async function graphStats(): Promise<GraphStats | null> {

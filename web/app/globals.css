@@ -445,3 +445,48 @@
 @utility pixel {
   image-rendering: pixelated;
 }
+
+/* ── print (Export PDF / ?print=1) — the report on paper, dark palette kept ────────── */
+@page {
+  size: A4;
+  margin: 14mm;
+}
+@media print {
+  * {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  html,
+  body {
+    background: var(--color-bg);
+  }
+  /* the shell: <main> is the scroll container on screen; on paper it must flow */
+  #console-main {
+    height: auto;
+    overflow: visible;
+  }
+  #console-main > .sticky, /* mobile top bar */
+  aside, /* sidebar + report rail (status chip lives in the sidebar) */
+  [role="status"],
+  [aria-label="notifications"] {
+    display: none !important;
+  }
+  section,
+  table,
+  svg,
+  pre,
+  .elev {
+    break-inside: avoid;
+  }
+  .overflow-x-auto {
+    overflow: visible !important;
+  }
+  .overflow-x-auto svg,
+  .overflow-x-auto > [class*="min-w-"] {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+  a {
+    text-decoration: none;
+  }
+}

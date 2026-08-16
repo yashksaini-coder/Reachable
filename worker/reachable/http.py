@@ -2,7 +2,7 @@
 
 Cache key = sha256(method + url + body). Responses are cached forever — a re-run
 never re-fetches. Delete .cache/ to refresh. Non-2xx responses are cached too
-(as 404s etc.) so a missing package is not re-asked on every run — except 429/5xx,
+(as 404s etc.) so a missing package is not re-asked on every run — except 401/403/408/429/5xx,
 which are transient and never cached.
 """
 
@@ -56,8 +56,9 @@ def request(method: str, url: str, *, json_body=None, headers=None, retries: int
             time.sleep(float(r.headers.get("retry-after", 0)) or 5 * (attempt + 1))
             continue
         out = {"status": r.status_code, "body": r.text}
-        # never cache transient failures
-        if r.status_code < 500 and r.status_code not in (408, 429):
+        # never cache transient failures — nor auth/rate-limit answers, which flip once a
+        # token is set or the limit resets
+        if r.status_code < 500 and r.status_code not in (401, 403, 408, 429):
             p.parent.mkdir(parents=True, exist_ok=True)
             p.write_text(json.dumps(out))
         return out

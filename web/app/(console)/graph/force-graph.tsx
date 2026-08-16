@@ -226,7 +226,7 @@ export function ForceGraph({
                   {isSel && <circle r={n.r + 5} fill="none" stroke={c.color} strokeWidth={1} strokeOpacity={0.4} />}
                   <circle r={n.r} fill={c.color} fillOpacity={0.9} />
                   {showLabel && (
-                    <text x={n.r + 6} y={3.5} className="font-mono text-[10px]" fill={off ? "var(--color-dim)" : "var(--color-mut)"}>
+                    <text x={n.r + 6} y={3.5} className="font-mono text-[10.5px]" fill={off ? "var(--color-dim)" : "var(--color-mut)"}>
                       {text.length > 34 ? text.slice(0, 32) + "…" : text}
                     </text>
                   )}

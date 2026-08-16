@@ -79,6 +79,14 @@
 
 @media (max-width: 900px) {
   .nav {
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .nav::-webkit-scrollbar {
     display: none;
+  }
+  .link {
+    flex-shrink: 0;
   }
 }

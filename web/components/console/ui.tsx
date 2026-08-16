@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { ChevronDown } from "lucide-react";
 import { fmtMs } from "@/lib/format";
@@ -19,6 +19,16 @@ export const ELEV = "elev";
 // chevron (180° on open). Body: the Cypher in a --code <pre>, 11.5/1.65 mono, --signal-2, plus a
 // "copy statement" button that reads "copied". Collapsed is fine; hidden is never allowed.
 const EASE = [0.32, 0.72, 0, 1] as const;
+
+// Print mode — on while a report is being exported (Export PDF button, or `?print=1`). Every
+// HydraCard and ShowAll opens without animation so the printed page carries the whole report.
+// Outside a provider it reads false, so the primitives behave normally on every other page.
+const PrintCtx = createContext<{ on: boolean; set: (v: boolean) => void }>({ on: false, set: () => {} });
+export function PrintProvider({ children }: { children: ReactNode }) {
+  const [on, set] = useState(false);
+  return <PrintCtx.Provider value={{ on, set }}>{children}</PrintCtx.Provider>;
+}
+export const usePrintMode = () => useContext(PrintCtx);
 
 export function HydraCard({
   title,
@@ -40,20 +50,44 @@ export function HydraCard({
   flat?: boolean; // no outer margin (caller stacks cards itself)
 }) {
   const [open, setOpen] = useState(defaultOpen);
+  const print = usePrintMode().on;
   const reduce = useReducedMotion();
   const t = reduce ? { duration: 0 } : { duration: 0.25, ease: EASE };
   const statements = dedupe(cypher);
   // Temperature is stated only when it was measured (a cold/warm pair); a lone ms carries no claim.
   const warm = timing && timing.runs > 1 && timing.warm_p50_ms != null;
+  const body = (
+    <div className="px-[13px] pb-[13px]">
+      {statements.length === 0 ? (
+        <div className="rounded-md border border-line bg-code p-3 font-mono text-[11.5px] text-dim">no statement executed</div>
+      ) : (
+        <pre className="m-0 overflow-x-auto rounded-md border border-line bg-code p-3 font-mono text-[11.5px] leading-[1.65] text-signal-2">
+          {statements.map(([q, n], i) => (
+            <span key={i} className="block">
+              {i > 0 && "\n"}
+              {n > 1 && <span className="mr-2 rounded-xs bg-hover px-1 text-dim">×{n}</span>}
+              {q}
+            </span>
+          ))}
+        </pre>
+      )}
+      <div className="mt-[9px] flex items-center gap-2">
+        {statements.length > 0 && <CopyStatement text={statements.map(([q]) => q).join("\n\n")} />}
+        <span className="font-mono text-[10.5px] leading-[1.6] text-dim">
+          as sent over Bolt · integer literals are 52-bit ids · timings are wall-clock from the driver over loopback
+        </span>
+      </div>
+    </div>
+  );
   return (
     <div className={cn("overflow-hidden rounded-lg border border-border border-l-2 border-l-signal/55 bg-card2", !flat && "mt-3")}>
       <button
         type="button"
-        aria-expanded={open}
+        aria-expanded={open || print}
         onClick={() => setOpen((o) => !o)}
         className="flex min-h-11 w-full items-center gap-3.5 px-[13px] py-[11px] text-left transition-colors duration-[180ms] ease-[var(--ease)] hover:bg-hover/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-signal/50 max-[760px]:flex-wrap"
       >
-        <span className="shrink-0 rounded-xs bg-sigfill px-1.5 py-[5px] font-mono text-[9.5px] font-medium uppercase leading-none tracking-[0.1em] text-signal">hydradb</span>
+        <span className="shrink-0 rounded-xs bg-sigfill px-1.5 py-[5px] font-mono text-[10.5px] font-medium uppercase leading-none tracking-[0.1em] text-signal">hydradb</span>
         <span className="min-w-0 flex-1 truncate text-[12.5px] text-mut max-[760px]:order-2 max-[760px]:basis-full max-[760px]:whitespace-normal">{title}</span>
         <span className="num shrink-0 text-[10.5px] leading-none text-dim">
           {rows} rows · {fmtMs(ms)}
@@ -66,44 +100,28 @@ export function HydraCard({
           )}
           {truncated && <span className="ml-2 text-l1">truncated</span>}
         </span>
-        <motion.span animate={{ rotate: open ? 180 : 0 }} transition={t} className="inline-flex shrink-0 text-dim" aria-hidden>
+        <motion.span animate={{ rotate: open || print ? 180 : 0 }} transition={t} className="inline-flex shrink-0 text-dim" aria-hidden>
           <ChevronDown className="size-3.5" />
         </motion.span>
       </button>
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            key="body"
-            initial={{ height: 0, opacity: 0.55 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0.55, transition: { duration: reduce ? 0 : 0.2, ease: EASE } }}
-            transition={t}
-            className="overflow-hidden"
-          >
-            <div className="px-[13px] pb-[13px]">
-              {statements.length === 0 ? (
-                <div className="rounded-md border border-line bg-code p-3 font-mono text-[11.5px] text-dim">no statement executed</div>
-              ) : (
-                <pre className="m-0 overflow-x-auto rounded-md border border-line bg-code p-3 font-mono text-[11.5px] leading-[1.65] text-signal-2">
-                  {statements.map(([q, n], i) => (
-                    <span key={i} className="block">
-                      {i > 0 && "\n"}
-                      {n > 1 && <span className="mr-2 rounded-xs bg-hover px-1 text-dim">×{n}</span>}
-                      {q}
-                    </span>
-                  ))}
-                </pre>
-              )}
-              <div className="mt-[9px] flex items-center gap-2">
-                {statements.length > 0 && <CopyStatement text={statements.map(([q]) => q).join("\n\n")} />}
-                <span className="font-mono text-[10.5px] leading-[1.6] text-dim">
-                  as sent over Bolt · integer literals are 52-bit ids · timings are wall-clock from the driver over loopback
-                </span>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {print ? (
+        body
+      ) : (
+        <AnimatePresence initial={false}>
+          {open && (
+            <motion.div
+              key="body"
+              initial={{ height: 0, opacity: 0.55 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0.55, transition: { duration: reduce ? 0 : 0.2, ease: EASE } }}
+              transition={t}
+              className="overflow-hidden"
+            >
+              {body}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
     </div>
   );
 }
@@ -121,7 +139,7 @@ function CopyStatement({ text }: { text: string }) {
         setDone(true);
         setTimeout(() => setDone(false), 1500);
       }}
-      className="grid min-h-8 shrink-0 rounded-md border border-border px-[11px] text-[11px] font-medium leading-none text-mut transition-[color,background-color,transform] duration-[180ms] ease-[var(--ease)] hover:bg-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50 active:scale-[0.97] [&>*]:[grid-area:1/1]"
+      className="grid min-h-10 shrink-0 rounded-md border border-border px-[11px] text-[11px] font-medium leading-none text-mut transition-[color,background-color,transform] duration-[180ms] ease-[var(--ease)] hover:bg-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50 active:scale-[0.97] [&>*]:[grid-area:1/1]"
     >
       <motion.span initial={false} animate={done ? { opacity: 0, scale: 0.25, filter: "blur(4px)" } : { opacity: 1, scale: 1, filter: "blur(0px)" }} transition={t} className="inline-flex items-center">
         copy statement
@@ -167,7 +185,6 @@ export function Question({
   n,
   title,
   summary,
-  star,
   children,
   footer,
   className,
@@ -175,22 +192,21 @@ export function Question({
   n: string;
   title: string;
   summary?: ReactNode;
-  star?: boolean;
+  star?: boolean; // accepted for callers; no longer rendered
   children: ReactNode;
   footer?: ReactNode;
   className?: string;
 }) {
   return (
     <section id={`q${n}`} data-sect={`q${n}`} className={cn("scroll-mt-24 rounded-2xl border border-border bg-card elev", className)}>
-      <header className="flex items-start gap-[18px] border-b border-line px-[18px] pb-[14px] pt-[18px]">
+      <header className="flex items-start gap-[18px] border-b border-line px-[18px] pb-[14px] pt-[18px] max-[760px]:flex-wrap">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline gap-x-2.5">
             <span className="font-mono text-[11px] font-medium leading-none text-signal">{`Q${n}`}</span>
             <h2 className="text-balance text-[17px] font-medium leading-[1.3] tracking-[-0.01em] text-fg">{title}</h2>
-            {star && <span className="text-[10.5px] text-dim">★ differentiator</span>}
           </div>
         </div>
-        {summary && <div className="num max-w-[46%] shrink-0 text-right text-[11px] leading-[1.5] text-dim">{summary}</div>}
+        {summary && <div className="num max-w-[46%] shrink-0 text-right text-[11px] leading-[1.5] text-dim max-[760px]:w-full max-[760px]:max-w-none max-[760px]:text-left">{summary}</div>}
       </header>
       <div className="p-[18px]">{children}</div>
       {footer && <footer className="border-t border-line">{footer}</footer>}
@@ -201,10 +217,11 @@ export function Question({
 // Table rows past a cap, behind a "show all N" row. `children` render always; `more` on demand.
 export function ShowAll({ n, cols, children, more }: { n: number; cols: number; children: ReactNode; more: ReactNode }) {
   const [open, setOpen] = useState(false);
+  const print = usePrintMode().on;
   return (
     <>
       {children}
-      {open ? (
+      {open || print ? (
         more
       ) : (
         <tr>
@@ -225,8 +242,8 @@ export function ShowAll({ n, cols, children, more }: { n: number; cols: number; 
 
 export { LEVEL } from "@/lib/level";
 
-// Pill geometry (shared): 10px/500 uppercase, tracking .07em, padding 5px 7px, 5px radius.
-const PILL = "inline-flex items-center gap-1.5 whitespace-nowrap rounded-sm px-[7px] py-[5px] text-[10px] font-medium uppercase leading-none tracking-[0.07em]";
+// Pill geometry (shared): 10.5px/500 uppercase, tracking .07em, padding 5px 7px, 5px radius.
+const PILL = "inline-flex items-center gap-1.5 whitespace-nowrap rounded-sm px-[7px] py-[5px] text-[10.5px] font-medium uppercase leading-none tracking-[0.07em]";
 
 // Level pill — verdict colour on its /14 tint.
 export function Level({ level, className }: { level: string; className?: string }) {
@@ -244,7 +261,7 @@ export function Level({ level, className }: { level: string; className?: string 
 export function Kind({ kind, className }: { kind: string; className?: string }) {
   const k = kind.replace(/_/g, " ");
   if (kind === "upper_bound")
-    return <span className={cn(PILL, "border border-l1/35 font-mono normal-case tracking-normal text-[9.5px] text-l1", className)}>{k}</span>;
+    return <span className={cn(PILL, "border border-l1/35 font-mono normal-case tracking-normal text-l1", className)}>{k}</span>;
   return <span className={cn(PILL, "bg-hover text-mut", className)}>{k}</span>;
 }
 

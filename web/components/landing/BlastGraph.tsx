@@ -16,6 +16,7 @@ const X = [60, 270, 560, 900];
 const HEADS = ['version', 'dependency', 'lockfile', 'service'];
 
 const yOf = (i: number, n: number) => 46 + (i + 0.5) * (232 / n);
+const trunc = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1) + '…' : s);
 
 const monoLabel = { fontFamily: 'var(--mono)', fontSize: 11.5, fontWeight: 400 } as const;
 const monoSub = { fontFamily: 'var(--mono)', fontSize: 9.5, fontWeight: 400 } as const;
@@ -85,7 +86,8 @@ export function BlastGraph({ data }: { data: BlastData }) {
               <g key={`n${ci}${i}`}>
                 <circle cx={x} cy={y} r={3.5} fill={node.c} />
                 <text x={x + 12} y={y + 4} fill={C.mut} style={monoLabel}>
-                  {node.label}
+                  <title>{node.label}</title>
+                  {trunc(node.label, 34)}
                 </text>
                 <text x={x + 12} y={y + 18} fill={node.c} style={tracked}>
                   {node.v}

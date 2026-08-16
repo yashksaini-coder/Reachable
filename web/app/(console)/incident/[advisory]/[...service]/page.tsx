@@ -35,7 +35,7 @@ const LEVEL_WHY: Record<string, string> = {
 const linkCls =
   "inline-flex min-h-10 items-center gap-1 rounded-md text-mut transition-colors duration-[180ms] ease-[var(--ease)] hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50";
 const CARD = "overflow-hidden rounded-xl border border-border bg-card elev";
-const CARD_HEAD = "flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-line px-4 py-3.5";
+const CARD_HEAD = "flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-line px-[18px] py-3.5";
 const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? "" : "s"}`;
 const hops = (n: number) => (n === 0 ? "direct" : plural(n, "hop"));
 
@@ -110,7 +110,7 @@ export default async function ServicePage({ params }: PageProps<"/incident/[advi
                 {hops(r.hops)} · {r.sha.slice(0, 7)} · {fmtUtc(new Date(r.committed_at * 1000).toISOString())}
               </span>
             </div>
-            <div className="overflow-x-auto overscroll-x-contain p-4">
+            <div className="overflow-x-auto overscroll-x-contain p-[18px]">
               {r.paths.length === 0 ? (
                 <div className="font-mono text-[11px] text-dim">
                   direct RESOLVED edge to {r.bad_versions.map(short).join(", ")} (no explanation path requested)
@@ -126,7 +126,7 @@ export default async function ServicePage({ params }: PageProps<"/incident/[advi
                 </div>
               )}
             </div>
-            <div className="px-4 pb-4 font-mono text-[11px] leading-[1.6] text-dim">
+            <div className="px-[18px] pb-[18px] font-mono text-[11px] leading-[1.6] text-dim">
               <span className={cn("mr-1", level === "L2" && "text-l2")}>reachability ·</span>
               {reachNote}
             </div>
@@ -143,11 +143,11 @@ export default async function ServicePage({ params }: PageProps<"/incident/[advi
               {plural(reach.files_scanned, "first-party file")} scanned · {plural(reach.imports.length, "import")} · {plural(reach.symbols.length, "symbol use")}
             </span>
           </div>
-          <div className="space-y-3 p-4">
+          <div className="space-y-3 p-[18px]">
             {reach.imports.length > 0 && (
               <div>
                 <div className="label mb-1.5">imports</div>
-                <ul className="space-y-1 font-mono text-[12px] text-fg">
+                <ul className="space-y-1 font-mono text-[12px] text-fg [overflow-wrap:anywhere]">
                   {reach.imports.map((i, k) => (
                     <li key={k}>
                       {i.path}:{i.line} <span className="text-dim">imports {short(i.package)}</span>
@@ -159,7 +159,7 @@ export default async function ServicePage({ params }: PageProps<"/incident/[advi
             {reach.symbols.length > 0 && (
               <div>
                 <div className="label mb-1.5">vulnerable symbols</div>
-                <ul className="space-y-1 font-mono text-[12px] text-l2">
+                <ul className="space-y-1 font-mono text-[12px] text-l2 [overflow-wrap:anywhere]">
                   {reach.symbols.map((s, k) => (
                     <li key={k}>
                       {s.path}:{s.line} uses {s.symbol}
@@ -185,12 +185,12 @@ export default async function ServicePage({ params }: PageProps<"/incident/[advi
           </div>
           <ul className="divide-y divide-line font-mono text-[11.5px]">
             {live.map((l, i) => (
-              <li key={i} className="flex min-h-10 flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5">
+              <li key={i} className="flex min-h-10 flex-wrap items-center gap-x-3 gap-y-1 px-[18px] py-2.5">
                 <span className="text-fg">{l.sha.slice(0, 12)}</span>
                 <span className="text-dim">committed {fmtUtc(l.resolved_at_iso)}</span>
                 <span className="text-dim">{short(l.version)}</span>
                 <Chip tone={l.evidence.includes("in_window") ? "text-l1" : "text-l2"}>{l.evidence.replace("+", " + ")}</Chip>
-                <span className="num basis-full text-dim md:ml-auto md:basis-auto">
+                <span className="num basis-full text-dim min-[900px]:ml-auto min-[900px]:basis-auto">
                   window {fmtUtc(l.live_from_iso)} → {fmtUtc(l.live_to_iso)} ({l.live_to_kind.replace("_", " ")})
                 </span>
               </li>

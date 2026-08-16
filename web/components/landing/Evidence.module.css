@@ -25,7 +25,7 @@
 }
 
 .tag {
-  font: 500 9.5px/1 var(--mono);
+  font: 500 10.5px/1 var(--mono);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--sig);
@@ -39,6 +39,9 @@
   min-width: 0;
   font-size: 12px;
   color: var(--mut);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .meta {
@@ -65,6 +68,7 @@
   .question {
     flex-basis: 100%;
     order: 3;
+    white-space: normal;
   }
 
   .meta {

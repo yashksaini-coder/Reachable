@@ -7,7 +7,7 @@ export function SixAnswers({ questions }: { questions: LandingModel['questions']
     <section id="answers" className="container section">
       <Reveal>
         <span className="eyebrow">the report</span>
-        <h2 className={styles.h2}>Six questions, answered before you open a terminal.</h2>
+        <h2 className={`h2 ${styles.h2}`}>Six questions, answered on one page.</h2>
       </Reveal>
 
       <div className={`cellGrid ${styles.grid}`}>

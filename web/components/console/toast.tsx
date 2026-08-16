@@ -73,7 +73,7 @@ function Toaster({ items, dismiss }: { items: Toast[]; dismiss: (id: number) => 
               className={cn("pointer-events-auto relative overflow-hidden rounded-lg border border-border bg-pop pl-3.5 pr-10 py-3 elev", t.tone === "error" && "border-l-2 border-l-l1")}
             >
               <div className="flex items-baseline gap-2">
-                <span className={cn("shrink-0 font-mono text-[10px] font-medium uppercase leading-none tracking-[0.1em]", t.tone === "error" ? "text-l1" : "text-signal")}>
+                <span className={cn("shrink-0 font-mono text-[10.5px] font-medium uppercase leading-none tracking-[0.1em]", t.tone === "error" ? "text-l1" : "text-signal")}>
                   {t.tone === "error" ? "error" : "note"}
                 </span>
                 <span className="text-[12.5px] leading-[1.4] text-fg">{t.title}</span>
@@ -86,7 +86,7 @@ function Toaster({ items, dismiss }: { items: Toast[]; dismiss: (id: number) => 
                     t.action?.onClick();
                     dismiss(t.id);
                   }}
-                  className="mt-2 inline-flex min-h-8 items-center rounded-md border border-border px-2.5 text-[11px] font-medium text-mut transition-colors duration-[180ms] hover:bg-hover hover:text-fg"
+                  className="mt-2 inline-flex min-h-10 items-center rounded-md border border-border px-2.5 text-[11px] font-medium text-mut transition-colors duration-[180ms] hover:bg-hover hover:text-fg"
                 >
                   {t.action.label}
                 </button>

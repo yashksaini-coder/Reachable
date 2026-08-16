@@ -44,8 +44,9 @@ real and lets HydraDB do the walking.
 ## What it is
 
 - **A worker** (`worker/`, Python 3.14, `neo4j` driver over Bolt) that ingests watched GitHub
-  repositories — every `package-lock.json` commit becomes a time-stamped `Lockfile` node whose
-  `RESOLVED` edges are the flattened install tree npm wrote — plus npm versions, publish and
+  repositories — every lockfile commit (`package-lock.json` v2/v3 or `pnpm-lock.yaml` v6/v9;
+  yarn is not supported yet) becomes a time-stamped `Lockfile` node whose `RESOLVED` edges are
+  the flattened install tree the package manager wrote — plus npm versions, publish and
   removal times, maintainers, OSV advisories with an **installable window on the `AFFECTS`
   edge**, first-party import scans, and a materialised near-name graph.
 - **A console** (`web/`, Next 16) — a landing page at `/`, then `/incidents` and the incident
@@ -58,7 +59,9 @@ real and lets HydraDB do the walking.
   states, API errors surface as toasts, unknown routes get a designed 404.
 - **An MCP server** (`worker/reachable/mcp_server.py`) exposing twelve tools so Claude Code,
   Codex, OpenCode, Cursor or Copilot can ask the graph the same questions.
-- **A badge** (`/badge/{owner}/{repo}.svg`) for READMEs.
+- **A badge** (`/badge/{owner}/{repo}.svg`) for READMEs, and **Export PDF** on every report
+  (`?print=1` expands every statement; the browser's print dialog saves the page as PDF — see
+  `docs/console/pages.md`).
 
 ## The six questions → how HydraDB answers them
 

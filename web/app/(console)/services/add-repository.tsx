@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Check, X } from "lucide-react";
+import { ArrowRight, Check, RotateCcw, X } from "lucide-react";
 import type { Job, JobStep } from "@/lib/api";
 import { fmtMs } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -24,6 +24,25 @@ export function AddRepository({ disabled, recent, prominent = false }: { disable
   const [busy, setBusy] = useState(false);
   const [jobId, setJobId] = useState<string | null>(null);
 
+  // Re-submits a finished/failed/interrupted job's repo; attaches to the new (or already running) job.
+  async function retry(id: string) {
+    setBusy(true);
+    try {
+      const r = await fetch(`/api/jobs/${encodeURIComponent(id)}/retry`, { method: "POST" });
+      const body = (await r.json().catch(() => ({}))) as { job_id?: string; error?: string };
+      if (body.job_id && (r.ok || r.status === 409)) {
+        setJobId(body.job_id);
+        setMsg(r.status === 409 ? { text: "an ingest is already running — attached to it", tone: "note" } : { text: `retrying · job ${body.job_id.slice(0, 8)}`, tone: "note" });
+      } else {
+        toast.error("could not retry the job", body.error ?? `HTTP ${r.status}`);
+      }
+    } catch {
+      toast.error("live API unavailable", "the worker on :8787 did not answer");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     const repo = normalise(value);
@@ -37,7 +56,7 @@ export function AddRepository({ disabled, recent, prominent = false }: { disable
         // 409 = a job is already running; the worker hands back its id — attach to it.
         setJobId(body.job_id);
         setValue("");
-        setMsg(r.status === 409 ? { text: "an ingest is already running — attached to it", tone: "note" } : { text: `queued · job ${body.job_id}`, tone: "note" });
+        setMsg(r.status === 409 ? { text: "an ingest is already running — attached to it", tone: "note" } : { text: `queued · job ${body.job_id.slice(0, 8)}`, tone: "note" });
       } else {
         setMsg({ text: body.error ?? `HTTP ${r.status}`, tone: "error" });
         toast.error("could not queue the repository", body.error ?? `HTTP ${r.status}`);
@@ -53,7 +72,7 @@ export function AddRepository({ disabled, recent, prominent = false }: { disable
   const invalid = msg?.tone === "error";
   const helper = disabled
     ? "adding needs the live worker API (make up) · offline: make add REPO=owner/repo"
-    : "every package-lock.json commit is ingested · versions enriched from npm · OSV advisories linked · imports scanned at the latest commit";
+    : "package-lock.json (v2/v3) or pnpm-lock.yaml (v6/v9) history is ingested · versions enriched from npm · OSV advisories linked · imports scanned at the latest commit";
 
   return (
     <>
@@ -72,7 +91,7 @@ export function AddRepository({ disabled, recent, prominent = false }: { disable
               if (invalid) setMsg(null);
             }}
             placeholder="owner/repository"
-            className="h-[42px] min-w-0 flex-1 bg-transparent px-[13px] font-mono text-[12.5px] text-fg outline-none placeholder:text-dim disabled:cursor-not-allowed"
+            className="h-11 min-w-0 flex-1 bg-transparent px-[13px] font-mono text-[12.5px] text-fg outline-none placeholder:text-dim disabled:cursor-not-allowed"
             disabled={disabled || busy}
             aria-invalid={invalid || undefined}
             aria-describedby="add-repo-hint"
@@ -82,7 +101,7 @@ export function AddRepository({ disabled, recent, prominent = false }: { disable
           <button
             type="submit"
             disabled={disabled || busy}
-            className="h-[42px] shrink-0 bg-signal px-[18px] text-[12px] font-medium leading-none text-ink transition-[filter,transform] duration-[180ms] ease-[var(--ease)] hover:brightness-[1.08] active:scale-[0.97] disabled:cursor-not-allowed"
+            className="h-11 shrink-0 bg-signal px-[18px] text-[12px] font-medium leading-none text-ink transition-[filter,transform] duration-[180ms] ease-[var(--ease)] hover:brightness-[1.08] active:scale-[0.97] disabled:cursor-not-allowed"
           >
             Add
           </button>
@@ -90,7 +109,7 @@ export function AddRepository({ disabled, recent, prominent = false }: { disable
         <p id="add-repo-hint" aria-live="polite" className={cn("mt-[9px] font-mono text-[11px] leading-[1.5] text-pretty", invalid ? "text-l2" : msg ? "text-mut" : "text-dim")}>
           {msg?.text ?? helper}
         </p>
-        {jobId && <JobCard key={jobId} id={jobId} />}
+        {jobId && <JobCard key={jobId} id={jobId} onRetry={retry} busy={busy} />}
       </form>
 
       <div className="rounded-xl border border-border bg-card p-[18px]">
@@ -103,14 +122,15 @@ export function AddRepository({ disabled, recent, prominent = false }: { disable
           {recent
             .filter((j) => j.job_id !== jobId)
             .map((j) => (
-              <li key={j.job_id} className="flex items-center gap-3 border-b border-line py-2.5 last:border-b-0">
-                <span aria-hidden className={cn("size-1.5 shrink-0 rounded-full", j.status === "done" ? "bg-l0" : j.status === "failed" ? "bg-l2" : "bg-l1")} />
-                <span className="min-w-0 flex-1 truncate font-mono text-[12px] leading-none text-mut" title={`job ${j.job_id}`}>
+              <li key={j.job_id} className="flex min-h-10 items-center gap-3 border-b border-line py-1.5 last:border-b-0">
+                <span aria-hidden className={cn("size-1.5 shrink-0 rounded-full", DOT[j.status] ?? "bg-l1")} />
+                <span className="min-w-0 flex-1 truncate font-mono text-[12px] leading-none text-mut" title={`job ${j.job_id}${j.error ? ` — ${j.error}` : ""}`}>
                   {j.repo}
                 </span>
-                <span suppressHydrationWarning className="num shrink-0 text-[10.5px] leading-none text-dim" title={String(j.started_at ?? "")}>
+                <span suppressHydrationWarning className="num min-w-0 max-w-[50%] truncate text-[10.5px] leading-none text-dim" title={j.error ?? String(j.started_at ?? "")}>
                   {what(j)} · {ago(j.started_at)}
                 </span>
+                {(j.status === "failed" || j.status === "interrupted") && !disabled && <RetryButton onClick={() => retry(j.job_id)} disabled={busy} compact />}
               </li>
             ))}
         </ul>
@@ -120,9 +140,29 @@ export function AddRepository({ disabled, recent, prominent = false }: { disable
 }
 
 const what = (j: Job) => (j.status === "running" && j.step ? `step · ${j.step}` : j.status === "failed" && j.error ? `failed · ${j.error}` : j.status);
+// Status dot: done → present-only green, failed → act-now red, interrupted → unknown grey, else amber (queued/running).
+const DOT: Record<string, string> = { done: "bg-l0", failed: "bg-l2", interrupted: "bg-unknown" };
+const SETTLED = new Set<Job["status"]>(["done", "failed", "interrupted"]);
+
+// Ghost retry control (never filled: the Add button is the one filled orange on this page).
+function RetryButton({ onClick, disabled, compact = false }: { onClick: () => void; disabled?: boolean; compact?: boolean }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={cn(
+        "inline-flex shrink-0 items-center gap-1 rounded-md border border-border font-mono text-signal-2 transition-colors duration-[180ms] ease-[var(--ease)] hover:border-signal/40 hover:text-signal active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60",
+        compact ? "min-h-10 px-2 text-[10.5px]" : "min-h-10 px-3 text-[12px]",
+      )}
+    >
+      <RotateCcw className={compact ? "size-3" : "size-3.5"} /> retry
+    </button>
+  );
+}
 
 // Polls /api/jobs/[id] every 1.5 s until the job settles.
-function JobCard({ id }: { id: string }) {
+function JobCard({ id, onRetry, busy }: { id: string; onRetry: (id: string) => void; busy: boolean }) {
   const router = useRouter();
   const [job, setJob] = useState<Job | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -140,7 +180,7 @@ function JobCard({ id }: { id: string }) {
         else {
           setErr(null);
           setJob(body);
-          if ((body.status === "done" || body.status === "failed") && !settled.current) {
+          if (SETTLED.has(body.status) && !settled.current) {
             settled.current = true;
             if (body.status === "done") router.refresh();
             return;
@@ -163,14 +203,22 @@ function JobCard({ id }: { id: string }) {
   const total = steps.reduce((a, s) => a + (s.ms ?? 0), 0);
   // The settled line is built from what the worker reported — never a canned count.
   const line =
-    status === "done" ? `settled · ${steps.length} steps · ${fmtMs(total)}` : status === "failed" ? `failed · ${fmtMs(total)}` : status === "running" && job?.step ? `running · ${job.step}` : status;
+    status === "done"
+      ? `settled · ${steps.length} steps · ${fmtMs(total)}`
+      : status === "failed"
+        ? `failed · ${fmtMs(total)}`
+        : status === "interrupted"
+          ? "interrupted"
+          : status === "running" && job?.step
+            ? `running · ${job.step}`
+            : status;
 
   return (
     <div className="mt-3.5 animate-[en_.3s_var(--ease)_both] rounded-[10px] border border-border bg-card2 p-3.5" aria-live="polite">
       <div className="flex items-center justify-between gap-3">
         <span className="min-w-0 truncate font-mono text-[12px] leading-none text-fg">{job?.repo ?? "…"}</span>
-        <span className="num shrink-0 text-[10.5px] leading-none text-dim">
-          <span className={cn(status === "failed" && "text-l2")}>{line}</span> · job {id}
+        <span className="num min-w-0 truncate text-[10.5px] leading-none text-dim" title={`job ${id}`}>
+          <span className={cn(status === "failed" && "text-l2", status === "interrupted" && "text-unknown")}>{line}</span> · job {id.slice(0, 8)}
         </span>
       </div>
       {err && <p className="mt-2 font-mono text-[11px] text-l1">{err} — retrying</p>}
@@ -187,10 +235,15 @@ function JobCard({ id }: { id: string }) {
           </li>
         )}
       </ol>
-      {job?.error && <p className="mt-2.5 font-mono text-[11px] leading-[1.5] text-l2 text-pretty">{job.error}</p>}
+      {job?.error && <p className={cn("mt-2.5 font-mono text-[11px] leading-[1.5] text-pretty", status === "interrupted" ? "text-mut" : "text-l2")}>{job.error}</p>}
+      {(status === "failed" || status === "interrupted") && (
+        <div className="mt-2.5 flex justify-end animate-[en_.3s_var(--ease)_both]">
+          <RetryButton onClick={() => onRetry(id)} disabled={busy} />
+        </div>
+      )}
       {status === "done" && (
         <div className="mt-2.5 flex justify-end animate-[en_.3s_var(--ease)_both]">
-          <Link href="/board" className="inline-flex min-h-8 items-center gap-1 rounded-md px-2 text-[12px] text-signal-2 transition-colors duration-[180ms] hover:text-signal">
+          <Link href="/board" className="inline-flex min-h-10 items-center gap-1 rounded-md px-2 text-[12px] text-signal-2 transition-colors duration-[180ms] hover:text-signal">
             view on board <ArrowRight className="size-3.5" />
           </Link>
         </div>
@@ -219,8 +272,8 @@ function Step({ step }: { step: JobStep }) {
       </span>
       <span className={cn("shrink-0 font-mono text-[11.5px] leading-none", st === "done" || st === "skipped" ? "text-mut" : "text-fg")}>{step.name}</span>
       <span className="min-w-0 flex-1 truncate font-mono text-[11px] leading-none text-dim">{step.detail ?? ""}</span>
-      {step.ms != null && <span className="num shrink-0 text-[10.5px] leading-none text-dim">{fmtMs(step.ms)}</span>}
-      <span className="h-[3px] w-16 shrink-0 overflow-hidden rounded-[2px] bg-hover">
+      <span className="num shrink-0 text-[10.5px] leading-none text-dim">{st === "running" || step.ms == null ? "—" : fmtMs(step.ms)}</span>
+      <span className="h-[3px] w-16 shrink-0 overflow-hidden rounded-[2px] bg-hover max-[900px]:hidden">
         <span className={cn("block h-full transition-[width] duration-300 ease-[var(--ease)]", w, bar)} />
       </span>
     </li>

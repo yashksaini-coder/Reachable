@@ -31,7 +31,7 @@ export function Header() {
             Docs
           </a>
           <a className={`btn btnOutline ${styles.cta}`} href="#cta">
-            Start a scan
+            Connect a repository
           </a>
         </div>
       </div>

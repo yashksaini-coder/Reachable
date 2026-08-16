@@ -61,7 +61,7 @@ export default async function GraphPage() {
             return (
               <div key={l} className="bg-card px-[13px] pb-[15px] pt-[13px] cell-lines">
                 <span aria-hidden className={cn("mb-3 block h-0.5 w-[18px]", rule)} />
-                <div className="num text-[21px] font-medium leading-none tracking-[-0.02em] text-fg">{n == null ? <span className="text-dim">n/a</span> : <CountUp n={n} delay={i * 90} />}</div>
+                <div className="num text-[22px] font-medium leading-none tracking-[-0.02em] text-fg">{n == null ? <span className="text-dim">n/a</span> : <CountUp n={n} delay={i * 90} />}</div>
                 <div className="mt-1.5 text-[10.5px] text-dim">{n == null ? `${label} — count refused past 250k` : label}</div>
               </div>
             );
@@ -96,7 +96,7 @@ export default async function GraphPage() {
         <section className="overflow-hidden rounded-xl border border-border bg-card">
           <div className="label border-b border-line px-[18px] py-4">schema</div>
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse [&_td]:border-b [&_td]:border-line [&_td]:px-3 [&_td]:py-3 [&_td]:align-middle [&_td]:text-[12.5px] [&_td]:text-mut [&_th]:whitespace-nowrap [&_th]:border-b [&_th]:border-border [&_th]:px-3 [&_th]:pb-[9px] [&_th]:pt-3 [&_th]:text-left [&_th]:text-[10.5px] [&_th]:font-medium [&_th]:uppercase [&_th]:leading-none [&_th]:tracking-[0.09em] [&_th]:text-dim [&_tbody_tr:last-child_td]:border-b-0 [&_tbody_tr]:transition-colors [&_tbody_tr]:duration-[180ms] [&_tbody_tr:hover]:bg-hover">
+            <table className="w-full border-collapse [&_td]:h-10 [&_td]:border-b [&_td]:border-line [&_td]:px-3 [&_td]:py-3 [&_td]:align-middle [&_td]:text-[12.5px] [&_td]:text-mut [&_th]:whitespace-nowrap [&_th]:border-b [&_th]:border-border [&_th]:px-3 [&_th]:pb-[9px] [&_th]:pt-3 [&_th]:text-left [&_th]:text-[10.5px] [&_th]:font-medium [&_th]:uppercase [&_th]:leading-none [&_th]:tracking-[0.09em] [&_th]:text-dim [&_tbody_tr:last-child_td]:border-b-0 [&_tbody_tr]:transition-colors [&_tbody_tr]:duration-[180ms] [&_tbody_tr:hover]:bg-hover">
               <thead>
                 <tr>
                   <th>from</th>
@@ -137,8 +137,8 @@ export default async function GraphPage() {
                   <div className="flex items-center gap-3">
                     <span className={cn("size-1.5 shrink-0 rounded-full", DOT[j.status] ?? "bg-unknown", j.status === "running" && "blip")} aria-hidden />
                     <span className="min-w-0 flex-1 truncate font-mono text-[12px] leading-none text-mut">{j.repo}</span>
-                    <span className={cn("font-mono text-[10.5px] leading-none", STATUS[j.status] ?? "text-dim")}>{j.status}</span>
-                    <span className="num text-[10.5px] leading-none text-dim">{when(j.started_at)}</span>
+                    <span className={cn("shrink-0 whitespace-nowrap font-mono text-[10.5px] leading-none", STATUS[j.status] ?? "text-dim")}>{j.status}</span>
+                    <span className="num shrink-0 whitespace-nowrap text-[10.5px] leading-none text-dim">{when(j.started_at)}</span>
                   </div>
                   <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 pl-[18px] font-mono text-[10.5px] leading-[1.6] text-dim">
                     <span className="num">

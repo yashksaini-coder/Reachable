@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ChevronRight, Radar } from "lucide-react";
 import { listIncidents, fmtMs, fmtUtc, type Incident } from "@/lib/incident";
-import { Chip, Kind, Level, SectionLabel, Stat } from "@/components/console/ui";
+import { Chip, Kind, Level, SectionLabel, Stat, StatStrip } from "@/components/console/ui";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-static";
@@ -51,14 +51,14 @@ export default async function Home() {
               supply chain{watching != null && <> · watching {watching} services</>}
             </span>
           </div>
-          <h1 className="max-w-[15ch] text-balance text-[31px] font-medium leading-[1.22] tracking-[-0.02em] text-fg">Compromised packages, and who they reached.</h1>
+          <h1 className="max-w-[15ch] text-balance text-[30px] font-medium leading-[1.22] tracking-[-0.02em] text-fg">Compromised packages, and who they reached.</h1>
           <p className="mt-4 max-w-[52ch] text-[13px] text-mut">Six answers per incident, each carrying the statement that produced it. Verdicts are computed, never inferred.</p>
         </div>
-        <div className="grid grid-cols-3 overflow-hidden rounded-[10px] border border-border">
+        <StatStrip min={132}>
           <Stat n={totals.l2} label="act now" rule="bg-l2" tone="text-l2" size="lg" />
           <Stat n={totals.exposed} label="services exposed" rule="bg-signal" size="lg" delay={90} />
           <Stat n={totals.unscanned} label="unscanned" rule="bg-unknown" tone="text-unknown" size="lg" delay={180} />
-        </div>
+        </StatStrip>
       </div>
 
       <SectionLabel className="mb-3 mt-11" note="sorted by act-now count">

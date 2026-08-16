@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { motion, useReducedMotion } from "motion/react";
+import { cn } from "@/lib/utils";
 
 // One semantic chunk settling into place on scroll (once). Rule 9: content is never dimmed or
 // hidden by default — the server markup is fully visible; only translateY settles (8px → 0), and
@@ -10,7 +11,7 @@ export function Reveal({ children, delay = 0, className }: { children: ReactNode
   const reduce = useReducedMotion();
   return (
     <motion.div
-      className={className}
+      className={cn(className, "print:transform-none!")}
       initial={false}
       whileInView={reduce ? undefined : { y: [8, 0] }}
       viewport={{ once: true, amount: 0.05 }}

@@ -56,6 +56,9 @@ export function WindowTimeline({ data }: { data: TimelineData }) {
   const barW = barEnd - barX;
   const advX = x(advisoryAt);
   const advOnEdge = Math.abs(advX - barEnd) < 8;
+  // the bound label is end-anchored at the bar's edge; when the bar is too short for it, it runs
+  // rightward from the edge instead of off the left of the viewBox
+  const boundFits = barEnd - 4 - (advOnEdge ? 230 : 90) > X0;
   const upper = data.liveToKind !== 'exact';
 
   const sorted = [...commits].sort((a, b) => a.at - b.at);
@@ -130,7 +133,7 @@ export function WindowTimeline({ data }: { data: TimelineData }) {
           <line x1={barEnd} y1={52} x2={barEnd} y2={88} stroke={C.sig} strokeWidth={1.4} strokeDasharray="3 3" />
         )}
         {/* the dashed edge is an upper bound, never a claim — the label stays */}
-        <text x={barEnd - 4} y={102} textAnchor="end" fill={C.sig2} style={mono12}>
+        <text x={boundFits ? barEnd - 4 : barEnd + 6} y={102} textAnchor={boundFits ? 'end' : 'start'} fill={C.sig2} style={mono12}>
           {upper ? 'upper bound' : 'removed'}
           {advOnEdge ? ' · advisory published' : ''}
         </text>

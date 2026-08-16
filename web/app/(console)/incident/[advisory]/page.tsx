@@ -10,6 +10,8 @@ import { BlastGraph } from "./graph";
 import { Rail, type RailEntry } from "./rail";
 import { Reveal } from "./reveal";
 import { FindVictims } from "./victims";
+import { PrintMode } from "./print-mode";
+import { ExportButton } from "./export-button";
 
 export const dynamic = "force-static";
 export async function generateStaticParams() {
@@ -42,10 +44,10 @@ const KIND_LABEL: Record<string, string> = {
 // Prototype table: th 10.5px tracked --dim on a --border rule; td 12px --mut on --line rules; row hover --hover.
 const TABLE =
   "w-full border-collapse [&_th]:label [&_th]:whitespace-nowrap [&_th]:border-b [&_th]:border-border [&_th]:px-3 [&_th]:pb-[9px] [&_th]:text-left " +
-  "[&_td]:border-b [&_td]:border-line [&_td]:px-3 [&_td]:py-3 [&_td]:align-middle [&_td]:whitespace-nowrap [&_td]:text-[12.5px] [&_td]:text-mut " +
+  "[&_td]:h-10 [&_td]:border-b [&_td]:border-line [&_td]:px-3 [&_td]:py-3 [&_td]:align-middle [&_td]:whitespace-nowrap [&_td]:text-[12.5px] [&_td]:text-mut " +
   "[&_tbody_tr]:transition-colors [&_tbody_tr]:duration-[180ms] [&_tbody_tr:hover]:bg-hover [&_tbody_tr:last-child_td]:border-b-0";
 const CHIP = "inline-flex items-center gap-2 rounded-[7px] border border-border bg-card2 px-2.5 py-[7px] font-mono text-[11.5px] leading-none text-mut";
-const CODE = "inline-block rounded-md border border-border bg-code px-2.5 py-2 font-mono text-[11.5px] leading-none text-signal-2 [overflow-wrap:anywhere]";
+const CODE = "inline-block rounded-md border border-border bg-code px-2.5 py-2 font-mono text-[11.5px] leading-[1.5] text-signal-2 [overflow-wrap:anywhere]";
 const LINK = "rounded-sm text-fg transition-colors duration-[180ms] hover:text-signal-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50";
 
 function SvcLink({ inc, svc, className }: { inc: Incident; svc: string; className?: string }) {
@@ -112,7 +114,8 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
   ];
 
   return (
-    <div className="mx-auto grid max-w-[1280px] grid-cols-[minmax(0,1fr)_188px] items-start gap-12 px-10 py-[52px] pb-[72px] max-[1180px]:grid-cols-1 max-[900px]:px-5">
+    <PrintMode>
+    <div className="mx-auto grid max-w-[1280px] grid-cols-[minmax(0,1fr)_188px] items-start gap-12 px-10 py-[52px] pb-[72px] max-[1180px]:grid-cols-1 max-[900px]:px-5 print:grid-cols-1 print:p-0">
       <div className="min-w-0">
         <div className="flex items-center gap-2 font-mono text-[11px] leading-none text-dim animate-[en_.3s_var(--ease)_both]">
           <Link href="/incidents" className="-my-2 inline-flex min-h-10 items-center rounded-sm text-mut hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50">
@@ -128,6 +131,7 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
             {worst && <Level level={worst} className="rounded-md px-2 py-1.5" />}
             <Kind kind={inc.advisory.kind} className="rounded-md px-2 py-1.5" />
             <Kind kind={inc.advisory.severity} className="rounded-md px-2 py-1.5" />
+            <ExportButton />
           </div>
           <div className="mt-3.5 flex flex-wrap gap-x-[22px] gap-y-1.5 font-mono text-[11px] leading-[1.3] text-dim">
             <span>
@@ -146,12 +150,12 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
               </span>
             )}
           </div>
-          <p className="m-0 mt-5 max-w-[70ch] text-pretty text-[14.5px] leading-[1.6] text-fg">
+          <p className="m-0 mt-5 max-w-[70ch] text-pretty text-[14px] leading-[1.6] text-fg">
             {inc.advisory.summary.replace(/\.$/, "")}. {verdict}.
           </p>
         </header>
 
-        <StatStrip className="mt-7 animate-[en_.3s_var(--ease)_both] [animation-delay:120ms]">
+        <StatStrip className="mt-6 animate-[en_.3s_var(--ease)_both] [animation-delay:120ms]">
           <Stat n={h.services_exposed} label="services exposed" rule="bg-signal" delay={0} />
           <Stat n={h.reachable_L2} label="act now" rule="bg-l2" tone="text-l2" delay={90} />
           <Stat n={q3 ? h.resolved_while_live : "n/a"} label="resolved while live" rule="bg-l1" tone="text-l1" delay={180} />
@@ -160,11 +164,11 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
           <Stat n={h.unscanned} label="unscanned" rule="bg-unknown" tone="text-unknown" delay={450} />
         </StatStrip>
 
-        <div className="mt-8">
+        <div className="mt-6">
           <BlastGraph inc={inc} />
         </div>
 
-        <Reveal className="mt-7">
+        <Reveal className="mt-6">
           <Question n="1" title="Which of my services are exposed, and at what level?" summary={<Two a={plural(services.length, "service")} b={`${h.reachable_L2} act now`} />}>
             <Distribution
               parts={[
@@ -518,17 +522,18 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
           </Question>
         </Reveal>
 
-        <div className="mt-6">
+        <div className="mt-6 print:hidden">
           <FindVictims advisory={inc.advisory.key} />
         </div>
 
         <Provenance inc={inc} statements={statements} rows={rowsTotal} />
       </div>
 
-      <aside className="max-[1180px]:hidden">
+      <aside className="max-[1180px]:hidden print:hidden">
         <Rail entries={rail} />
       </aside>
     </div>
+    </PrintMode>
   );
 }
 
@@ -581,7 +586,9 @@ function reachRow(r: Incident["q4_maintainers"]["rows"][number], max: number) {
               style={n === null ? undefined : { width: `${(n.length / max) * 100}%` }}
             />
           </span>
-          <span className="min-w-0 font-mono text-[11px] leading-[1.3] text-dim">{n === null ? "— not computed" : n.length === 0 ? "none" : n.map((s) => svcSlug(s).split("/").pop()).join(", ")}</span>
+          <span className="min-w-0 flex-1 truncate font-mono text-[11px] leading-[1.3] text-dim" title={n === null ? undefined : n.map(svcSlug).join(", ")}>
+            {n === null ? "— not computed" : n.length === 0 ? "none" : n.map((s) => svcSlug(s).split("/").pop()).join(", ")}
+          </span>
         </div>
       </td>
     </tr>

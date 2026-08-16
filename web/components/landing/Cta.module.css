@@ -25,9 +25,6 @@
 .h2 {
   margin: 0;
   max-width: 24ch;
-  font: 500 32px/1.16 var(--ui);
-  letter-spacing: -0.028em;
-  text-wrap: balance;
 }
 
 .lead {

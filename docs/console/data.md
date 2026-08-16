@@ -5,7 +5,7 @@ invented and no number is estimated.
 
 | source | what we take |
 |---|---|
-| **GitHub REST API** | `package-lock.json` commit history and contents per watched repository; the repository tree for the import scan; code search for "beyond the watched set" |
+| **GitHub REST API** | lockfile commit history and contents per watched repository — `package-lock.json` (npm lockfileVersion 2/3) or `pnpm-lock.yaml` (pnpm 6.x/9.x), root only; yarn/bun are refused, not guessed; the repository tree for the import scan; code search for "beyond the watched set" |
 | **registry.npmjs.org** | versions, publish times (the `time` map survives version removal — that is how `removed` and exact `live_from` are known), maintainers |
 | **api.npmjs.org** | weekly downloads (unscoped packages) |
 | **OSV.dev** | advisories (`MAL-*`, `GHSA-*`, `CVE-*`), affected ranges expanded against the ingested versions |
@@ -27,6 +27,8 @@ possible while it was live — commit time is irrelevant).
 - Whole-graph counts are refused by the engine above certain sizes; the Graph page says so instead
   of showing a stale number.
 - `twofa` / `account_created` are not exposed by the public registry — shown as unknown.
+- pnpm lockfiles record resolved versions but not the declared range per dependency, so
+  `DEPENDS_ON` edges from pnpm carry no `range` property (npm edges keep it verbatim).
 - Reachability is import-level (L0/L1) from a regex scan of first-party JS/TS at the exposed
   commit; symbol-level (L2) is only claimed when an advisory names a symbol and the scan finds it.
 

@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 // Proving-path chain — the signature of the service detail. A horizontal node-link strip read
 // right-to-left from the affected version: each node is a --card2 box (id in 11.5px mono, kind
-// beneath in 9.5px uppercase mono --dim), joined by a 34×7 left-pointing arrow with the relationship
+// beneath in 10.5px uppercase mono --dim), joined by a 34×7 left-pointing arrow with the relationship
 // (`←DEPENDS_ON←`, `←RESOLVED←`) above it. The affected version's node is stroked l2/40 with l2 text.
 // Pure markup from props — a Server Component. Callers wrap it in `overflow-x-auto`; `min-w-max`
 // keeps it from wrapping so it scrolls inside its card instead of breaking the body.
@@ -16,7 +16,7 @@ export function Chain({ chain, className }: { chain: string[]; className?: strin
       {chain.map((el, i) =>
         i % 2 === 1 ? (
           <div key={i} className="flex flex-col items-center gap-1 px-1">
-            <span className="font-mono text-[9.5px] leading-none tracking-[0.04em] text-dim">←{el}←</span>
+            <span className="font-mono text-[10.5px] leading-none tracking-[0.04em] text-dim">←{el}←</span>
             <svg width="34" height="7" viewBox="0 0 34 7" aria-hidden className="text-input">
               <path d="M33 3.5H1M6 1 1 3.5 6 6" fill="none" stroke="currentColor" strokeWidth="1.2" />
             </svg>
@@ -30,7 +30,7 @@ export function Chain({ chain, className }: { chain: string[]; className?: strin
             )}
           >
             <span className={cn("font-mono text-[11.5px] leading-none", i === 0 ? "text-l2" : "text-fg")}>{short(el)}</span>
-            <span className="font-mono text-[9.5px] uppercase leading-none tracking-[0.06em] text-dim">{kindOf(el, i)}</span>
+            <span className="font-mono text-[10.5px] uppercase leading-none tracking-[0.06em] text-dim">{kindOf(el, i)}</span>
           </span>
         ),
       )}

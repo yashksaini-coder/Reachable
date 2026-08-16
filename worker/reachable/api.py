@@ -6,7 +6,8 @@ Endpoints (JSON):
   GET  /health
   GET  /services                       Service nodes + lockfile count (anchored per service)
   POST /services/add  {"repo": ...}    -> 202 {job_id}; 400 bad slug; 409 already queued/running
-  GET  /jobs · /jobs/<id>              ingest job records (jobs.py)
+  GET  /jobs · /jobs/<id>              ingest job records (jobs.py; status incl. `interrupted`)
+  POST /jobs/<id>/retry                re-submit that job's repo -> 202 {job_id}; 404; 409
   GET  /graph/stats                    node counts per label (null when admission control refuses)
                                        + edge counts summed from job records (never scanned)
   /ask/exposed?advisory=<id>[&service=<owner/repo>]      Q1 membership + proving paths
@@ -482,6 +483,16 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         u = urlparse(self.path)
+        if u.path.startswith("/jobs/") and u.path.endswith("/retry"):
+            try:
+                job = jobs.retry(u.path[len("/jobs/") : -len("/retry")])
+            except KeyError:
+                return self._json(404, {"error": "no such job"})
+            except jobs.Conflict as e:
+                return self._json(
+                    409, {"error": "a job for this repo is queued or running", "job_id": str(e)}
+                )
+            return self._json(202, {"job_id": job.job_id, "repo": job.repo})
         if u.path != "/services/add":
             return self._json(404, {"error": "unknown route"})
         try:

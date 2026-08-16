@@ -7,7 +7,7 @@ export function Cta() {
     <section id="cta" className={`container ${styles.section}`}>
       <Reveal className={styles.card}>
         <div className={styles.glow} aria-hidden="true" />
-        <h2 className={styles.h2}>Point it at one repository and read the first report tonight.</h2>
+        <h2 className={`h2 ${styles.h2}`}>Point it at one repository and read the first report tonight.</h2>
         <p className={`lead ${styles.lead}`}>
           Read-only GitHub access, lockfiles and commit metadata linked into one graph, six answers
           per advisory from the first ingest onward.
@@ -19,7 +19,7 @@ export function Cta() {
           <a className="btn btnOutline" href={LINKS.console}>
             Open the console
           </a>
-          <span className={styles.note}>no agent to install</span>
+          <span className={styles.note}>read-only GitHub access · self-hosted</span>
         </div>
       </Reveal>
     </section>

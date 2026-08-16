@@ -5,9 +5,11 @@ engine access). Steps, in order: lockfiles · packages · advisories · reach ·
     jobs.submit("owner/repo")    # -> Job (raises Conflict if that repo is queued/running)
     jobs.run_repo("owner/repo")  # synchronous, same steps (pipeline.py --repo)
 
-Finished jobs are appended to .cache/jobs.jsonl and reloaded at startup so a restart
-still shows history. Every job records the edge counts it wrote — that is the only
-source for /graph/stats edge numbers (whole-type edge scans time out, AGENTS.md §8).
+Every job state change is appended to .cache/jobs.jsonl (last line per id wins) and
+reloaded at startup so a restart still shows history; a job that was queued/running when
+the process died comes back as `interrupted` and can be retried. Every job records the
+edge counts it wrote — that is the only source for /graph/stats edge numbers
+(whole-type edge scans time out, AGENTS.md §8).
 """
 
 import json
@@ -16,17 +18,20 @@ import threading
 import time
 import uuid
 from collections import defaultdict
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, fields
 from pathlib import Path
 
 from reachable import pipeline
 from reachable.db import run, session
+from reachable.http import HttpError
 from reachable.ids import gid
 from reachable.load import log, upsert_edges, upsert_nodes
 from reachable.sources import github, reach
 
 HISTORY = Path(".cache") / "jobs.jsonl"
 STEPS = ["lockfiles", "packages", "advisories", "reach"]
+TERMINAL = ("done", "failed", "interrupted")
+INTERRUPTED = "the worker restarted while this job was running — retry re-runs it idempotently"
 
 
 class Conflict(Exception):
@@ -38,7 +43,7 @@ class Job:
     job_id: str
     repo: str
     criticality: int = 1
-    status: str = "queued"  # queued | running | done | failed
+    status: str = "queued"  # queued | running | done | failed | interrupted
     started_at: int | None = None
     ended_at: int | None = None
     step: str | None = None
@@ -66,19 +71,41 @@ _q: queue.Queue[Job] = queue.Queue()
 _thread: threading.Thread | None = None
 
 
+_FIELDS = {f.name for f in fields(Job)}
+
+
 def _load_history() -> None:
+    """Replay the log; tolerant to lines from older/newer schemas. Anything not terminal was
+    cut off by a restart: mark it interrupted (with its last known step) and persist that."""
     if not HISTORY.exists():
         return
     for line in HISTORY.read_text().splitlines():
-        if line.strip():
+        if not line.strip():
+            continue
+        try:
             d = json.loads(line)
-            _jobs[d["job_id"]] = Job(**d)
+            job = Job(**{k: v for k, v in d.items() if k in _FIELDS})
+        except (ValueError, TypeError) as e:
+            log(f"jobs: skipping unreadable history line ({e})")
+            continue
+        _jobs[job.job_id] = job
+    for job in _jobs.values():
+        if job.status not in TERMINAL:
+            if job.steps and job.steps[-1]["status"] == "running":
+                job.steps[-1]["status"] = "failed"
+            job.status, job.error = "interrupted", INTERRUPTED
+            job.ended_at = job.ended_at or int(time.time())
+            job.say("interrupted by a worker restart")
+            _persist(job)
 
 
 def _persist(job: Job) -> None:
-    HISTORY.parent.mkdir(exist_ok=True)
-    with HISTORY.open("a") as f:
-        f.write(json.dumps(asdict(job)) + "\n")
+    try:
+        HISTORY.parent.mkdir(exist_ok=True)
+        with HISTORY.open("a") as f:
+            f.write(json.dumps(asdict(job)) + "\n")
+    except OSError as e:  # a full disk must not take the worker thread down
+        log(f"jobs: could not persist {job.job_id[:8]}: {e}")
 
 
 def start() -> None:
@@ -96,6 +123,8 @@ def _worker() -> None:
         job = _q.get()
         try:
             _run(job)
+        except Exception as e:  # noqa: BLE001 — the loop outlives any single job
+            log(f"jobs: worker error on {job.job_id[:8]}: {e!s:.300}")
         finally:
             _q.task_done()
 
@@ -107,8 +136,17 @@ def submit(repo: str, criticality: int = 1) -> Job:
                 raise Conflict(j.job_id)
         job = Job(job_id=uuid.uuid4().hex, repo=repo, criticality=criticality)
         _jobs[job.job_id] = job
+    _persist(job)  # queued: a restart before it starts still shows it (as interrupted)
     _q.put(job)
     return job
+
+
+def retry(job_id: str) -> Job:
+    """Re-submit a finished/failed/interrupted job's repo with the same criticality."""
+    old = get(job_id)
+    if old is None:
+        raise KeyError(job_id)
+    return submit(old.repo, old.criticality)
 
 
 def all_jobs() -> list[Job]:
@@ -133,13 +171,16 @@ def run_repo(repo: str, criticality: int = 1) -> Job:
 
 def _run(job: Job) -> None:
     job.status, job.started_at = "running", int(time.time())
+    _persist(job)
     try:
         with session() as s:
             ctx: dict = {}
             for name in STEPS:
                 job.step = name
-                st = {"name": name, "status": "running", "ms": 0.0, "detail": ""}
+                # ms is None while running: the console shows "—", never a fake 0.00 ms
+                st = {"name": name, "status": "running", "ms": None, "detail": ""}
                 job.steps.append(st)
+                ctx["step"] = st  # stages update st["detail"] with live i/n progress
                 t0 = time.perf_counter()
                 st["detail"] = globals()[f"step_{name}"](s, job, ctx) or ""
                 st["ms"] = round((time.perf_counter() - t0) * 1000, 1)
@@ -152,20 +193,50 @@ def _run(job: Job) -> None:
         job.status = "failed"
         job.error = f"{e!s:.400}"
         job.say(f"failed: {e!s:.400}")
-    job.ended_at = int(time.time())
-    _persist(job)
+    finally:
+        job.ended_at = int(time.time())
+        _persist(job)
+
+
+def _lockfile_error(repo: str, r: dict) -> str:
+    found = github.root_lockfiles(repo)
+    other = [f for f in found if f in github.UNSUPPORTED]
+    if other:
+        return (
+            f"found {other[0]} — {other[0].split('.')[0]} is not supported yet "
+            "(npm package-lock.json v2/v3 and pnpm-lock.yaml v6/v9 are)"
+        )
+    if r["lockfile_path"] is None:
+        return (
+            "no package-lock.json or pnpm-lock.yaml in this repository's root history — "
+            "no root lockfile; monorepo sub-directories are not scanned yet"
+        )
+    return (
+        f"{r['lockfile_path']} exists but no commit carried a supported version "
+        "(npm lockfileVersion 2/3, pnpm 6.x/9.x) — "
+        f"{len(r['skipped_snapshots'])} snapshots skipped"
+    )
 
 
 def step_lockfiles(s, job: Job, ctx: dict) -> str:
     # yearly cutoffs + the 24 most recent lockfile commits: dense recent history so a narrow
     # incident window (95 min for chalk@5.6.1) has a chance of a snapshot inside it.
-    r = github.ingest_service(job.repo, job.criticality, pipeline.yearly_cutoffs(), [], recent=24)
-    if not r["lockfiles"]:
-        raise RuntimeError(
-            "no package-lock.json with lockfileVersion 3 in this repository's history — "
-            "Reachable reads npm v7+ lockfiles (yarn/pnpm are not supported yet); "
-            f"{len(r['skipped_snapshots'])} older snapshots skipped"
+    try:
+        r = github.ingest_service(
+            job.repo, job.criticality, pipeline.yearly_cutoffs(), [], recent=24
         )
+    except HttpError as e:
+        if e.status == 404:
+            raise RuntimeError(
+                "repository not found or private — set GITHUB_TOKEN with repo scope"
+            ) from e
+        if e.status in (401, 403):
+            raise RuntimeError(
+                f"GitHub rate limit or token scope (HTTP {e.status}) — set GITHUB_TOKEN or wait"
+            ) from e
+        raise
+    if not r["lockfiles"]:
+        raise RuntimeError(_lockfile_error(job.repo, r))
     r["service"]["added_at"] = int(time.time())
     for k, n in pipeline.write_service(s, r).items():
         job.edges[k] = job.edges.get(k, 0) + n
@@ -173,7 +244,7 @@ def step_lockfiles(s, job: Job, ctx: dict) -> str:
     latest = max(r["lockfiles"], key=lambda lf: lf["committed_at"])
     ctx["sha"] = latest["sha"]
     return (
-        f"{len(r['lockfiles'])} lockfiles, {len(r['versions'])} versions, "
+        f"{len(r['lockfiles'])} {r['lockfile_path']} commits, {len(r['versions'])} versions, "
         f"{len(r['resolved'])} RESOLVED, {len(r['depends_on'])} DEPENDS_ON, "
         f"{len(r['skipped_snapshots'])} snapshots skipped"
     )
@@ -181,13 +252,13 @@ def step_lockfiles(s, job: Job, ctx: dict) -> str:
 
 def step_packages(s, job: Job, ctx: dict) -> str:
     touched = ctx["touched"]
-    ctx["known"] = pipeline.stage_packages(s, sorted(touched), keep=touched)
+    ctx["known"] = pipeline.stage_packages(s, sorted(touched), keep=touched, step=ctx["step"])
     return f"{len(ctx['known'])} packuments, {sum(len(v) for v in touched.values())} versions kept"
 
 
 def step_advisories(s, job: Job, ctx: dict) -> str:
     pairs = sorted((n, v) for n, vs in ctx["touched"].items() for v in vs)
-    c = pipeline.ingest_advisories(s, pairs, ctx["known"])
+    c = pipeline.ingest_advisories(s, pairs, ctx["known"], step=ctx["step"])
     job.edges["AFFECTS"] = job.edges.get("AFFECTS", 0) + c["AFFECTS"]
     return f"{c['advisories']} advisories, {c['AFFECTS']} AFFECTS, {c['malicious']} malicious"
 
@@ -206,7 +277,11 @@ def step_reach(s, job: Job, ctx: dict) -> str:
     }
     if not pkgs:
         return "no advisory-affected package resolved at the latest commit; nothing to scan"
-    r = reach.scan_service(job.repo, ctx["sha"], pkgs)
+    # source_files is disk-cached, so listing here for the progress line costs nothing
+    ctx["step"]["detail"] = (
+        f"scanning {len(reach.source_files(job.repo, ctx['sha']))} files for {len(pkgs)} packages"
+    )
+    r = reach.scan_service(job.repo, ctx["sha"], pkgs, step=ctx.get("step"))
     upsert_nodes(s, "File", pipeline._dedupe(r["files"]))
     job.edges["CONTAINS"] = job.edges.get("CONTAINS", 0) + upsert_edges(
         s, "CONTAINS", "Service", "File", r["contains"]
@@ -234,7 +309,8 @@ def edges_written() -> tuple[dict[str, int], int | None]:
 def print_job(job: dict) -> None:
     log(f"{job['repo']}: {job['status']}")
     for st in job["steps"]:
-        log(f"  {st['name']:10} {st['status']:7} {st['ms']:>8.0f} ms  {st['detail']}")
+        ms = f"{st['ms']:>8.0f}" if st["ms"] is not None else f"{'—':>8}"
+        log(f"  {st['name']:10} {st['status']:7} {ms} ms  {st['detail']}")
 
 
 def main(argv=None) -> int:
@@ -270,7 +346,7 @@ def main(argv=None) -> int:
     log(f"job {jid} queued for {a.repo} (waiting)")
     while True:
         d = json.load(urllib.request.urlopen(f"{a.api}/jobs/{jid}", timeout=10))
-        if d["status"] in ("done", "failed"):
+        if d["status"] in TERMINAL:
             break
         time.sleep(3)
     print_job(d)

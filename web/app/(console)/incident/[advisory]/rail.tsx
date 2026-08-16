@@ -33,7 +33,7 @@ export function Rail({ entries }: { entries: RailEntry[] }) {
     main.scrollTop += el.getBoundingClientRect().top - OFFSET;
   };
   return (
-    <nav aria-label="this report" className="sticky top-9 flex flex-col gap-0.5">
+    <nav aria-label="this report" className="sticky top-9 flex flex-col gap-0.5 print:hidden">
       <div className="label pb-3 pl-3 tracking-[0.11em]">this report</div>
       {entries.map((e) => {
         const on = e.id === active;

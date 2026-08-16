@@ -1,9 +1,7 @@
+/* same scale as `.landing .h2` (32/1.18) — one h2 tier across the landing */
 .h2 {
   margin: 16px 0 0;
   max-width: 26ch;
-  font: 500 34px/1.16 var(--ui);
-  letter-spacing: -0.028em;
-  text-wrap: balance;
 }
 
 .grid {
@@ -12,7 +10,7 @@
 }
 
 .card {
-  padding: 24px;
+  padding: 22px;
   transition: background 0.2s var(--ease);
 }
 

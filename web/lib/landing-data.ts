@@ -191,7 +191,7 @@ export function buildLanding(inc: Incident): LandingModel {
     band: [
       { key: 'b1', label: 'services watched', n: g.Service ?? null },
       { key: 'b2', label: 'lockfiles parsed', n: g.Lockfile ?? null },
-      { key: 'b3', label: 'advisories tracked', n: g.Advisory ?? null },
+      { key: 'b3', label: 'advisories in the graph', n: g.Advisory ?? null },
       { key: 'b4', label: 'full report, wall-clock', n: total == null ? null : Math.round(total / 100) / 10, suffix: 's' },
     ],
     questions: [
@@ -244,11 +244,11 @@ const Q_COPY = [
   },
   {
     title: 'Which look-alike names exist?',
-    body: 'Names one edit away, scope confusion and reordered words — grouped by kind with edit distance.',
+    body: 'Names one edit away, scope confusion, hyphen and homoglyph swaps — grouped by kind with edit distance.',
   },
   {
     title: 'What is the blast radius, service by service?',
-    body: 'The final ledger: act now, imported, present only, unscanned — plus the command to regenerate it.',
+    body: 'The final ledger: act now, imported, present only, unscanned — plus the provenance that produced it.',
   },
 ];
 
@@ -257,7 +257,7 @@ export const LEVELS = [
     tag: 'L2',
     color: C.l2,
     title: 'act now',
-    body: "First-party code references the affected package's vulnerable symbol. This is the only level that pages anyone.",
+    body: "First-party code references the affected package's vulnerable symbol. This is the level that needs action now.",
   },
   {
     tag: 'L1',
@@ -279,23 +279,20 @@ export const LEVELS = [
   },
 ];
 
-export const STEPS = [
+export const RUNS = [
   {
     n: '01',
-    title: 'Bring the console up',
-    body: 'One HydraDB node, the worker API and this console. Nothing runs anywhere else.',
-    cmd: 'make up',
+    title: 'Console',
+    body: 'Incidents · report · board · ask · graph. Every page reads the graph and shows the statement that produced it.',
   },
   {
     n: '02',
-    title: 'Connect a repository',
-    body: 'Lockfiles and commit metadata via the GitHub API; versions and maintainers from npm; advisories from OSV. First ingest of a large repository takes minutes.',
-    cmd: 'make add REPO=owner/repo',
+    title: 'Self-hosted core',
+    body: 'One HydraDB node and one worker: GitHub lockfile history, npm versions and maintainers, OSV advisories, an import scan at the exposed commit. Single-tenant — the token never leaves it.',
   },
   {
     n: '03',
-    title: 'Read the report',
-    body: 'Six answers per advisory, each with its statement and measured latency. Regenerate any time.',
-    cmd: `make incident ID=${LANDING_INCIDENT} ARGS="--out"`,
+    title: 'Coding agents',
+    body: 'An MCP server exposes the same questions to Claude Code, Codex, Cursor and others, so an answer arrives where the fix is written.',
   },
 ];

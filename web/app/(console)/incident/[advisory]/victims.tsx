@@ -42,7 +42,7 @@ export function FindVictims({ advisory }: { advisory: string }) {
     <section className="rounded-2xl border border-border bg-card">
       <div className="flex flex-wrap items-center justify-between gap-x-[18px] gap-y-3 px-[18px] py-4">
         <div className="min-w-0">
-          <h2 className="text-[13px] font-medium leading-[1.3] text-fg">Beyond the watched set</h2>
+          <h2 className="text-[17px] font-medium leading-[1.3] tracking-[-0.01em] text-fg">Beyond the watched set</h2>
           <div className="mt-[5px] font-mono text-[11px] leading-[1.4] text-dim">
             {state === "busy"
               ? "GitHub code search takes about ten seconds…"
@@ -55,7 +55,7 @@ export function FindVictims({ advisory }: { advisory: string }) {
           type="button"
           onClick={search}
           disabled={state === "busy"}
-          className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-lg border border-border px-3.5 text-[12px] font-medium leading-none text-mut transition-[color,background-color,transform] duration-[180ms] ease-[var(--ease)] hover:bg-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-[7px] border border-border px-3.5 text-[12px] font-medium leading-none text-mut transition-[color,background-color,transform] duration-[180ms] ease-[var(--ease)] hover:bg-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {state === "busy" && <Loader2 className="size-3.5 animate-spin" />}
           {state === "idle" ? "search GitHub" : state === "busy" ? "searching lockfiles" : "search again"}
@@ -139,7 +139,7 @@ function VictimRow({ v, onWatched }: { v: Victim; onWatched: () => void }) {
           <span className="truncate">{v.repo}</span>
           <ArrowUpRight className="size-3 shrink-0 opacity-0 transition-opacity duration-[180ms] group-hover:opacity-100" />
         </a>
-        <span className="hidden truncate font-mono text-[11px] text-dim sm:inline">{v.versions.map(short).join(", ")}</span>
+        <span className="hidden max-w-[22ch] truncate font-mono text-[11px] text-dim sm:block">{v.versions.map(short).join(", ")}</span>
       </div>
       {watched ? (
         jobId ? (

@@ -115,7 +115,7 @@ export function GraphExplorer({ services, initial }: { services: string[]; initi
               aria-pressed={seed === k}
               onClick={() => setSeed(k)}
               className={cn(
-                "min-h-8 rounded-[7px] border px-[11px] font-mono text-[11.5px] leading-none transition-[background-color,color,border-color] duration-[180ms] ease-[var(--ease)] active:scale-[0.97]",
+                "min-h-10 rounded-[7px] border px-[11px] font-mono text-[11.5px] leading-none transition-[background-color,color,border-color] duration-[180ms] ease-[var(--ease)] active:scale-[0.97]",
                 seed === k ? "border-signal/40 bg-sigfill text-signal" : "border-border text-mut hover:bg-hover hover:text-fg",
                 HIT,
               )}
@@ -187,7 +187,7 @@ export function GraphExplorer({ services, initial }: { services: string[]; initi
               <aside
                 aria-label="selected node"
                 onPointerDown={(e) => e.stopPropagation()}
-                className="absolute bottom-3 right-3 top-3 flex w-[244px] max-w-[calc(100%-24px)] cursor-auto select-text flex-col rounded-[10px] border border-border bg-pop p-3.5 elev animate-[en_.25s_var(--ease)_both]"
+                className="absolute bottom-3 right-3 top-3 flex w-[244px] max-w-[calc(100%-24px)] cursor-auto select-text flex-col rounded-md border border-border bg-pop p-3.5 elev animate-[en_.25s_var(--ease)_both]"
               >
                 <div className="flex items-start justify-between gap-2.5">
                   <div className="min-w-0">

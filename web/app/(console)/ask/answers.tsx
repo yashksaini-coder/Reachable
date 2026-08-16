@@ -71,7 +71,7 @@ export function sentence(ask: Ask, data: AskData): string {
 // Token table: th 10.5px uppercase tracked --dim on a --border rule; td 12.5px --mut on --line rules;
 // row hover --hover. Wide tables scroll inside their card (rule 7).
 const TABLE =
-  "w-full border-collapse [&_th]:whitespace-nowrap [&_th]:px-3 [&_th]:pb-[9px] [&_th]:pt-3.5 [&_th]:text-left [&_th]:text-[10.5px] [&_th]:font-medium [&_th]:uppercase [&_th]:leading-none [&_th]:tracking-[0.09em] [&_th]:text-dim [&_th]:border-b [&_th]:border-border [&_td]:whitespace-nowrap [&_td]:border-b [&_td]:border-line [&_td]:p-3 [&_td]:align-middle [&_td]:text-[12.5px] [&_td]:text-mut [&_tbody_tr:last-child_td]:border-b-0 [&_tbody_tr]:transition-colors [&_tbody_tr]:duration-[180ms] [&_tbody_tr:hover]:bg-hover";
+  "w-full border-collapse [&_th]:whitespace-nowrap [&_th]:px-3 [&_th]:pb-[9px] [&_th]:pt-3.5 [&_th]:text-left [&_th]:text-[10.5px] [&_th]:font-medium [&_th]:uppercase [&_th]:leading-none [&_th]:tracking-[0.09em] [&_th]:text-dim [&_th]:border-b [&_th]:border-border [&_td]:h-10 [&_td]:whitespace-nowrap [&_td]:border-b [&_td]:border-line [&_td]:p-3 [&_td]:align-middle [&_td]:text-[12.5px] [&_td]:text-mut [&_tbody_tr:last-child_td]:border-b-0 [&_tbody_tr]:transition-colors [&_tbody_tr]:duration-[180ms] [&_tbody_tr:hover]:bg-hover";
 
 // The typed result sits in a --card box, 10px radius, scrolling sideways inside itself.
 const Box = ({ children, pad = false }: { children: ReactNode; pad?: boolean }) => (
@@ -135,7 +135,7 @@ export function Answer({ ask, data }: { ask: Ask; data: AskData }) {
                         {short(el)}
                       </span>
                     ) : (
-                      <span key={k} className="text-[10px] text-dim">
+                      <span key={k} className="text-[10.5px] text-dim">
                         ←{el}←
                       </span>
                     ),
@@ -225,7 +225,7 @@ export function Answer({ ask, data }: { ask: Ask; data: AskData }) {
                 {rows.slice(0, 25).map((r, i) => (
                   <tr key={i}>
                     <td className="font-mono text-[12px] text-fg">{short(String(r.package))}</td>
-                    <td className="font-mono text-dim">
+                    <td className="max-w-[42ch] truncate font-mono text-dim" title={Array.isArray(r.services_at_risk) ? (r.services_at_risk as string[]).map(svcSlug).join(", ") : undefined}>
                       {r.services_at_risk == null ? (
                         <span className="text-dim">— not computed</span>
                       ) : (
@@ -270,7 +270,7 @@ export function Answer({ ask, data }: { ask: Ask; data: AskData }) {
               {rows.map((r, i) => (
                 <tr key={i}>
                   {cols.map((c) => (
-                    <td key={c} className="font-mono text-dim">
+                    <td key={c} className="max-w-[42ch] truncate font-mono text-dim" title={typeof r[c] === "object" ? JSON.stringify(r[c]).slice(0, 200) : String(r[c])}>
                       {typeof r[c] === "object" ? JSON.stringify(r[c]).slice(0, 200) : String(r[c])}
                     </td>
                   ))}

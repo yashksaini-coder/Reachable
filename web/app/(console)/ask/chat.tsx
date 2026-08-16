@@ -84,7 +84,7 @@ export function Chat({ initialQ, healthy: initialHealthy }: { initialQ: string; 
         <div className={EN}>
           {/* cold state only: the thesis image (inert stack, one traced route) — never next to data */}
           <Image src="/art/reachable-path-512.png" alt="" width={256} height={256} className="pixel -ml-3 mb-2 opacity-90" unoptimized />
-          <h1 className="text-balance text-[24px] font-medium leading-[1.3] tracking-[-0.02em] text-fg">Ask the graph.</h1>
+          <h1 className="text-balance text-[22px] font-medium leading-[1.25] tracking-[-0.015em] text-fg">Ask the graph.</h1>
           <p className="mt-2.5 text-[13px] text-mut">One sentence back, then the rows it came from.</p>
         </div>
       ) : (
@@ -136,9 +136,10 @@ export function Chat({ initialQ, healthy: initialHealthy }: { initialQ: string; 
                   type="button"
                   onClick={() => insert(f, true)}
                   style={{ animationDelay: `${120 + i * 60}ms` }}
-                  className={cn(EN, "inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-border px-3 text-[12px] text-mut transition-colors duration-[180ms] ease-[var(--ease)] hover:bg-hover hover:text-fg active:scale-[0.97]")}
+                  className={cn(EN, "inline-flex min-h-10 min-w-0 max-w-full items-center gap-1.5 rounded-lg border border-border px-3 text-[12px] text-mut transition-colors duration-[180ms] ease-[var(--ease)] hover:bg-hover hover:text-fg active:scale-[0.97]")}
+                  title={f}
                 >
-                  <CornerDownRight className="size-3" /> {f}
+                  <CornerDownRight className="size-3 shrink-0" /> <span className="truncate">{f}</span>
                 </button>
               ))}
             </div>
@@ -171,7 +172,7 @@ export function Chat({ initialQ, healthy: initialHealthy }: { initialQ: string; 
             type="submit"
             disabled={!healthy}
             aria-label={pending ? "Sending" : "Send"}
-            className="grid size-10 shrink-0 place-items-center rounded-lg border border-border transition-[background-color,transform] duration-[180ms] ease-[var(--ease)] hover:bg-hover active:scale-[0.96] disabled:cursor-not-allowed"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-lg border border-border transition-[background-color,transform] duration-[180ms] ease-[var(--ease)] hover:bg-hover active:scale-[0.96] disabled:cursor-not-allowed"
           >
             {pending ? (
               <span key="busy" className="blip size-[7px] rounded-full bg-signal animate-[pop_.25s_var(--ease)_both]" aria-hidden />
@@ -236,7 +237,7 @@ function followUpsFor(ask: Ask, data: AskData): string[] {
       out.push(`who is exposed to ${ask.advisory}`, `which versions does ${ask.advisory} affect`);
       break;
     case "pulls":
-      out.push(`typosquats near ${ask.package}`, `MATCH (p:Package)-[r:NAME_SIMILAR_TO]->(q:Package) RETURN p.key AS suspect, q.key AS popular, r.kind AS kind LIMIT 20`);
+      out.push(`typosquats near ${ask.package}`, `MATCH (p:Package)-[r:NAME_SIMILAR_TO]->(q:Package) RETURN p.key, q.key, r.kind LIMIT 20`);
       break;
     case "versions":
     case "maintainers":

@@ -42,6 +42,14 @@ the latest commit. Progress streams into the job card; the table below is the wa
 with cohort, lockfile count, latest commit, incidents and the badge. When the worker is down the
 page shows a degraded state instead of stale numbers.
 
+**Supported lockfiles:** npm `package-lock.json` (lockfileVersion 2 and 3) and pnpm
+`pnpm-lock.yaml` (6.x and 9.x), at the repository root; `package-lock.json` is tried first and
+the first path with commits wins. `yarn.lock` and bun lockfiles are detected and refused with a
+clear "not supported yet"; monorepo sub-directories are not scanned yet. Steps show `—` (not a
+time) while running and live `i/n` progress; a job cut off by a worker restart comes back as
+`interrupted` with a **retry** button (retries are idempotent), and the table flags a service
+whose latest job did not finish as `partial · retry`.
+
 ## Ask — `/ask`
 
 Type a question; see [Ask](/docs/ask) for what the grammar understands. Each answer is one
@@ -58,3 +66,11 @@ click opens a node panel with an "ask about this" action.
 Everything is reachable by keyboard; focus rings are always visible; hit areas are at least 40 px;
 `prefers-reduced-motion` turns every animation off and shows every number at its final value.
 The console is dark only.
+
+## Export a report as PDF
+
+**Export PDF** in the report header opens the browser's print dialog with the whole report laid
+out for A4: every "How HydraDB answered this" card open, every capped table fully expanded, the
+sidebar, rail and "Beyond the watched set" left out. Save as PDF from the dialog. Opening a report
+with `?print=1` puts it in the same expanded state on load, so a link can be shared or printed with
+Ctrl/Cmd+P. The dark palette is kept on paper; numbers and Cypher are the same recorded values.

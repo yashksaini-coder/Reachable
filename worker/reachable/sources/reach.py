@@ -86,12 +86,15 @@ def imports_in(text: str) -> list[tuple[str, int]]:
     return out
 
 
-def scan_service(slug: str, sha: str, packages: set[str]) -> dict:
-    """File/CONTAINS/IMPORTS rows for the given packages. `packages` are bare npm names."""
+def scan_service(slug: str, sha: str, packages: set[str], step: dict | None = None) -> dict:
+    """File/CONTAINS/IMPORTS rows for the given packages. `packages` are bare npm names.
+    `step` (a job step dict) gets live "i/n files" progress so a long scan never looks hung."""
     files = source_files(slug, sha)
     file_rows, contains, imports = [], [], []
     hits = 0
-    for path in files:
+    for i, path in enumerate(files, 1):
+        if step is not None:
+            step["detail"] = f"{i}/{len(files)} files"
         text = read_file(slug, sha, path)
         if text is None:
             continue

@@ -17,7 +17,8 @@ recorded in a committed JSON with the statement that produced it.
    sent over Bolt, with rows and wall-clock ms (cold and warm). It is generated from the executed
    statement, not typed into the page.
 5. **Docs** in the sidebar (`/docs`) explains every page, the Ask grammar, the data sources and the schema — rendered from the repo's own markdown.
-6. Click a service → the **proving path**: `bad version ← DEPENDS_ON ← … ← RESOLVED ← lockfile`,
+6. **Export PDF** (report header) prints the whole report — every Cypher card open, every table row — to a PDF; `?print=1` opens a report already expanded.
+7. Click a service → the **proving path**: `bad version ← DEPENDS_ON ← … ← RESOLVED ← lockfile`,
    returned by `algo.SPpaths` — the engine explains *why*, we do not reconstruct it.
 
 ## The six track questions → where each is answered

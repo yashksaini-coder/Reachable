@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import { Activity, Info } from "lucide-react";
+import { Info } from "lucide-react";
 import { listIncidents, svcSlug } from "@/lib/incident";
 import { services, jobs, type Service } from "@/lib/api";
 import { Chip } from "@/components/console/ui";
@@ -41,7 +41,7 @@ async function cohorts(): Promise<Map<string, string>> {
 
 // Token table: th 10.5px uppercase tracked --dim on a --border rule; td 12.5px --mut on --line rules.
 const TABLE =
-  "w-full min-w-[880px] border-collapse [&_th]:whitespace-nowrap [&_th]:px-3 [&_th]:pb-[9px] [&_th]:pt-3.5 [&_th]:text-left [&_th]:text-[10.5px] [&_th]:font-medium [&_th]:uppercase [&_th]:leading-none [&_th]:tracking-[0.09em] [&_th]:text-dim [&_td]:whitespace-nowrap [&_td]:border-b [&_td]:border-line [&_td]:p-3 [&_td]:align-middle [&_td]:text-[12.5px] [&_td]:text-mut [&_tbody_tr:last-child_td]:border-b-0";
+  "w-full min-w-[880px] border-collapse [&_th]:whitespace-nowrap [&_th]:px-3 [&_th]:pb-[9px] [&_th]:pt-3.5 [&_th]:text-left [&_th]:text-[10.5px] [&_th]:font-medium [&_th]:uppercase [&_th]:leading-none [&_th]:tracking-[0.09em] [&_th]:text-dim [&_td]:h-10 [&_td]:whitespace-nowrap [&_td]:border-b [&_td]:border-line [&_td]:p-3 [&_td]:align-middle [&_td]:text-[12.5px] [&_td]:text-mut [&_tbody_tr:last-child_td]:border-b-0";
 
 export default async function Services() {
   const [svcs, recent, incidents, cohort] = await Promise.all([services(), jobs(), listIncidents(), cohorts()]);
@@ -56,7 +56,12 @@ export default async function Services() {
   }
   const live = svcs !== null;
   const list = svcs ?? [];
-  const recentSorted = [...(recent ?? [])].sort((a, b) => Number(b.started_at ?? 0) - Number(a.started_at ?? 0)).slice(0, 5);
+  const jobsSorted = [...(recent ?? [])].sort((a, b) => Number(b.started_at ?? 0) - Number(a.started_at ?? 0));
+  const recentSorted = jobsSorted.slice(0, 5);
+  // Latest job per repo (jobs are newest first). A service whose latest job did not finish is
+  // flagged partial: some steps may have written, later ones did not.
+  const latestJob = new Map<string, (typeof jobsSorted)[number]>();
+  for (const j of jobsSorted) if (!latestJob.has(j.repo.toLowerCase())) latestJob.set(j.repo.toLowerCase(), j);
   const empty = live && list.length === 0;
 
   return (
@@ -107,12 +112,19 @@ export default async function Services() {
                     const e = exposure.get(s.key);
                     const co = cohort.get(slug.toLowerCase());
                     const lc = typeof s.latest_commit === "object" ? s.latest_commit : null;
+                    const lj = latestJob.get(slug.toLowerCase());
+                    const partial = lj && (lj.status === "failed" || lj.status === "interrupted");
                     return (
                       <tr key={s.key} className="transition-colors duration-[180ms] ease-[var(--ease)] hover:bg-hover">
                         <td className="font-mono text-[12px] text-fg" title={s.note ?? undefined}>
                           <a href={s.repo_url || `https://github.com/${slug}`} className="text-fg hover:text-signal-2" target="_blank" rel="noreferrer">
                             {slug}
                           </a>
+                          {partial && (
+                            <span className="ml-2 font-mono text-[10.5px] text-signal-2" title={lj.error ?? `latest job ${lj.status}`}>
+                              partial · retry
+                            </span>
+                          )}
                         </td>
                         <td>{co ? <Chip>{co}</Chip> : <span className="text-dim">—</span>}</td>
                         <td className="num">{s.lockfiles}</td>
