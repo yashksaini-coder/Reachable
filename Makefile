@@ -1,10 +1,14 @@
-.PHONY: node node-stop node-logs roundtrip probe test
+.PHONY: venv node node-stop node-logs roundtrip probe test
 
 DATA    := $(CURDIR)/.hydradb
 PY      := $(CURDIR)/.venv/bin/python
 IMAGE   := ghcr.io/hydra-db/hydradb:latest
 # Local dev token only. Real deployments read it from the environment.
 TOKEN   ?= local-development-token-32-bytes
+
+# .venv and .hydradb are gitignored, so a clean checkout has neither.
+venv:
+	python3 -m venv .venv && $(PY) -m pip install -q neo4j httpx
 
 # Runs in the foreground and does not return — that is it working, not hanging.
 # Use a second shell for everything else.
