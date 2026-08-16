@@ -8,9 +8,28 @@ import contextlib
 import os
 import time
 from contextlib import contextmanager
+from pathlib import Path
 
 from neo4j import GraphDatabase
 from neo4j.exceptions import ServiceUnavailable, SessionExpired
+
+
+def _load_dotenv() -> None:
+    """Read KEY=VALUE lines from the nearest .env into os.environ without overriding anything
+    already set. Stdlib only. The node (make node) reads the same file, so they agree."""
+    for parent in (Path.cwd(), *Path(__file__).resolve().parents):
+        f = parent / ".env"
+        if f.is_file():
+            for line in f.read_text().splitlines():
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                k, _, v = line.partition("=")
+                os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
+            return
+
+
+_load_dotenv()
 
 URI = os.environ.get("HYDRA_URI", "bolt://127.0.0.1:7687")
 HTTP_URL = os.environ.get("HYDRA_HTTP_URL", "http://127.0.0.1:8443")

@@ -267,16 +267,24 @@ def stage_advisories(
 def stage_reach(s) -> None:
     """L0/L1 reachability for every (service, lockfile) that resolves an advisory-affected
     version: scan first-party sources at that commit for imports of the affected packages."""
+    # File nodes are keyed per service (not per commit), so scan each service ONCE at its
+    # newest exposed lockfile commit, for every advisory-affected package it resolves there.
     # Anchored per advisory: an unanchored walk over 240k AFFECTS edges hits the 30 s timeout.
-    targets: dict[tuple[str, str], set[str]] = defaultdict(set)
+    per_svc: dict[str, dict] = {}
     for a in run(s, "MATCH (a:Advisory) RETURN a.id AS id"):
         for r in run(
             s,
             f"MATCH (a:Advisory {{id: {a['id']}}})-[:AFFECTS]->(v:Version)<-[:RESOLVED]-(l:Lockfile)"
             "<-[:HAS_LOCKFILE]-(sv:Service) MATCH (v)-[:VERSION_OF]->(p:Package) "
-            "RETURN sv.key AS svc, l.sha AS sha, p.name AS pkg",
+            "RETURN sv.key AS svc, l.sha AS sha, l.committed_at AS at, p.name AS pkg",
         ):
-            targets[(r["svc"], r["sha"])].add(r["pkg"])
+            e = per_svc.setdefault(r["svc"], {"sha": r["sha"], "at": r["at"], "pkgs": set()})
+            if r["at"] > e["at"]:
+                e["sha"], e["at"] = r["sha"], r["at"]
+            e["pkgs"].add(r["pkg"])
+    targets: dict[tuple[str, str], set[str]] = {
+        (svc, e["sha"]): e["pkgs"] for svc, e in per_svc.items()
+    }
     log(f"  {len(targets)} exposed (service, commit) pairs to scan")
     files, contains, imports = [], [], []
     for (svc, sha), pkgs in sorted(targets.items()):
