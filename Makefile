@@ -65,3 +65,6 @@ test: lint
 
 web:
 	cd web && npm run dev
+
+web-build:
+	cd web && npm ci && npm run build
