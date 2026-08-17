@@ -526,6 +526,11 @@ reference/{schema,ask,run,data}); markdown in docs/console/*.md with markers `{{
 worker/out/MAL-2025-46974.json at build, `{{figure:FILE|caption}}` served from docs/assets/guide/
 via /guide/[file]. Plan + the owner's image/GIF prompt sheet: docs/superpowers/plans/2026-08-17-guide.md.
 
+**Deployed 2026-08-17 22:45 IST:** Vercel project `reachable` (root dir `web`, deploy from the repo
+root so worker/out, docs, demo upload; `.vercelignore` at root; `vercel.json` in web/); production
+alias https://reachable-lac.vercel.app; every route 200, OG images absolute, live pages degrade.
+Redeploy: `npx vercel@latest deploy --prod --yes` from the repo root.
+
 **Known open items:** push the latest local commits (owner) · Vercel
 read-only deploy from committed JSON · video ≤ 3:00 in the prescribed order ·
 form · final disqualifier pass (private-window links, no pre-Aug-12 commits,

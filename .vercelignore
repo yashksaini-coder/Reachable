@@ -1,0 +1,17 @@
+# Only what the console needs at build/request time travels to Vercel.
+.venv
+.hydradb
+.hydradb-test
+.cache
+node_modules
+web/node_modules
+web/.next
+worker/**/__pycache__
+worker/tests
+scripts
+benchmarks
+docs/screenshots
+docs/superpowers
+docs/plans
+docs/*.pdf
+*.log

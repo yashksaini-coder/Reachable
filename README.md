@@ -2,6 +2,8 @@
 
 # Reachable
 
+**Live console:** <https://reachable-lac.vercel.app> · report: <https://reachable-lac.vercel.app/incident/MAL-2025-46974> · guide: <https://reachable-lac.vercel.app/docs/why>
+
 **Supply-chain incident response on a graph.** When an npm package is compromised,
 answer in milliseconds — from HydraDB, not from Python — which services are transitively
 exposed, which resolved the bad version *while it was still installable*, which packages
@@ -158,8 +160,9 @@ Watched cohorts are in [`demo/services.txt`](demo/services.txt): 8 well-maintain
   with "not computed". Q4 on very prolific maintainers takes tens of seconds (measured).
 - Typosquat candidates come from the ingested corpus; distance and kind are facts, "typosquat"
   is a hypothesis.
-- The console's read-only deploy renders the committed JSON; live features (add repository,
-  Ask, Graph explorer, find public victims, MCP) need the worker and node — shown in the video.
+- The read-only deploy at reachable-lac.vercel.app renders the committed JSON; live features (add
+  repository, Ask, Graph explorer, find public victims, MCP) need the worker and node and show
+  designed degraded states there — they are demonstrated in the video.
 
 ## Layout
 
