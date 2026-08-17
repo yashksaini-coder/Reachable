@@ -22,7 +22,8 @@ const RECENT_MAX = 8;
 // the slot, steps scroll inside), and the recent list scrolls inside its card. Below 900px the
 // cards stack and take natural height; the recent list is capped at 336px and scrolls.
 // Header pattern: `.label` left + mono meta right, 1px --line beneath, 18px padding.
-const CARD = "elev flex flex-col overflow-hidden rounded-xl border border-border bg-card min-[900px]:h-[420px]";
+// 480px: header + input + helper + a JobCard with all four steps visible (no inner scroll) + error line + footer link.
+const CARD = "elev flex flex-col overflow-hidden rounded-xl border border-border bg-card min-[900px]:h-[480px]";
 const HEAD = "flex h-12 shrink-0 items-center justify-between border-b border-line px-[18px]";
 const BODY = "flex min-h-0 flex-1 flex-col p-[18px]";
 
@@ -242,7 +243,7 @@ function JobCard({ id, onRetry, busy }: { id: string; onRetry: (id: string) => v
         {canRetry && <RetryButton onClick={() => onRetry(id)} disabled={busy} compact />}
       </div>
       {err && <p className="mt-2 font-mono text-[11px] text-l1">{err} — retrying</p>}
-      <ol className="mt-2 min-h-0 flex-1 overflow-y-auto">
+      <ol className="mt-2 flex-1">
         {steps.map((s) => (
           <Step key={s.name} step={s} />
         ))}
