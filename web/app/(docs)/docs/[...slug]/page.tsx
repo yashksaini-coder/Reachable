@@ -54,12 +54,6 @@ export default async function DocPage({ params }: PageProps<"/docs/[...slug]">) 
             </ul>
           </div>
         ))}
-        <p className="font-mono text-[11.5px] leading-[1.6] text-dim max-[900px]:hidden">
-          rendered from the repository&apos;s markdown ·{" "}
-          <a href="https://github.com/yashksaini-coder/Reachable/tree/master/docs" target="_blank" rel="noreferrer">
-            docs/
-          </a>
-        </p>
       </nav>
       <article className="doc min-w-0">
         <h1 className="text-balance text-[40px] font-medium leading-[1.15] tracking-[-0.025em]">{doc.title}</h1>
