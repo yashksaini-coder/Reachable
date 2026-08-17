@@ -491,19 +491,53 @@
   image-rendering: pixelated;
 }
 
-/* ── print (Export PDF / ?print=1) — the report on paper, dark palette kept ────────── */
+/* ── print (Export PDF / ?print=1) — the report on paper ────────────────────────────
+   Paper palette: the same tokens, redefined on :root for print, so every utility (bg-card2,
+   text-mut, fill-dim, bg-l2/14 …) inherits a light value. Verdict colours are darkened so they
+   read as ink on white; print-color-adjust keeps tints, dots and rules. */
 @page {
   size: A4;
-  margin: 14mm;
+  margin: 16mm 14mm 18mm;
 }
 @media print {
+  :root {
+    color-scheme: light;
+    --color-bg: #ffffff;
+    --color-card: #ffffff;
+    --color-card2: #f6f7f9;
+    --color-pop: #eef0f4;
+    --color-hover: #eef0f4;
+    --color-border: #d9dde6;
+    --color-line: #e6e9ef;
+    --color-input: #c8cdd8;
+    --color-code: #f3f4f7;
+    --color-fg: #0b0c0f;
+    --color-mut: #3d4350;
+    --color-dim: #6b7280;
+    --color-signal: #c2410c;
+    --color-signal-2: #9a3412; /* code / mono accent must be ink, not a tint, on white */
+    --color-l2: #c62828;
+    --color-l1: #9a6a00;
+    --color-l0: #1b7f4b;
+    --color-unknown: #6b7280;
+    --color-node-service: #c2410c;
+    --color-node-lockfile: #9a6a00;
+    --color-node-version: #6b7280;
+    --color-node-advisory: #c62828;
+    --color-node-maintainer: #1b7f4b;
+    --elev: none;
+    --focus: transparent;
+  }
   * {
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
+    animation: none !important;
+    transition: none !important;
   }
   html,
   body {
     background: var(--color-bg);
+    color: var(--color-fg);
   }
   /* the shell: <main> is the scroll container on screen; on paper it must flow */
   #console-main {
@@ -516,15 +550,42 @@
   [aria-label="notifications"] {
     display: none !important;
   }
-  section,
-  table,
+  /* page flow: sections may break; a row, a drawing, a statement and a header never split */
+  tr,
   svg,
   pre,
-  .elev {
+  .q-head {
     break-inside: avoid;
+  }
+  h1,
+  h2,
+  h3,
+  .q-head,
+  thead {
+    break-after: avoid;
+  }
+  p,
+  li {
+    orphans: 3;
+    widows: 3;
+  }
+  /* sections read as a document, not stacked cards: no chrome, hairline under the header stays */
+  section {
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
   }
   .overflow-x-auto {
     overflow: visible !important;
+  }
+  pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  td,
+  th {
+    white-space: normal !important;
   }
   .overflow-x-auto svg,
   .overflow-x-auto > [class*="min-w-"] {
@@ -533,5 +594,6 @@
   }
   a {
     text-decoration: none;
+    color: inherit;
   }
 }

@@ -68,16 +68,33 @@ card per exposed lockfile with the proving path as a chain
 (`debug@4.4.2 ←DEPENDS_ON← agent-base@6.0.2 ←RESOLVED← lockfile`), commit sha and time, and the
 reachability note (files scanned, imports found).
 
-## Export a report as PDF
+## Export and share a report
 
-[Live: the print view](/incident/{{stat:advisory.key}}?print=1).
+[Live: the print view](/incident/{{stat:advisory.key}}?print=1) · [Markdown](/incident/{{stat:advisory.key}}/export?format=md) · [Slack text](/incident/{{stat:advisory.key}}/export?format=slack) · [JSON](/incident/{{stat:advisory.key}}/export?format=json).
 
+**Export PDF** in the report header prints the report as a paper document: a light print palette
+(the same tokens, redefined for paper), an A4 flow with a title block (advisory, kind, severity,
+worst verdict, published, generated, engine digest), every "How HydraDB answered this" statement
+open as a light code block, every capped table fully expanded, the stat strip on one row, the
+blast graph and timeline scaled to the page width, and a provenance line at the end. The sidebar,
+rail, buttons and "Beyond the watched set" are left out. Save as PDF from the dialog — the file
+name is proposed as `reachable-<advisory>-report.pdf`. Opening a report with `?print=1` puts it
+in the same expanded state on load, so a link can be shared or printed with Ctrl/Cmd+P.
 
-**Export PDF** in the report header opens the browser's print dialog with the whole report laid
-out for A4: every "How HydraDB answered this" card open, every capped table fully expanded, the
-sidebar, rail and "Beyond the watched set" left out. Save as PDF from the dialog. Opening a report
-with `?print=1` puts it in the same expanded state on load, so a link can be shared or printed with
-Ctrl/Cmd+P. The dark palette is kept on paper; numbers and Cypher are the same recorded values.
+**Share** opens a small menu next to it:
+
+| action | what you get |
+|---|---|
+| Copy for Slack | mrkdwn — bold headings, bullets, code spans, the six headline numbers, Q1–Q6 in short lists (`… +N more` when capped), the link |
+| Copy for Discord | Markdown subset under Discord's 2 000-character limit — the same story, lists truncated honestly |
+| Copy Markdown / Download .md | GitHub-flavoured Markdown: tables for every question, each executed statement in a collapsible block, provenance |
+| Download .json | the committed report itself (`worker/out/<advisory>.json`) |
+| Copy link · Copy print link | the report URL, or the `?print=1` variant |
+
+The same formats are served at `/incident/<advisory>/export?format=md|slack|discord|txt|json`
+(add `&download=1` for an attachment). Every number and statement in every format is read from
+the same JSON the page renders; nothing is re-typed. Pasting a report link into Slack, Discord or
+X unfurls a card for that incident (advisory, summary, the six numbers, the worst verdict).
 
 ## Ask
 

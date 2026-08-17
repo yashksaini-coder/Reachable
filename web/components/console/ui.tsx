@@ -100,7 +100,7 @@ export function HydraCard({
           )}
           {truncated && <span className="ml-2 text-l1">truncated</span>}
         </span>
-        <motion.span animate={{ rotate: open || print ? 180 : 0 }} transition={t} className="inline-flex shrink-0 text-dim" aria-hidden>
+        <motion.span animate={{ rotate: open || print ? 180 : 0 }} transition={t} className="inline-flex shrink-0 text-dim print:hidden" aria-hidden>
           <ChevronDown className="size-3.5" />
         </motion.span>
       </button>
@@ -139,7 +139,7 @@ function CopyStatement({ text }: { text: string }) {
         setDone(true);
         setTimeout(() => setDone(false), 1500);
       }}
-      className="grid min-h-10 shrink-0 rounded-md border border-border px-[11px] text-[12px] font-medium leading-none text-mut transition-[color,background-color,transform] duration-[180ms] ease-[var(--ease)] hover:bg-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50 active:scale-[0.97] [&>*]:[grid-area:1/1]"
+      className="grid min-h-10 shrink-0 rounded-md border border-border px-[11px] text-[12px] font-medium leading-none text-mut transition-[color,background-color,transform] duration-[180ms] ease-[var(--ease)] hover:bg-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50 active:scale-[0.97] print:hidden [&>*]:[grid-area:1/1]"
     >
       <motion.span initial={false} animate={done ? { opacity: 0, scale: 0.25, filter: "blur(4px)" } : { opacity: 1, scale: 1, filter: "blur(0px)" }} transition={t} className="inline-flex items-center">
         copy statement
@@ -199,7 +199,7 @@ export function Question({
 }) {
   return (
     <section id={`q${n}`} data-sect={`q${n}`} className={cn("scroll-mt-24 rounded-2xl border border-border bg-card elev", className)}>
-      <header className="flex items-start gap-x-[18px] gap-y-2 border-b border-line px-[18px] pb-[14px] pt-[18px] max-[760px]:flex-wrap">
+      <header className="q-head flex items-start gap-x-[18px] gap-y-2 border-b border-line px-[18px] pb-[14px] pt-[18px] max-[760px]:flex-wrap print:px-0 print:pt-2">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline gap-x-2.5">
             <span className="font-mono text-[12px] font-medium leading-none text-signal">{`Q${n}`}</span>
@@ -208,7 +208,7 @@ export function Question({
         </div>
         {summary && <div className="num max-w-[46%] shrink-0 text-right text-[12px] leading-[1.5] text-dim max-[760px]:w-full max-[760px]:max-w-none max-[760px]:text-left">{summary}</div>}
       </header>
-      <div className="p-[18px]">{children}</div>
+      <div className="p-[18px] print:px-0">{children}</div>
       {footer && <footer className="border-t border-line">{footer}</footer>}
     </section>
   );
@@ -306,7 +306,7 @@ export function Stat({
 // draw hairlines per cell (see .cell-lines) so a wrapped row leaves no phantom cells.
 export function StatStrip({ children, min = 158, className }: { children: ReactNode; min?: number; className?: string }) {
   return (
-    <div className={cn("grid overflow-hidden rounded-xl border border-border bg-card elev", className)} style={{ gridTemplateColumns: `repeat(auto-fit, minmax(${min}px, 1fr))` }}>
+    <div className={cn("grid overflow-hidden rounded-xl border border-border bg-card elev print:rounded-none print:shadow-none", className)} style={{ gridTemplateColumns: `repeat(auto-fit, minmax(${min}px, 1fr))` }}>
       {children}
     </div>
   );

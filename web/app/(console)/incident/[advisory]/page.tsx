@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
@@ -14,14 +15,27 @@ import { Reveal } from "./reveal";
 import { FindVictims } from "./victims";
 import { PrintMode } from "./print-mode";
 import { ExportButton } from "./export-button";
+import { ShareMenu } from "./share-menu";
 
 export const dynamic = "force-static";
 export async function generateStaticParams() {
   return (await listIncidents()).map((i) => ({ advisory: i.advisory.key }));
 }
-export async function generateMetadata({ params }: PageProps<"/incident/[advisory]">) {
+export async function generateMetadata({ params }: PageProps<"/incident/[advisory]">): Promise<Metadata> {
   const { advisory } = await params;
-  return { title: advisory };
+  const inc = await readIncident(advisory);
+  if (!inc) return { title: advisory };
+  const h = inc.headline;
+  const watched = inc.q1_mspaths.targets ?? inc.provenance.graph.Service ?? "the";
+  const description = [
+    `${h.services_exposed} of ${watched} watched services resolved a compromised version`,
+    inc.q3_while_live && h.resolved_while_live != null ? `${h.resolved_while_live} did so while it was still installable` : null,
+    h.reachable_L2 > 0 ? `${h.reachable_L2} need${h.reachable_L2 === 1 ? "s" : ""} action now` : "none is reachable from first-party code",
+  ]
+    .filter(Boolean)
+    .join("; ");
+  const title = `${advisory} — ${inc.advisory.summary}`;
+  return { title, description, openGraph: { type: "article", title, description, publishedTime: inc.advisory.published_at_iso } };
 }
 
 const RANK: Record<string, number> = { L2: 3, L1: 2, unscanned: 1, L0: 0 };
@@ -119,7 +133,21 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
     <PrintMode>
     <div className="mx-auto grid max-w-[1280px] grid-cols-[minmax(0,1fr)_188px] items-start gap-12 px-10 py-[52px] pb-[72px] max-[1180px]:grid-cols-1 max-[900px]:px-5 print:grid-cols-1 print:p-0">
       <div className="min-w-0">
-        <div className="flex items-center gap-2 font-mono text-[12px] leading-none text-dim animate-[en_.3s_var(--ease)_both]">
+        {/* paper only: document title block (the screen header's pills/buttons are hidden below) */}
+        <div className="hidden print:block">
+          <div className="label tracking-[0.11em]">Reachable · incident report</div>
+          <h1 className="m-0 mt-3 font-mono text-[28px] font-medium leading-[1.15] tracking-[-0.025em] text-fg [overflow-wrap:anywhere]">{inc.advisory.key}</h1>
+          <div className="mt-2.5 flex flex-wrap gap-x-[18px] gap-y-1 font-mono text-[12px] leading-[1.4] text-dim">
+            <span>
+              {inc.advisory.kind.replace(/_/g, " ")} · {inc.advisory.severity.replace(/_/g, " ")}
+              {worst && <> · {LEVEL[worst].label}</>}
+            </span>
+            <span>published {fmtUtc(inc.advisory.published_at_iso)}</span>
+            <span>generated {fmtUtc(inc.provenance.generated_at)}</span>
+            <span>engine {inc.provenance.hydradb_image?.match(/sha256:([0-9a-f]+)/)?.[1]?.slice(0, 12) ?? "digest not recorded"}</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 font-mono text-[12px] leading-none text-dim animate-[en_.3s_var(--ease)_both] print:hidden">
           <Link href="/incidents" className="-my-2 inline-flex min-h-10 items-center rounded-sm text-mut hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50">
             incidents
           </Link>
@@ -127,15 +155,16 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
           <span className="text-mut">{inc.advisory.key}</span>
         </div>
 
-        <header className="mt-5 animate-[en_.3s_var(--ease)_both] [animation-delay:60ms]">
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-2.5">
+        <header className="mt-5 animate-[en_.3s_var(--ease)_both] [animation-delay:60ms] print:mt-0">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2.5 print:hidden">
             <h1 className="m-0 min-w-0 font-mono text-[32px] font-medium leading-[1.15] tracking-[-0.025em] text-fg [overflow-wrap:anywhere] max-[600px]:basis-full">{inc.advisory.key}</h1>
             {worst && <Level level={worst} className="rounded-md px-2 py-1.5" />}
             <Kind kind={inc.advisory.kind} className="rounded-md px-2 py-1.5" />
             <Kind kind={inc.advisory.severity} className="rounded-md px-2 py-1.5" />
-            <ExportButton />
+            <ExportButton advisory={inc.advisory.key} />
+            <ShareMenu advisory={inc.advisory.key} />
           </div>
-          <div className="mt-3.5 flex flex-wrap gap-x-[22px] gap-y-1.5 font-mono text-[12px] leading-[1.3] text-dim">
+          <div className="mt-3.5 flex flex-wrap gap-x-[22px] gap-y-1.5 font-mono text-[12px] leading-[1.3] text-dim print:hidden">
             <span>
               published <span className="text-mut">{fmtUtc(inc.advisory.published_at_iso)}</span>
             </span>
@@ -157,7 +186,7 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
           </p>
         </header>
 
-        <StatStrip min={132} className="mt-6 animate-[en_.3s_var(--ease)_both] [animation-delay:120ms]">
+        <StatStrip min={132} className="mt-6 animate-[en_.3s_var(--ease)_both] [animation-delay:120ms] print:grid-cols-6! print:rounded-none print:shadow-none">
           <Stat n={h.services_exposed} label="services exposed" rule="bg-signal" delay={0} />
           <Stat n={h.reachable_L2} label="act now" rule="bg-l2" tone="text-l2" delay={90} />
           <Stat n={q3 ? h.resolved_while_live : "n/a"} label="resolved while live" rule="bg-l1" tone="text-l1" delay={180} />
@@ -529,6 +558,9 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
         </div>
 
         <Provenance inc={inc} statements={statements} rows={rowsTotal} />
+        <p className="m-0 mt-4 hidden border-t border-line pt-3 font-mono text-[11px] leading-[1.6] text-dim [overflow-wrap:anywhere] print:block">
+          generated {fmtUtc(inc.provenance.generated_at)} from worker/out/{inc.advisory.key}.json · every statement executed on HydraDB · {inc.provenance.bolt_uri}
+        </p>
       </div>
 
       <aside className="max-[1180px]:hidden print:hidden">

@@ -5,19 +5,25 @@ import { usePrintMode } from "@/components/console/ui";
 
 // Export PDF — outline button (the report keeps its one filled orange for the verdict rule).
 // Sits at the right of the title row; ≤600px it drops below the pills as a full-width outline.
-// Turns print mode on (every HydraCard / ShowAll open, no animation), lets the browser paint two
-// frames, opens the print dialog, then restores the previous mode. Hidden on paper.
-export function ExportButton() {
+// Turns print mode on (every HydraCard / ShowAll open, no animation), sets the document title so
+// Save-as-PDF proposes `reachable-<advisory>-report.pdf`, lets the browser paint two frames, opens
+// the print dialog, then restores both once the dialog closes (afterprint). Hidden on paper.
+export function ExportButton({ advisory }: { advisory: string }) {
   const { on, set } = usePrintMode();
   const go = () => {
     const was = on;
+    const title = document.title;
     set(true);
-    requestAnimationFrame(() =>
-      requestAnimationFrame(() => {
-        window.print();
+    document.title = `reachable-${advisory}-report`;
+    window.addEventListener(
+      "afterprint",
+      () => {
         set(was);
-      }),
+        document.title = title;
+      },
+      { once: true },
     );
+    requestAnimationFrame(() => requestAnimationFrame(() => window.print()));
   };
   return (
     <button
