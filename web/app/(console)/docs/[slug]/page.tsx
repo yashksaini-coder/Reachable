@@ -21,19 +21,19 @@ export default async function DocPage({ params }: PageProps<"/docs/[slug]">) {
   const doc = await renderDoc(slug);
   if (!doc) notFound();
   return (
-    <div className="mx-auto grid max-w-[1280px] grid-cols-[200px_minmax(0,1fr)_180px] gap-12 px-10 py-[52px] pb-[72px] max-[1180px]:grid-cols-[200px_minmax(0,1fr)] max-[900px]:grid-cols-1 max-[900px]:px-5">
-      <nav aria-label="Docs" className="max-[900px]:order-2">
+    <div className="mx-auto grid max-w-[1280px] grid-cols-[200px_minmax(0,1fr)_180px] gap-12 px-10 py-[52px] pb-[72px] max-[1180px]:grid-cols-[200px_minmax(0,1fr)] max-[900px]:grid-cols-1 max-[900px]:gap-8 max-[900px]:px-5 max-[900px]:pt-9">
+      <nav aria-label="Docs" className="min-w-0">
         <div className="label mb-3">docs</div>
-        <ul className="flex flex-col gap-0.5">
+        <ul className="flex flex-col gap-0.5 max-[900px]:flex-row max-[900px]:flex-wrap max-[900px]:gap-1">
           {DOCS.map((d) => {
             const active = d.slug === slug;
             return (
-              <li key={d.slug}>
+              <li key={d.slug} className="min-w-0">
                 <Link
                   href={`/docs/${d.slug}`}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "flex min-h-11 flex-col justify-center rounded-lg border-l-2 px-3 transition-colors duration-[180ms] ease-[var(--ease)] hover:bg-hover",
+                    "flex min-h-11 flex-col justify-center rounded-lg border-l-2 px-3 transition-colors duration-[180ms] ease-[var(--ease)] hover:bg-hover max-[900px]:border-l-0 max-[900px]:border-b-2 max-[900px]:rounded-b-none max-[900px]:py-1.5",
                     active ? "border-signal" : "border-transparent",
                   )}
                 >
@@ -44,14 +44,14 @@ export default async function DocPage({ params }: PageProps<"/docs/[slug]">) {
             );
           })}
         </ul>
-        <p className="mt-6 font-mono text-[10.5px] leading-[1.6] text-dim">
+        <p className="mt-6 font-mono text-[10.5px] leading-[1.6] text-dim max-[900px]:mt-3">
           rendered from the repository&apos;s markdown ·{" "}
           <a href="https://github.com/yashksaini-coder/Reachable/tree/master/docs" target="_blank" rel="noreferrer">
             docs/
           </a>
         </p>
       </nav>
-      <article className="doc min-w-0 max-[900px]:order-1">
+      <article className="doc min-w-0">
         <h1 className="text-balance text-[26px] font-medium leading-[1.2] tracking-[-0.02em]">{doc.title}</h1>
         <div dangerouslySetInnerHTML={{ __html: doc.html }} />
       </article>

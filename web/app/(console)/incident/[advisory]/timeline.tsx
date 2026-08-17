@@ -1,6 +1,7 @@
 import type { VersionRow, WhileLiveRow } from "@/lib/incident";
 import { svcSlug } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { SCROLLER } from "@/components/console/states";
 
 // Q3 — the installable-window timeline (1180×190 viewBox). A real time axis; the installable
 // span as a --sigfill bar stroked --signal (one bar per bounded version at the same y, so gaps
@@ -48,7 +49,7 @@ export function Timeline({ rows, versions, advisoryPublished }: { rows: WhileLiv
   const adFlip = adX > X1 - 140;
 
   return (
-    <div className="overflow-x-auto overscroll-x-contain px-[10px] pt-3">
+    <div className={cn(SCROLLER, "px-[10px] pt-3")}>
       <svg
         viewBox="0 0 1180 190"
         className="h-auto w-full min-w-[1000px]"

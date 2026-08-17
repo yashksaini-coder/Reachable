@@ -43,3 +43,16 @@
   color: var(--mut);
   max-width: 44ch;
 }
+@media (max-width: 900px) {
+  .grid {
+    margin-top: 28px;
+  }
+}
+@media (max-width: 600px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .card {
+    padding: 18px;
+  }
+}

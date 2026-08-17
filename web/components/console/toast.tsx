@@ -5,7 +5,8 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Toasts — for API/network errors and short confirmations. Bottom-right, --pop surface, elev,
+// Toasts — for API/network errors and short confirmations. Bottom-right (full-width bottom ≤900px),
+// --pop surface, elev, at most three stacked,
 // 5s auto-dismiss, `aria-live="polite"` (never steals focus). Tone: `error` carries the word
 // "error" and a --l1 rule (amber is the app-wide "attention" tone for non-verdict states, chosen
 // once here so l2 stays a verdict); `note` is neutral. Enters y6→0 300ms, exits 200ms.
@@ -28,7 +29,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const push = useCallback(
     (t: Omit<Toast, "id">) => {
       const id = ++seq.current;
-      setItems((xs) => [...xs.slice(-3), { ...t, id }]); // at most four on screen
+      setItems((xs) => [...xs.slice(-2), { ...t, id }]); // at most three on screen
       timers.current.set(
         id,
         setTimeout(() => dismiss(id), t.tone === "error" ? 7000 : 5000),
@@ -61,7 +62,7 @@ export function useToast(): Ctx {
 function Toaster({ items, dismiss }: { items: Toast[]; dismiss: (id: number) => void }) {
   const reduce = useReducedMotion();
   return (
-    <div className="pointer-events-none fixed bottom-4 right-4 z-[70] flex w-[min(360px,calc(100vw-32px))] flex-col gap-2" role="region" aria-label="notifications">
+    <div className="pointer-events-none fixed bottom-4 right-4 z-[70] flex w-[360px] flex-col gap-2 max-[900px]:left-4 max-[900px]:right-4 max-[900px]:w-auto" role="region" aria-label="notifications">
       <div aria-live="polite" aria-atomic="false" className="flex flex-col gap-2">
         <AnimatePresence initial={false}>
           {items.map((t) => (

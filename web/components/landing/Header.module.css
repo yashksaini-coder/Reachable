@@ -90,3 +90,16 @@
     flex-shrink: 0;
   }
 }
+/* phones: the section nav keeps scrolling; the Docs link yields its width to it (docs stays in the footer) */
+@media (max-width: 600px) {
+  .inner {
+    gap: 14px;
+  }
+  .docs {
+    display: none;
+  }
+  .cta {
+    flex-shrink: 0;
+    padding: 0 12px;
+  }
+}

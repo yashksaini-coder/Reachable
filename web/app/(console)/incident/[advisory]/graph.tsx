@@ -1,6 +1,12 @@
-import { short, svcSlug, type Incident } from "@/lib/incident";
+import type { Incident } from "@/lib/incident";
+import { short, svcSlug } from "@/lib/format";
+import { EmptySlot, SCROLLER } from "@/components/console/states";
 import { LEVEL } from "@/lib/level";
 import { cn } from "@/lib/utils";
+
+// Slot-sized empty state (the page-sized one is StateView): 44px muted icon circle → one sentence
+// ≤44ch, vertically centred in a 120px slot. Shared by the report's tables, Q5, victims and the
+// service detail — never a left-aligned line floating in a box.
 
 // Blast radius — the report's hero. Drawn from the paths HydraDB returned for Q1 (chains
 // [bad, REL, …, REL, lockfile] plus the lockfile→service edge), laid out in the four columns of the
@@ -83,9 +89,9 @@ export function BlastGraph({ inc }: { inc: Incident }) {
         </span>
       </div>
       {rows.length === 0 ? (
-        <p className="px-[18px] py-10 text-center font-mono text-[11.5px] text-dim">no watched service resolves an affected version — nothing to draw</p>
+        <EmptySlot className="min-h-[160px]">no watched service resolves an affected version — nothing to draw</EmptySlot>
       ) : (
-        <div className="overflow-x-auto overscroll-x-contain px-2 pt-1">
+        <div className={cn(SCROLLER, "px-2 pt-1")}>
           <svg viewBox="0 0 1180 300" className="h-auto w-full min-w-[1000px]" role="img" aria-label={`blast radius graph: ${shown} services, ${lock.size} lockfiles, ${edges.size} edges`}>
             {heads.map((h, i) => (
               <text key={h} x={X[i] - 6} y={26} className="fill-dim text-[10.5px] font-medium uppercase tracking-[0.11em]">

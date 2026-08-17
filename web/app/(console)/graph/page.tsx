@@ -4,6 +4,9 @@ import { fmtMs } from "@/lib/incident";
 import { StatStrip } from "@/components/console/ui";
 import { CountUp } from "@/components/console/count-up";
 import { cn } from "@/lib/utils";
+import { ACTION } from "@/components/console/states";
+import Link from "next/link";
+import { PlugZap, FolderPlus } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Graph" };
@@ -55,7 +58,7 @@ export default async function GraphPage() {
       {!stats ? (
         <Unavailable what="counts" className="mt-[22px]" />
       ) : (
-        <StatStrip min={132} className="mt-[22px]">
+        <StatStrip min={120} className="mt-[22px]">
           {TILES.map(([l, label, rule], i) => {
             const n = stats.nodes?.[l];
             return (
@@ -86,13 +89,13 @@ export default async function GraphPage() {
         {!svcs ? (
           <Unavailable what="explorer" />
         ) : names.length === 0 ? (
-          <p className="font-mono text-[11px] leading-[1.6] text-dim">no watched services yet — the explorer seeds from one. add a repository on Services.</p>
+          <Empty icon={FolderPlus} sentence="No watched services yet — the explorer seeds from one." action="add a repository" className="min-h-[220px] rounded-2xl border border-border bg-card" />
         ) : (
           <GraphExplorer services={names} initial={{ service: names[0] }} />
         )}
       </div>
 
-      <div className="mt-3.5 grid grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] items-start gap-3.5 max-[900px]:grid-cols-1">
+      <div className="mt-3.5 grid grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] items-start gap-3.5 max-[1180px]:grid-cols-1">
         <section className="overflow-hidden rounded-xl border border-border bg-card">
           <div className="label border-b border-line px-[18px] py-4">schema</div>
           <div className="overflow-x-auto">
@@ -122,18 +125,19 @@ export default async function GraphPage() {
           </p>
         </section>
 
-        <section className="rounded-xl border border-border bg-card p-[18px]">
-          <div className="label">ingest jobs</div>
+        <section className="overflow-hidden rounded-xl border border-border bg-card">
+          <div className="flex items-baseline justify-between gap-4 border-b border-line px-[18px] py-4">
+            <span className="label">ingest jobs</span>
+            {list && list.length > 0 && <span className="num text-[10.5px] leading-none text-dim">{list.length}</span>}
+          </div>
           {!list ? (
-            <Unavailable what="jobs" className="mt-3" />
+            <Unavailable what="jobs" className="m-[18px]" />
           ) : list.length === 0 ? (
-            <p className="mt-3 text-pretty text-[12.5px] text-mut">
-              No jobs yet — add a repository on Services or run <code className="text-[11.5px] text-signal-2">make add REPO=owner/repo</code>.
-            </p>
+            <Empty icon={FolderPlus} sentence="No jobs yet — add a repository to start the first ingest." action="add a repository" className="min-h-[220px]" />
           ) : (
-            <ol className="mt-3 flex flex-col">
+            <ol className="flex max-h-[520px] flex-col overflow-y-auto px-[18px] max-[900px]:max-h-[360px]">
               {list.map((j) => (
-                <li key={j.job_id} className="border-b border-line py-2.5">
+                <li key={j.job_id} className="border-b border-line py-2.5 last:border-b-0">
                   <div className="flex items-center gap-3">
                     <span className={cn("size-1.5 shrink-0 rounded-full", DOT[j.status] ?? "bg-unknown", j.status === "running" && "blip")} aria-hidden />
                     <span className="min-w-0 flex-1 truncate font-mono text-[12px] leading-none text-mut">{j.repo}</span>
@@ -164,11 +168,33 @@ export default async function GraphPage() {
   );
 }
 
-// Designed degraded state: dashed --input edge, one mono sentence, nothing estimated.
+// Designed degraded state: dashed --input edge, centred stack, nothing estimated.
 function Unavailable({ what, className }: { what: string; className?: string }) {
   return (
-    <div className={cn("rounded-lg border border-dashed border-input px-4 py-3 font-mono text-[11px] leading-[1.6] text-dim", className)}>
-      live API unavailable — {what} not shown. start it with <code className="text-signal-2">make up</code>; nothing here is served from cache.
+    <div role="status" className={cn("flex flex-col items-center gap-3 rounded-lg border border-dashed border-input px-[18px] py-7 text-center", className)}>
+      <span className="grid size-11 place-items-center rounded-full border border-border text-dim" aria-hidden>
+        <PlugZap className="size-[17px]" />
+      </span>
+      <p className="max-w-[44ch] text-pretty text-[13px] text-mut">Live API unavailable — {what} not shown.</p>
+      <p className="font-mono text-[11px] leading-[1.6] text-dim">start it with make up · nothing here is served from cache</p>
+    </div>
+  );
+}
+
+// Designed empty state: 44px muted circle, one sentence, one outlined orange action (→ Services).
+function Empty({ icon: Icon, sentence, action, className }: { icon: typeof PlugZap; sentence: string; action: string; className?: string }) {
+  return (
+    <div className={cn("flex flex-col items-center justify-center gap-3 px-[18px] py-8 text-center", className)}>
+      <span className="grid size-11 place-items-center rounded-full border border-border text-dim" aria-hidden>
+        <Icon className="size-[17px]" />
+      </span>
+      <p className="max-w-[44ch] text-pretty text-[13px] text-mut">{sentence}</p>
+      <Link
+        href="/services"
+        className={ACTION}
+      >
+        {action}
+      </Link>
     </div>
   );
 }

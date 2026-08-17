@@ -34,7 +34,6 @@ const CTRL = cn(
   HIT,
 );
 
-const HEIGHT = 430;
 const ZOOM = [0.5, 2.4] as const; // relative to the fitted scale
 
 export function ForceGraph({
@@ -55,13 +54,17 @@ export function ForceGraph({
   const ref = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const [width, setWidth] = useState(900);
+  const [height, setHeight] = useState(430); // 320 on phones, 430 from 600px — read from the CSS-sized box
   const [hover, setHover] = useState<string | null>(null);
   const drag = useRef<{ x: number; y: number; vx: number; vy: number } | null>(null);
   const moved = useRef(false); // click vs pan: >4px of movement is a pan, not a select
 
   useEffect(() => {
     if (!ref.current) return;
-    const ro = new ResizeObserver(([e]) => setWidth(Math.max(320, e.contentRect.width)));
+    const ro = new ResizeObserver(([e]) => {
+      setWidth(Math.max(320, e.contentRect.width));
+      setHeight(Math.max(240, e.contentRect.height));
+    });
     ro.observe(ref.current);
     return () => ro.disconnect();
   }, []);
@@ -78,19 +81,19 @@ export function ForceGraph({
       .force("link", forceLink<SimNode, SimLink>(sl).id((d) => d.id).distance((l) => (l.type === "HAS_LOCKFILE" ? 60 : l.type === "RESOLVED" ? 42 : 34)).strength(0.6))
       .force("charge", forceManyBody().strength(-90))
       .force("collide", forceCollide<SimNode>().radius((d) => d.r + 6))
-      .force("center", forceCenter(width / 2, HEIGHT / 2))
+      .force("center", forceCenter(width / 2, height / 2))
       .stop();
     for (let i = 0; i < 260; i++) sim.tick();
     let fit = { x: 0, y: 0, k: 1 };
     if (sn.length) {
       const xs = sn.map((n) => n.x ?? 0), ys = sn.map((n) => n.y ?? 0);
       const minX = Math.min(...xs) - 60, maxX = Math.max(...xs) + 140, minY = Math.min(...ys) - 30, maxY = Math.max(...ys) + 30;
-      const k = Math.min(1.6, Math.max(0.3, Math.min(width / (maxX - minX), HEIGHT / (maxY - minY))));
-      fit = { k, x: (width - (minX + maxX) * k) / 2, y: (HEIGHT - (minY + maxY) * k) / 2 };
+      const k = Math.min(1.6, Math.max(0.3, Math.min(width / (maxX - minX), height / (maxY - minY))));
+      fit = { k, x: (width - (minX + maxX) * k) / 2, y: (height - (minY + maxY) * k) / 2 };
     }
     return { n: sn, l: sl, fit };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key, width]);
+  }, [key, width, height]);
   const pos = layout;
 
   // The view is the fit until the user pans/zooms; a new layout resets it (state is tagged with its layout).
@@ -148,7 +151,7 @@ export function ForceGraph({
   const zoomBy = (f: number) =>
     setView((v) => {
       const k = clampK(v.k * f);
-      const cx = width / 2, cy = HEIGHT / 2;
+      const cx = width / 2, cy = height / 2;
       return { k, x: cx - ((cx - v.x) * k) / v.k, y: cy - ((cy - v.y) * k) / v.k };
     });
   const onDown = (e: React.PointerEvent) => {
@@ -177,13 +180,13 @@ export function ForceGraph({
     <>
       <div
         ref={ref}
-        className="relative h-[430px] cursor-grab touch-none select-none overflow-hidden overscroll-contain active:cursor-grabbing"
+        className="relative h-[320px] cursor-grab touch-none select-none overflow-hidden overscroll-contain active:cursor-grabbing min-[600px]:h-[430px]"
         onPointerDown={onDown}
         onPointerMove={onMove}
         onPointerUp={onUp}
         onPointerLeave={onUp}
       >
-        <svg ref={svgRef} width={width} height={HEIGHT} role="img" aria-label="graph neighbourhood" className="block" onClick={() => pick(null)}>
+        <svg ref={svgRef} width={width} height={height} role="img" aria-label="graph neighbourhood" className="block" onClick={() => pick(null)}>
           <g transform={`translate(${view.x},${view.y}) scale(${view.k})`}>
             {pos.l.map((l, i) => {
               const s = l.source as SimNode;
@@ -252,8 +255,8 @@ export function ForceGraph({
         {children}
       </div>
 
-      <div className="flex flex-wrap items-center gap-4 border-t border-line px-4 py-2.5">
-        <div className="flex min-w-0 flex-1 flex-wrap gap-3.5 font-mono text-[10.5px] leading-none text-dim">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2.5 border-t border-line px-4 py-2.5">
+        <div className="flex min-w-0 flex-1 flex-wrap gap-x-3.5 gap-y-2 font-mono text-[10.5px] leading-none text-dim max-[600px]:basis-full">
           {LEGEND.map((g) => (
             <span key={g.kind} className="inline-flex items-center gap-1.5">
               <span className={cn("size-1.5 rounded-full", g.bg)} aria-hidden />
@@ -261,7 +264,7 @@ export function ForceGraph({
             </span>
           ))}
         </div>
-        <span className="num text-[10.5px] leading-none text-dim">
+        <span className="num ml-auto whitespace-nowrap text-[10.5px] leading-none text-dim">
           {nodes.length} nodes · {edges.length} edges
         </span>
         <div className="flex gap-1" role="group" aria-label="zoom">

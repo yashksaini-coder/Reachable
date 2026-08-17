@@ -66,13 +66,12 @@ export default async function Home() {
       </SectionLabel>
 
       {incidents.length === 0 ? (
-        <div className="flex flex-col items-center rounded-xl border border-border bg-card px-5 py-10 text-center elev">
-          <span className="grid size-10 place-items-center rounded-full bg-card2 text-mut">
-            <Radar className="size-4" strokeWidth={1.75} />
+        <div className="flex min-h-[200px] flex-col items-center justify-center gap-3 rounded-xl border border-border bg-card px-5 py-10 text-center elev">
+          <span className="grid size-11 place-items-center rounded-full border border-border text-dim" aria-hidden>
+            <Radar className="size-[17px]" />
           </span>
-          <p className="mt-3 text-pretty text-[13px] text-fg">No incident composed yet.</p>
-          <p className="mt-1 text-pretty text-[12.5px] text-mut">Add a repository, then compose one from an advisory id.</p>
-          <code className="mt-4 rounded-md border border-line bg-code px-3 py-2 font-mono text-[12px] text-signal-2">make add REPO=owner/repo &amp;&amp; make incident ID=GHSA-…</code>
+          <p className="m-0 max-w-[44ch] text-pretty text-[13px] text-mut">No incident composed yet — add a repository, then compose one.</p>
+          <code className="mt-1 max-w-full rounded-md border border-line bg-code px-3 py-2 font-mono text-[12px] text-signal-2 [overflow-wrap:anywhere]">make add REPO=owner/repo &amp;&amp; make incident ID=GHSA-…</code>
         </div>
       ) : (
         <div className="overflow-hidden rounded-xl border border-border bg-card elev">
@@ -86,7 +85,7 @@ export default async function Home() {
                 href={`/incident/${i.advisory.key}`}
                 className="group block w-full border-b border-line px-5 py-[18px] transition-colors duration-[180ms] ease-[var(--ease)] hover:bg-hover focus-visible:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-signal/50"
               >
-                <div className="flex items-start gap-5">
+                <div className="flex items-start gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2.5">
                       <span className="font-mono text-[13px] font-medium leading-none text-signal">{i.advisory.key}</span>
@@ -111,12 +110,14 @@ export default async function Home() {
                       <span>
                         published <span className="text-mut">{fmtUtc(i.advisory.published_at_iso)}</span>
                       </span>
-                      <span className="inline-flex items-center gap-1.5">
+                      <span className="inline-flex items-center gap-1.5 max-[760px]:basis-full">
                         cold {fmtMs(t.cold_ms)} · warm {fmtMs(t.warm_p50_ms)} <Sparkline values={[t.cold_ms, t.warm_p50_ms, t.warm_p95_ms]} />
                       </span>
                     </div>
                   </div>
-                  <ChevronRight className="mt-0.5 size-4 shrink-0 text-dim transition-transform duration-[180ms] ease-[var(--ease)] group-hover:translate-x-0.5" strokeWidth={1.75} />
+                  <span className="-mr-3 grid size-10 shrink-0 place-items-center text-dim" aria-hidden>
+                    <ChevronRight className="size-4 transition-transform duration-[180ms] ease-[var(--ease)] group-hover:translate-x-0.5" strokeWidth={1.75} />
+                  </span>
                 </div>
               </Link>
             );

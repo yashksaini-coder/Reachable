@@ -59,3 +59,16 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+@media (max-width: 900px) {
+  .split {
+    gap: 28px;
+  }
+  .copy {
+    max-width: none;
+  }
+}
+@media (max-width: 600px) {
+  .cardHead {
+    flex-wrap: wrap;
+  }
+}

@@ -32,3 +32,14 @@
   color: var(--mut);
   max-width: 38ch;
 }
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 24px;
+  }
+}
+@media (max-width: 600px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

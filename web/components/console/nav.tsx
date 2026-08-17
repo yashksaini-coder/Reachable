@@ -10,7 +10,7 @@ import { ToastProvider } from "@/components/console/toast";
 // Sidebar spec (design handoff §Shell): fixed 236px, --bg, 1px right border, 100vh sticky.
 // Five two-line items on a 46px pitch (44px item + 2px gap); a 2px × 44px orange indicator slides
 // on the left edge with translateY(index × 46px). Below 900px the sidebar is an off-canvas sheet
-// (translateX(-101%), 300ms) behind a sticky top bar, with a backdrop scrim. <main> — not the
+// (translateX(-101%), 300ms) behind a sticky 52px top bar, with a backdrop scrim. <main> — not the
 // document — is the scroll container (100vh, overflow-y auto), so rail listeners target it.
 const NAV = [
   {
@@ -181,7 +181,7 @@ export function Shell({ children }: { children: ReactNode }) {
           id="console-main"
           className="h-dvh min-w-0 flex-1 overflow-x-hidden overflow-y-auto"
         >
-          <div className="sticky top-0 z-40 hidden items-center gap-3 border-b border-border bg-bg/[.92] px-4 py-3 backdrop-blur-[8px] max-[900px]:flex">
+          <div className="sticky top-0 z-40 hidden h-[52px] items-center gap-3 border-b border-border bg-bg/[.92] px-4 backdrop-blur-[8px] max-[900px]:flex">
             <button
               type="button"
               onClick={() => setOpen(true)}
@@ -239,7 +239,7 @@ function Status() {
           : "down";
   return (
     <div
-      className="flex items-center gap-[9px] rounded-lg border border-border bg-card px-[11px] py-[9px]"
+      className="flex min-w-0 items-center gap-[9px] rounded-lg border border-border bg-card px-[11px] py-[9px]"
       role="status"
       aria-live="polite"
     >
@@ -254,7 +254,7 @@ function Status() {
               : "bg-l2 shadow-[0_0_0_3px_rgba(255,92,92,.14)]",
         )}
       />
-      <span className="font-mono text-[11px] leading-[1.3] text-mut">
+      <span className="min-w-0 truncate font-mono text-[11px] leading-[1.3] text-mut">
         HydraDB {word}
         {st && (
           <>

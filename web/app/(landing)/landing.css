@@ -180,3 +180,7 @@
 .landing .enter {
   animation: en 0.34s var(--ease) var(--enter-delay, 0ms) both;
 }
+@media (max-width: 600px) {
+  .landing .section { padding-top: 64px; }
+  .landing .h2 { font-size: 26px; }
+}

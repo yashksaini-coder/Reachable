@@ -199,7 +199,7 @@ export function Question({
 }) {
   return (
     <section id={`q${n}`} data-sect={`q${n}`} className={cn("scroll-mt-24 rounded-2xl border border-border bg-card elev", className)}>
-      <header className="flex items-start gap-[18px] border-b border-line px-[18px] pb-[14px] pt-[18px] max-[760px]:flex-wrap">
+      <header className="flex items-start gap-x-[18px] gap-y-2 border-b border-line px-[18px] pb-[14px] pt-[18px] max-[760px]:flex-wrap">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline gap-x-2.5">
             <span className="font-mono text-[11px] font-medium leading-none text-signal">{`Q${n}`}</span>
@@ -271,7 +271,7 @@ export function Chip({ children, tone = "", className }: { children: ReactNode; 
   return <span className={cn(PILL, "bg-hover font-mono normal-case tracking-normal text-[10.5px] text-mut", tone, className)}>{children}</span>;
 }
 
-// Stat — big mono numeral (30–40px/500, −.03em), lowercase 10.5px --dim label, and a 2px × 22px rule
+// Stat — big mono numeral (30–40px/500, −.03em; 32px at ≤600px), lowercase 10.5px --dim label, and a 2px × 22px rule
 // carrying the semantic colour. Lives inside <StatStrip/>, whose cells draw their own hairlines.
 // `n` is server-rendered as its true value and counted down-then-up on the client (rule 9).
 export function Stat({
@@ -294,7 +294,7 @@ export function Stat({
   return (
     <div className={cn("bg-card px-4 pb-[18px] pt-4 cell-lines", className)}>
       <span aria-hidden className={cn("mb-3.5 block h-0.5 w-[22px]", rule)} />
-      <div className={cn("num font-medium leading-none tracking-[-0.03em]", size === "lg" ? "text-[40px]" : "text-[32px]", tone)}>
+      <div className={cn("num font-medium leading-none tracking-[-0.03em]", size === "lg" ? "text-[40px] max-[600px]:text-[32px]" : "text-[32px]", tone)}>
         {typeof n === "number" ? <CountUp n={n} delay={delay} /> : n == null ? <span className="text-dim">—</span> : n}
       </div>
       <div className="mt-[7px] text-[10.5px] lowercase text-dim">{label}</div>

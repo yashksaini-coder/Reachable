@@ -75,3 +75,11 @@
     margin-left: auto;
   }
 }
+@media (max-width: 900px) {
+  .split {
+    gap: 28px;
+  }
+  .copy {
+    max-width: none;
+  }
+}

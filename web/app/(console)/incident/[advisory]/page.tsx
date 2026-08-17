@@ -1,12 +1,14 @@
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { Clock, Radar, Users } from "lucide-react";
 import { readIncident, listIncidents, short, svcSlug, fmtMs, fmtUtc, type Incident } from "@/lib/incident";
 import { LEVEL } from "@/lib/level";
 import { HydraCard, Kind, Level, Limits, Notes, Question, ShowAll, Stat, StatStrip } from "@/components/console/ui";
 import { cn } from "@/lib/utils";
 import { Timeline } from "./timeline";
 import { BlastGraph } from "./graph";
+import { EmptySlot } from "@/components/console/states";
 import { Rail, type RailEntry } from "./rail";
 import { Reveal } from "./reveal";
 import { FindVictims } from "./victims";
@@ -126,8 +128,8 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
         </div>
 
         <header className="mt-5 animate-[en_.3s_var(--ease)_both] [animation-delay:60ms]">
-          <div className="flex flex-wrap items-center gap-3">
-            <h1 className="m-0 font-mono text-[30px] font-medium leading-[1.15] tracking-[-0.025em] text-fg">{inc.advisory.key}</h1>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2.5">
+            <h1 className="m-0 min-w-0 font-mono text-[30px] font-medium leading-[1.15] tracking-[-0.025em] text-fg [overflow-wrap:anywhere] max-[600px]:basis-full">{inc.advisory.key}</h1>
             {worst && <Level level={worst} className="rounded-md px-2 py-1.5" />}
             <Kind kind={inc.advisory.kind} className="rounded-md px-2 py-1.5" />
             <Kind kind={inc.advisory.severity} className="rounded-md px-2 py-1.5" />
@@ -155,7 +157,7 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
           </p>
         </header>
 
-        <StatStrip className="mt-6 animate-[en_.3s_var(--ease)_both] [animation-delay:120ms]">
+        <StatStrip min={132} className="mt-6 animate-[en_.3s_var(--ease)_both] [animation-delay:120ms]">
           <Stat n={h.services_exposed} label="services exposed" rule="bg-signal" delay={0} />
           <Stat n={h.reachable_L2} label="act now" rule="bg-l2" tone="text-l2" delay={90} />
           <Stat n={q3 ? h.resolved_while_live : "n/a"} label="resolved while live" rule="bg-l1" tone="text-l1" delay={180} />
@@ -178,7 +180,7 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
                 ["unscanned", h.unscanned],
               ]}
             />
-            <div className="mt-5 overflow-x-auto">
+            <div className="mt-5 overflow-x-auto overscroll-x-contain">
               <table className={TABLE}>
                 <thead>
                   <tr>
@@ -217,8 +219,8 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
                   })}
                   {services.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="py-8 text-center font-mono !text-[11.5px] !text-dim">
-                        no watched service resolved an affected version
+                      <td colSpan={6} className="!p-0 !whitespace-normal">
+                        <EmptySlot icon={Radar}>no watched service resolved an affected version</EmptySlot>
                       </td>
                     </tr>
                   )}
@@ -255,7 +257,7 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
             title="Which versions were installable, and for how long?"
             summary={<Two a={plural(q2.rows.length, "version")} b={`${q2.rows.filter((r) => r.removed).length} removed`} />}
           >
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto overscroll-x-contain">
               <table className={TABLE}>
                 <thead>
                   <tr>
@@ -299,7 +301,7 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
                 <div className="-mx-2 -mt-1.5">
                   <Timeline rows={q3.rows} versions={q2.rows} advisoryPublished={inc.advisory.published_at} />
                 </div>
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto overscroll-x-contain">
                   <table className={TABLE}>
                     <thead>
                       <tr>
@@ -331,8 +333,8 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
                       ))}
                       {q3.rows.length === 0 && (
                         <tr>
-                          <td colSpan={6} className="py-8 text-center font-mono !text-[11.5px] !text-dim">
-                            no watched lockfile was committed inside the window or pins a removed version
+                          <td colSpan={6} className="!p-0 !whitespace-normal">
+                            <EmptySlot icon={Clock}>no watched lockfile was committed inside the window or pins a removed version</EmptySlot>
                           </td>
                         </tr>
                       )}
@@ -363,9 +365,9 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
                   <span className={m.twofa === false ? "text-l1" : "text-dim"}>2FA {m.twofa === null ? "unknown" : m.twofa ? "on" : "off"}</span>
                 </span>
               ))}
-              {q4.maintainers.length === 0 && <span className="font-mono text-[11.5px] text-dim">no maintainer recorded</span>}
+              {q4.maintainers.length === 0 && <EmptySlot className="min-h-[88px] w-full">no maintainer recorded for the affected packages</EmptySlot>}
             </div>
-            <div className="mt-[18px] overflow-x-auto">
+            <div className="mt-[18px] overflow-x-auto overscroll-x-contain">
               <table className={TABLE}>
                 <thead>
                   <tr>
@@ -384,8 +386,8 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
                   )}
                   {q4.rows.length === 0 && (
                     <tr>
-                      <td colSpan={3} className="py-8 text-center font-mono !text-[11.5px] !text-dim">
-                        no co-maintained packages in the ingested graph
+                      <td colSpan={3} className="!p-0 !whitespace-normal">
+                        <EmptySlot icon={Users}>no co-maintained packages in the ingested graph</EmptySlot>
                       </td>
                     </tr>
                   )}
@@ -433,10 +435,10 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
                   );
                 })}
               {q5Total === 0 && (
-                <div className="flex flex-wrap items-center gap-5">
+                <div className="flex min-h-[200px] flex-col items-center justify-center gap-3 px-5 py-4 text-center">
                   {/* the report carries no art except this hole: Q5 with nothing to show */}
-                  <Image src="/art/typosquat-pair.png" alt="" width={256} height={140} className="pixel opacity-90" unoptimized />
-                  <p className="m-0 font-mono text-[11.5px] text-dim">
+                  <Image src="/art/typosquat-pair.png" alt="" width={256} height={140} className="pixel max-w-full opacity-90" unoptimized />
+                  <p className="m-0 max-w-[44ch] text-pretty text-[12.5px] leading-[1.5] text-mut">
                     no near-names in the ingested corpus{q5.length > 1 ? ` across ${plural(q5.length, "package")}` : q5[0] ? ` for ${short(q5[0][0])}` : ""}
                   </p>
                 </div>
@@ -457,7 +459,7 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
             title="What is the blast radius, service by service?"
             summary={<Two a={plural(services.length, "service")} b={`${h.unscanned} unscanned`} />}
             footer={
-              <div className="flex flex-wrap items-center justify-between gap-6 px-[18px] py-4">
+              <div className="flex flex-wrap items-start justify-between gap-6 px-[18px] py-4 max-[760px]:flex-col">
                 <div className="min-w-0">
                   <div className="label mb-[9px]">regenerate</div>
                   <code className={CODE}>make incident ID={inc.advisory.key} ARGS=&quot;--out&quot;</code>

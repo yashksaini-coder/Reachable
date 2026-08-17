@@ -135,3 +135,23 @@
   height: 6px;
   border-radius: 50%;
 }
+@media (max-width: 900px) {
+  .console {
+    margin-top: 40px;
+  }
+  .head {
+    flex-wrap: wrap;
+    gap: 10px 14px;
+  }
+}
+@media (max-width: 600px) {
+  .strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .cell {
+    padding: 14px 14px 16px;
+  }
+  .value {
+    font-size: 26px;
+  }
+}

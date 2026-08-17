@@ -1,6 +1,8 @@
 import { listIncidents, short, svcSlug, fmtUtc } from "@/lib/incident";
+import Link from "next/link";
 import { KanbanSquare } from "lucide-react";
 import { Lane } from "./lane";
+import { ACTION } from "@/components/console/states";
 
 export const dynamic = "force-static";
 
@@ -83,14 +85,20 @@ export default async function Board() {
         </label>
       </div>
       {cards.length === 0 && (
-        <div className="elev mx-auto mb-5 flex max-w-[1600px] flex-col items-center gap-3 rounded-xl border border-border bg-card px-5 py-10 text-center">
-          <span className="grid size-10 place-items-center rounded-full bg-card2 text-mut">
-            <KanbanSquare className="size-4" strokeWidth={1.75} />
+        <div className="elev mx-auto mb-5 flex min-h-[200px] max-w-[1600px] flex-col items-center justify-center gap-[18px] rounded-xl border border-border bg-card px-5 py-10 text-center">
+          <span className="grid size-11 place-items-center rounded-full border border-border text-dim" aria-hidden>
+            <KanbanSquare className="size-[17px]" />
           </span>
-          <p className="text-pretty text-[13px] text-mut">No incidents composed yet — cards appear once an advisory is run against the graph.</p>
+          <p className="m-0 max-w-[44ch] text-pretty text-[13px] text-mut">No incident composed yet — nothing to triage.</p>
+          <Link
+            href="/incidents"
+            className={ACTION}
+          >
+            Open incidents
+          </Link>
         </div>
       )}
-      <div className="mx-auto flex max-w-[1600px] gap-3.5 overflow-x-auto overscroll-x-contain pb-2">
+      <div className="mx-auto flex max-w-[1600px] snap-x gap-3.5 overflow-x-auto overscroll-x-contain scroll-px-1 pb-2 [scrollbar-width:thin] [scrollbar-color:var(--color-input)_transparent]">
         {COLUMNS.map((col) => (
           <Lane
             key={col.key}

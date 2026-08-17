@@ -8,6 +8,7 @@ import type { Job, JobStep } from "@/lib/api";
 import { fmtMs } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/console/toast";
+import { StateView } from "@/components/console/states";
 
 const SLUG = /^[\w.-]+\/[\w.-]+$/;
 const normalise = (raw: string) => {
@@ -16,10 +17,14 @@ const normalise = (raw: string) => {
 };
 
 const RECENT_MAX = 8;
-// Both cards share ONE fixed height so the top row never jumps, whatever the data: 420px, flex
-// columns; the job region on the left always renders (placeholder or JobCard, filling the slot,
-// steps scroll inside), and the recent list scrolls inside its card. Nothing here grows with jobs.
-const CARD = "elev flex h-[420px] flex-col overflow-hidden rounded-xl border border-border bg-card p-[18px]";
+// Both cards share ONE fixed height at ≥900px so the top row never jumps, whatever the data:
+// 420px, flex columns; the job region on the left always renders (placeholder or JobCard, filling
+// the slot, steps scroll inside), and the recent list scrolls inside its card. Below 900px the
+// cards stack and take natural height; the recent list is capped at 336px and scrolls.
+// Header pattern: `.label` left + mono meta right, 1px --line beneath, 18px padding.
+const CARD = "elev flex flex-col overflow-hidden rounded-xl border border-border bg-card min-[900px]:h-[420px]";
+const HEAD = "flex h-12 shrink-0 items-center justify-between border-b border-line px-[18px]";
+const BODY = "flex min-h-0 flex-1 flex-col p-[18px]";
 
 // Renders the two cells of the /services top row: the add-repository card (with the running
 // JobCard beneath it) and the recent-jobs card. The page owns the grid; `recent` is newest first.
@@ -64,77 +69,84 @@ export function AddRepository({ disabled, recent, prominent = false }: { disable
   const invalid = err != null;
   const helper = disabled
     ? "adding needs the live worker API (make up) · offline: make add REPO=owner/repo"
-    : "package-lock.json (v2/v3) or pnpm-lock.yaml (v6/v9) history is ingested · versions enriched from npm · OSV advisories linked · imports scanned at the latest commit";
+    : "npm (package-lock v2/v3) and pnpm (v6/v9) lockfile history · versions from npm · advisories from OSV · imports scanned at the latest commit";
   const shown = recent.slice(0, RECENT_MAX);
 
   return (
     <>
       <form onSubmit={submit} noValidate className={CARD}>
-        <label htmlFor="add-repo" className="label block">
-          add repository
-        </label>
-        {prominent && <p className="mt-2.5 text-[12.5px] text-mut text-pretty">Watch a GitHub repository. Its lockfile history becomes the first service in the graph.</p>}
-        {/* input + button as one control: shared border, the button sits inside the field */}
-        <div className={cn("mt-3.5 flex overflow-hidden rounded-[9px] border bg-code transition-colors duration-200 ease-[var(--ease)]", invalid ? "border-l2/60" : "border-input focus-within:border-signal/45", (disabled || busy) && "opacity-60")}>
-          <input
-            id="add-repo"
-            value={value}
-            onChange={(e) => {
-              setValue(e.target.value);
-              if (invalid) setErr(null);
-            }}
-            placeholder="owner/repository"
-            className="h-11 min-w-0 flex-1 bg-transparent px-[13px] font-mono text-[12.5px] text-fg outline-none placeholder:text-dim disabled:cursor-not-allowed"
-            disabled={disabled || busy}
-            aria-invalid={invalid || undefined}
-            aria-describedby="add-repo-hint"
-            autoComplete="off"
-            spellCheck={false}
-          />
-          <button
-            type="submit"
-            disabled={disabled || busy}
-            className="h-11 shrink-0 bg-signal px-[18px] text-[12px] font-medium leading-none text-ink transition-[filter,transform] duration-[180ms] ease-[var(--ease)] hover:brightness-[1.08] active:scale-[0.97] disabled:cursor-not-allowed"
-          >
-            Add
-          </button>
+        <div className={HEAD}>
+          <label htmlFor="add-repo" className="label">
+            add repository
+          </label>
         </div>
-        {/* helper: validation / API errors or the default hint — queued/running state lives in the JobCard */}
-        <p id="add-repo-hint" aria-live="polite" className={cn("mt-[9px] font-mono text-[11px] leading-[1.5] text-pretty", invalid ? "text-l2" : "text-dim")}>
-          {err ?? helper}
-        </p>
-        {jobId ? (
-          <JobCard key={jobId} id={jobId} onRetry={retry} busy={busy} />
-        ) : (
-          <div className="mt-3.5 flex flex-1 items-center gap-3 rounded-[10px] border border-dashed border-input p-3.5">
-            <span className="grid size-8 shrink-0 place-items-center rounded-full border border-border text-dim">
-              <Radio className="size-3.5" />
-            </span>
-            <p className="font-mono text-[11px] leading-[1.5] text-dim text-pretty">no job running · add a repository to start one</p>
+        <div className={BODY}>
+          {prominent && <p className="mb-3.5 text-[12.5px] text-mut text-pretty">Watch a GitHub repository. Its lockfile history becomes the first service in the graph.</p>}
+          {/* input + button as one control: shared border, the button sits inside the field */}
+          <div className={cn("flex overflow-hidden rounded-[9px] border bg-code transition-colors duration-200 ease-[var(--ease)]", invalid ? "border-l2/60" : "border-input focus-within:border-signal/45", (disabled || busy) && "opacity-60")}>
+            <input
+              id="add-repo"
+              value={value}
+              onChange={(e) => {
+                setValue(e.target.value);
+                if (invalid) setErr(null);
+              }}
+              placeholder="owner/repository"
+              className="h-11 min-w-0 flex-1 bg-transparent px-[13px] font-mono text-[12.5px] text-fg outline-none placeholder:text-dim disabled:cursor-not-allowed"
+              disabled={disabled || busy}
+              aria-invalid={invalid || undefined}
+              aria-describedby="add-repo-hint"
+              autoComplete="off"
+              spellCheck={false}
+            />
+            <button
+              type="submit"
+              disabled={disabled || busy}
+              className="h-11 shrink-0 bg-signal px-[18px] text-[12px] font-medium leading-none text-ink transition-[filter,transform] duration-[180ms] ease-[var(--ease)] hover:brightness-[1.08] active:scale-[0.97] disabled:cursor-not-allowed"
+            >
+              Add
+            </button>
           </div>
-        )}
+          {/* helper: validation / API errors or the default hint — queued/running state lives in the JobCard */}
+          <p id="add-repo-hint" aria-live="polite" className={cn("mt-[9px] font-mono text-[11px] leading-[1.5] text-pretty", invalid ? "text-l2" : "text-dim")}>
+            {err ?? helper}
+          </p>
+          {jobId ? (
+            <JobCard key={jobId} id={jobId} onRetry={retry} busy={busy} />
+          ) : (
+            <StateView
+              icon={Radio}
+              sentence="no job running"
+              hint="add a repository above — its lockfile history becomes a service"
+              className="mt-3.5 min-h-[160px] flex-1 rounded-[10px] border border-dashed border-input p-4"
+            />
+          )}
+        </div>
       </form>
 
       <div className={CARD}>
-        <div className="flex items-baseline justify-between">
+        <div className={HEAD}>
           <span className="label">recent jobs</span>
           <span className="num text-[11px] leading-none text-dim">{recent.length > shown.length ? `showing ${shown.length} of ${recent.length}` : recent.length}</span>
         </div>
-        <ul className="mt-3 flex min-h-0 flex-1 flex-col overflow-y-auto">
-          {shown.length === 0 && <li className="flex h-10 items-center font-mono text-[11px] text-dim">{disabled ? "live API unavailable — no job history" : "no jobs yet"}</li>}
-          {shown.map((j) => (
-            <li key={j.job_id} className="grid h-10 shrink-0 grid-cols-[6px_minmax(0,1fr)_minmax(0,auto)_76px] items-center gap-3 border-b border-line last:border-b-0">
-              <span aria-hidden className={cn("size-1.5 rounded-full", DOT[j.status] ?? "bg-l1")} />
-              <span className="min-w-0 truncate font-mono text-[12px] leading-none text-mut" title={j.repo}>
-                {j.repo}
-              </span>
-              <span suppressHydrationWarning className="num min-w-0 truncate whitespace-nowrap text-[10.5px] leading-none text-dim" title={`job ${j.job_id}${j.error ? ` — ${j.error}` : ""} · ${j.started_at ?? ""}`}>
-                {what(j)} · {ago(j.started_at)}
-              </span>
-              <span className="flex justify-end">{(j.status === "failed" || j.status === "interrupted") && !disabled && <RetryButton onClick={() => retry(j.job_id)} disabled={busy} compact />}</span>
-            </li>
-          ))}
-        </ul>
+        {shown.length === 0 ? (
+          <StateView icon={Radio} sentence={disabled ? "live API unavailable — no job history" : "no jobs yet"} className="min-h-[160px] flex-1 p-4" />
+        ) : (
+          <ul className="flex min-h-0 flex-1 flex-col overflow-y-auto px-[18px] max-[900px]:max-h-[336px]">
+            {shown.map((j) => (
+              <li key={j.job_id} className="grid h-10 shrink-0 grid-cols-[6px_minmax(0,1fr)_minmax(0,auto)_76px] items-center gap-3 border-b border-line last:border-b-0">
+                <span aria-hidden className={cn("size-1.5 rounded-full", DOT[j.status] ?? "bg-l1")} />
+                <span className="min-w-0 truncate font-mono text-[12px] leading-none text-mut" title={j.repo}>
+                  {j.repo}
+                </span>
+                <span suppressHydrationWarning className="num min-w-0 truncate whitespace-nowrap text-[10.5px] leading-none text-dim" title={`job ${j.job_id}${j.error ? ` — ${j.error}` : ""} · ${j.started_at ?? ""}`}>
+                  {what(j)} · {ago(j.started_at)}
+                </span>
+                <span className="flex justify-end">{(j.status === "failed" || j.status === "interrupted") && !disabled && <RetryButton onClick={() => retry(j.job_id)} disabled={busy} compact />}</span>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </>
   );
@@ -221,7 +233,7 @@ function JobCard({ id, onRetry, busy }: { id: string; onRetry: (id: string) => v
   return (
     <div className="mt-3.5 flex min-h-0 flex-1 flex-col animate-[en_.3s_var(--ease)_both] rounded-[10px] border border-border bg-card2 p-3.5" aria-live="polite">
       <div className="flex min-h-10 flex-wrap items-center gap-x-3 gap-y-1">
-        <span className="min-w-[40%] flex-1 truncate font-mono text-[12px] leading-none text-fg" title={job?.repo}>
+        <span className="min-w-[40%] flex-1 truncate font-mono text-[12px] leading-none text-fg max-[760px]:basis-full" title={job?.repo}>
           {job?.repo ?? "…"}
         </span>
         <span className="num min-w-0 truncate text-[10.5px] leading-none text-dim" title={`job ${id}`}>

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { SearchX } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Chip, Kind } from "@/components/console/ui";
 import { short, svcSlug } from "@/lib/format";
@@ -83,9 +84,11 @@ export function Answer({ ask, data }: { ask: Ask; data: AskData }) {
   if (rows.length === 0) {
     return (
       <Box pad>
-        <div className="text-[12.5px] text-mut text-pretty">
-          <Chip className="mr-2">none</Chip>
-          Nothing in the graph matches. For an advisory this means no watched service resolved an affected version; for a package it means no watched lockfile pins it.
+        <div className="flex flex-col items-center gap-3 py-5 text-center">
+          <span className="grid size-11 place-items-center rounded-full border border-border text-dim" aria-hidden>
+            <SearchX className="size-[17px]" />
+          </span>
+          <p className="max-w-[44ch] text-pretty text-[12.5px] text-mut">Nothing in the graph matches this question.</p>
         </div>
       </Box>
     );

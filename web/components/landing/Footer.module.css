@@ -41,3 +41,13 @@
   font: 400 11px/1 var(--mono);
   color: var(--dim);
 }
+@media (max-width: 600px) {
+  .footer {
+    padding-top: 40px;
+    gap: 16px 24px;
+  }
+  .snapshot {
+    margin-left: 0;
+    flex-basis: 100%;
+  }
+}

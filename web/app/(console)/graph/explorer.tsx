@@ -125,7 +125,7 @@ export function GraphExplorer({ services, initial }: { services: string[]; initi
           ))}
 
           <form
-            className="ml-auto flex h-10 max-w-full items-stretch overflow-hidden rounded-[7px] border border-border bg-card"
+            className="ml-auto flex h-10 max-w-full items-stretch overflow-hidden rounded-[7px] border border-border bg-card max-[900px]:ml-0 max-[900px]:basis-full max-[600px]:h-auto max-[600px]:flex-wrap"
             onSubmit={(e) => {
               e.preventDefault();
               if (advisory.trim()) {
@@ -142,7 +142,7 @@ export function GraphExplorer({ services, initial }: { services: string[]; initi
                 setAdvisory("");
                 if (e.target.value) load({ service: e.target.value });
               }}
-              className={cn(field, "max-w-56 cursor-pointer")}
+              className={cn(field, "max-w-56 cursor-pointer max-[900px]:max-w-none max-[900px]:flex-1 max-[600px]:basis-full max-[600px]:border-b max-[600px]:border-border")}
             >
               <option value="">— pick a service —</option>
               {services.map((s) => (
@@ -151,10 +151,10 @@ export function GraphExplorer({ services, initial }: { services: string[]; initi
                 </option>
               ))}
             </select>
-            <span className="grid place-items-center border-l border-border px-2 text-[10.5px] text-dim" aria-hidden>
+            <span className="grid place-items-center border-l border-border px-2 text-[10.5px] text-dim max-[600px]:border-l-0" aria-hidden>
               or
             </span>
-            <input value={advisory} aria-label="advisory" onChange={(e) => setAdvisory(e.target.value)} placeholder="GHSA-… / MAL-…" className={cn(field, "w-40 border-l border-border")} />
+            <input value={advisory} aria-label="advisory" onChange={(e) => setAdvisory(e.target.value)} placeholder="GHSA-… / MAL-…" className={cn(field, "w-40 border-l border-border max-[900px]:w-auto max-[900px]:flex-1")} />
             <button
               type="submit"
               disabled={pending || !advisory.trim()}
@@ -171,10 +171,10 @@ export function GraphExplorer({ services, initial }: { services: string[]; initi
 
         {pending ? (
           <Canvas role="status">
-            <span className="inline-flex items-center gap-2">
-              <Loader2 className="size-3.5 animate-spin text-signal" />
-              laying out…
+            <span className="grid size-11 place-items-center rounded-full border border-border text-dim">
+              <Loader2 className="size-[17px] animate-spin text-signal" />
             </span>
+            <span className="text-[13px] text-mut">laying out…</span>
             {data && (
               <span className="num text-[10.5px] text-dim">
                 {data.nodes.length} nodes · {data.edges.length} edges
@@ -245,7 +245,7 @@ export function GraphExplorer({ services, initial }: { services: string[]; initi
             <p className="max-w-[44ch] text-pretty text-center text-[13px] text-mut">
               {error ? "The worker could not return this neighbourhood." : data ? "Nothing in the neighbourhood yet — advisories may not be ingested." : "Pick a service or an advisory to render its neighbourhood."}
             </p>
-            {error && <p className="font-mono text-[11px] text-l1">{error}</p>}
+            {error && <p className="max-w-[44ch] break-words font-mono text-[11px] leading-[1.6] text-l1">{error}</p>}
           </Canvas>
         )}
       </div>
@@ -260,10 +260,10 @@ export function GraphExplorer({ services, initial }: { services: string[]; initi
   );
 }
 
-// The 430px canvas in its non-graph states (loading / empty / error): centred, one sentence.
+// The canvas (320px on phones, 430px from 600px) in its non-graph states (loading / empty / error): centred stack, one sentence.
 function Canvas({ children, role }: { children: React.ReactNode; role?: string }) {
   return (
-    <div role={role} className="flex h-[430px] flex-col items-center justify-center gap-3 px-6 text-[12px] text-mut">
+    <div role={role} className="flex h-[320px] flex-col items-center justify-center gap-3 px-6 text-center text-[12px] text-mut min-[600px]:h-[430px]">
       {children}
     </div>
   );

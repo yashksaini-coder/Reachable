@@ -3,10 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { ArrowUpRight, Check, Loader2 } from "lucide-react";
+import { ArrowUpRight, Check, Loader2, SearchX, Unplug } from "lucide-react";
 import { short } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/console/toast";
+import { EmptySlot } from "@/components/console/states";
 
 const EASE = [0.32, 0.72, 0, 1] as const;
 
@@ -73,12 +74,12 @@ export function FindVictims({ advisory }: { advisory: string }) {
             className="border-t border-line"
           >
             {data.error ? (
-              <p className="px-[18px] py-3 font-mono text-[11.5px] text-l1">{data.error}</p>
+              <EmptySlot icon={Unplug}>{data.error}</EmptySlot>
             ) : rows.length === 0 ? (
-              <p className="px-[18px] py-3 font-mono text-[11.5px] text-dim">
+              <EmptySlot icon={SearchX}>
                 no public lockfile pins {data.searched?.map((s) => s.split(" ")[0]).join(", ")}
                 {data.errors?.length ? ` · ${data.errors[0]}` : ""}
-              </p>
+              </EmptySlot>
             ) : (
               <ul>
                 {rows.map((v) => (

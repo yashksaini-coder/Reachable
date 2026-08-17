@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Inbox } from "lucide-react";
 import { LEVEL } from "@/lib/level";
 import { cn } from "@/lib/utils";
 
@@ -21,7 +22,7 @@ export function Lane({ title, hint, tone, wide, cards }: { title: string; hint: 
   return (
     <section
       className={cn(
-        "flex min-w-[248px] flex-col rounded-b-xl border border-border border-t-2 bg-card",
+        "flex min-w-[248px] snap-start flex-col rounded-b-xl border border-border border-t-2 bg-card",
         wide ? "flex-[0_0_300px] group-has-[:checked]:flex-[0_0_272px]" : "flex-[0_0_272px]",
         tone.border,
       )}
@@ -37,7 +38,12 @@ export function Lane({ title, hint, tone, wide, cards }: { title: string; hint: 
       </header>
       <div className="flex flex-col gap-2 p-2.5">
         {cards.length === 0 ? (
-          <div className="grid min-h-11 place-items-center rounded-[9px] border border-dashed border-input px-3 py-3 text-center font-mono text-[10.5px] text-dim">nothing in this state</div>
+          <div className="flex min-h-[120px] flex-col items-center justify-center gap-2.5 rounded-[9px] border border-dashed border-input px-3 py-4 text-center">
+            <span className="grid size-11 place-items-center rounded-full border border-border text-dim" aria-hidden>
+              <Inbox className="size-[17px]" />
+            </span>
+            <p className="m-0 max-w-[44ch] text-pretty font-mono text-[10.5px] text-dim">nothing in this state</p>
+          </div>
         ) : (
           cards.map((c) => {
             const l = LEVEL[c.level] ?? LEVEL.unscanned;

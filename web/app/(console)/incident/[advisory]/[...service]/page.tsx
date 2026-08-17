@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, FileSearch } from "lucide-react";
 import { readIncident, listIncidents, short, svcSlug, fmtUtc } from "@/lib/incident";
 import { HydraCard, Level, Chip, Notes } from "@/components/console/ui";
 import { cn } from "@/lib/utils";
 import { Chain } from "./chain";
+import { EmptySlot, SCROLLER } from "@/components/console/states";
 
 export const dynamic = "force-static";
 export async function generateStaticParams() {
@@ -110,22 +111,26 @@ export default async function ServicePage({ params }: PageProps<"/incident/[advi
                 {hops(r.hops)} · {r.sha.slice(0, 7)} · {fmtUtc(new Date(r.committed_at * 1000).toISOString())}
               </span>
             </div>
-            <div className="overflow-x-auto overscroll-x-contain p-[18px]">
-              {r.paths.length === 0 ? (
-                <div className="font-mono text-[11px] text-dim">
-                  direct RESOLVED edge to {r.bad_versions.map(short).join(", ")} (no explanation path requested)
+            {r.paths.length === 0 ? (
+              <div className="p-[18px] font-mono text-[11px] leading-[1.5] text-dim [overflow-wrap:anywhere]">
+                direct RESOLVED edge to {r.bad_versions.map(short).join(", ")} (no explanation path requested)
+              </div>
+            ) : (
+              /* the chain scrolls inside its card; a fade at the right edge hints there is more */
+              <div className="relative">
+                <div className={cn(SCROLLER, "p-[18px]")}>
+                  <div className="flex min-w-max flex-col gap-2.5 pr-6">
+                    {r.paths.map((p, i) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <Chain chain={p.chain} />
+                        <span className="num shrink-0 font-mono text-[10.5px] text-dim">{hops(p.hops)}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              ) : (
-                <div className="flex min-w-max flex-col gap-2.5">
-                  {r.paths.map((p, i) => (
-                    <div key={i} className="flex items-center gap-3">
-                      <Chain chain={p.chain} />
-                      <span className="num shrink-0 font-mono text-[10.5px] text-dim">{hops(p.hops)}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                <span aria-hidden className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-linear-to-l from-card to-transparent" />
+              </div>
+            )}
             <div className="px-[18px] pb-[18px] font-mono text-[11px] leading-[1.6] text-dim">
               <span className={cn("mr-1", level === "L2" && "text-l2")}>reachability ·</span>
               {reachNote}
@@ -138,7 +143,7 @@ export default async function ServicePage({ params }: PageProps<"/incident/[advi
       {reach && (reach.imports.length > 0 || reach.symbols.length > 0 || reach.files_scanned > 0) && (
         <div className={cn(CARD, "mt-3")}>
           <div className={CARD_HEAD}>
-            <span className="text-[12.5px] text-fg">reachability</span>
+            <span className="label">reachability</span>
             <span className="num font-mono text-[11px] leading-none text-dim">
               {plural(reach.files_scanned, "first-party file")} scanned · {plural(reach.imports.length, "import")} · {plural(reach.symbols.length, "symbol use")}
             </span>
@@ -170,7 +175,7 @@ export default async function ServicePage({ params }: PageProps<"/incident/[advi
               </div>
             )}
             {reach.imports.length === 0 && reach.symbols.length === 0 && (
-              <div className="font-mono text-[11px] text-dim">no scanned file imports the package</div>
+              <EmptySlot icon={FileSearch}>no scanned file imports the package</EmptySlot>
             )}
           </div>
         </div>
@@ -180,7 +185,7 @@ export default async function ServicePage({ params }: PageProps<"/incident/[advi
       {live.length > 0 && (
         <div className={cn(CARD, "mt-3")}>
           <div className={CARD_HEAD}>
-            <span className="text-[12.5px] text-fg">resolved while live</span>
+            <span className="label">resolved while live</span>
             <span className="num font-mono text-[11px] leading-none text-dim">{plural(live.length, "lockfile")}</span>
           </div>
           <ul className="divide-y divide-line font-mono text-[11.5px]">

@@ -2,10 +2,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import { Info } from "lucide-react";
+import { Unplug } from "lucide-react";
 import { listIncidents, svcSlug } from "@/lib/incident";
 import { services, jobs, type Service } from "@/lib/api";
 import { Chip } from "@/components/console/ui";
+import { StateView } from "@/components/console/states";
 import { AddRepository } from "./add-repository";
 
 // Services live in the graph; this page reads them from the worker API and degrades honestly
@@ -148,14 +149,12 @@ export default async function Services() {
       )}
 
       {!live && (
-        <div className="mt-3.5 flex items-center gap-3.5 rounded-xl border border-dashed border-input p-[18px]">
-          <span className="grid size-8 shrink-0 place-items-center rounded-full border border-border text-dim">
-            <Info className="size-3.5" />
-          </span>
-          <p className="font-mono text-[11.5px] leading-[1.6] text-dim text-pretty">
-            degraded · the live API is unreachable, so the watched list and its commit metadata cannot be read; incident counts on this deploy come from the last committed graph snapshot. Nothing here is estimated.
-          </p>
-        </div>
+        <StateView
+          icon={Unplug}
+          sentence="degraded — the live API is unreachable, so the watched list cannot be read."
+          hint="incident counts on this deploy come from the last committed graph snapshot · nothing here is estimated"
+          className="mt-3.5 min-h-[160px] rounded-xl border border-dashed border-input p-[18px]"
+        />
       )}
     </div>
   );
