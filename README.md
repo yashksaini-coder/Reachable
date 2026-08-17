@@ -162,7 +162,8 @@ Watched cohorts are in [`demo/services.txt`](demo/services.txt): 8 well-maintain
   is a hypothesis.
 - The read-only deploy at reachable-lac.vercel.app renders the committed JSON; live features (add
   repository, Ask, Graph explorer, find public victims, MCP) need the worker and node and show
-  designed degraded states there — they are demonstrated in the video.
+  designed degraded states there — they are demonstrated in the video. `deploy/README.md` runs the
+  worker and node on one small VM (docker-compose + Caddy TLS) and points the console at it.
 
 ## Layout
 

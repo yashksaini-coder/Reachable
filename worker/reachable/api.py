@@ -44,6 +44,9 @@ from reachable.sources.github import API as API_GH
 
 HOST = os.environ.get("REACHABLE_API_HOST", "127.0.0.1")
 PORT = int(os.environ.get("REACHABLE_API_PORT", "8787"))
+# When set, every route except /health requires `Authorization: Bearer <key>` — the console's
+# server-side proxy and the MCP server send it. Unset = loopback-only development.
+API_KEY = os.environ.get("REACHABLE_API_KEY", "").strip()
 _ADV = re.compile(
     r"^(GHSA-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}|MAL-\d{4}-\d+|CVE-\d{4}-\d+|MAL-TEST-\d+|GHSA-TEST-[A-Z]+)$"
 )
@@ -481,8 +484,15 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
 
+    def _authed(self) -> bool:
+        if not API_KEY:
+            return True
+        return self.headers.get("Authorization", "") == f"Bearer {API_KEY}"
+
     def do_POST(self):
         u = urlparse(self.path)
+        if not self._authed():
+            return self._json(401, {"error": "missing or invalid API key"})
         if u.path.startswith("/jobs/") and u.path.endswith("/retry"):
             try:
                 job = jobs.retry(u.path[len("/jobs/") : -len("/retry")])
@@ -517,6 +527,8 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         u = urlparse(self.path)
         q = parse_qs(u.query)
+        if u.path != "/health" and not self._authed():
+            return self._json(401, {"error": "missing or invalid API key"})
         if u.path == "/health":
             with session() as s:
                 n, ms = timed(s, "MATCH (sv:Service) RETURN count(*) AS c")

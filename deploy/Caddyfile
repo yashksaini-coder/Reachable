@@ -1,0 +1,9 @@
+# HTTPS for the worker API. API_HOST is e.g. api.203.0.113.10.sslip.io (free, IP-based) or your domain.
+{$API_HOST} {
+	encode zstd gzip
+	reverse_proxy worker:8787
+	header {
+		-Server
+		Strict-Transport-Security "max-age=31536000"
+	}
+}

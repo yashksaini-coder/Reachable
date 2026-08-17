@@ -531,6 +531,12 @@ root so worker/out, docs, demo upload; `.vercelignore` at root; `vercel.json` in
 alias https://reachable-lac.vercel.app; every route 200, OG images absolute, live pages degrade.
 Redeploy: `npx vercel@latest deploy --prod --yes` from the repo root.
 
+**Worker + node hosting:** `deploy/` — docker-compose (hydradb · worker built from `worker/Dockerfile` ·
+Caddy TLS on `api.<ip>.sslip.io`), `deploy/setup.sh` for a fresh Ubuntu droplet (2 vCPU / 4 GB), guide in
+`deploy/README.md`. The API takes an optional bearer key (`REACHABLE_API_KEY`; `/health` stays open) — the
+console proxy, the MCP server and `python -m reachable.jobs --api` send it. Vercel gets
+`REACHABLE_API_URL` + `REACHABLE_API_KEY`. Not deployed yet (status TBD).
+
 **Known open items:** push the latest local commits (owner) · Vercel
 read-only deploy from committed JSON · video ≤ 3:00 in the prescribed order ·
 form · final disqualifier pass (private-window links, no pre-Aug-12 commits,

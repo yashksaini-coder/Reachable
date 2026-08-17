@@ -3,6 +3,9 @@ import "server-only";
 // The live query API (worker/reachable/api.py). Loopback by default; on a read-only deploy it
 // is simply unreachable and every live feature degrades to "unavailable" — never to a lie.
 const API = process.env.REACHABLE_API_URL ?? "http://127.0.0.1:8787";
+// Server-only: when the worker is remote it requires a bearer key; the browser never sees it.
+const KEY = process.env.REACHABLE_API_KEY;
+const AUTH: HeadersInit = KEY ? { authorization: `Bearer ${KEY}` } : {};
 
 export type Live<T = Record<string, unknown>> = {
   ok: boolean;
@@ -14,7 +17,7 @@ export type Live<T = Record<string, unknown>> = {
 export async function live<T = Record<string, unknown>>(path: string, params: Record<string, string>): Promise<Live<T>> {
   const qs = new URLSearchParams(params).toString();
   try {
-    const r = await fetch(`${API}${path}?${qs}`, { cache: "no-store", signal: AbortSignal.timeout(35_000) });
+    const r = await fetch(`${API}${path}?${qs}`, { cache: "no-store", headers: AUTH, signal: AbortSignal.timeout(35_000) });
     const data = (await r.json()) as Live<T>["data"] & { error?: string };
     if (!r.ok) return { ok: false, status: r.status, error: data?.error ?? `HTTP ${r.status}` };
     return { ok: true, status: r.status, data };
@@ -66,7 +69,7 @@ export type GraphStats = {
 
 // Plain JSON round-trip; the caller decides how to degrade. Throws only on network/timeout.
 async function json<T>(path: string, init?: RequestInit & { timeoutMs?: number }): Promise<{ status: number; body: T }> {
-  const r = await fetch(`${API}${path}`, { cache: "no-store", signal: AbortSignal.timeout(init?.timeoutMs ?? 10_000), ...init });
+  const r = await fetch(`${API}${path}`, { cache: "no-store", signal: AbortSignal.timeout(init?.timeoutMs ?? 10_000), ...init, headers: { ...AUTH, ...(init?.headers as Record<string, string> | undefined) } });
   return { status: r.status, body: (await r.json().catch(() => ({}))) as T };
 }
 

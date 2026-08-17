@@ -1,0 +1,64 @@
+# Reachable — one small VM runs everything the live console needs:
+#   hydradb  the open-source graph engine (Bolt 7687, internal only)
+#   worker   ingest jobs + the query API (:8787, internal only)
+#   caddy    HTTPS in front of the worker on api.<ip>.sslip.io (or your domain)
+# Bring up: cp .env.example .env && edit && docker compose up -d
+services:
+  hydradb:
+    image: ghcr.io/hydra-db/hydradb:latest
+    restart: unless-stopped
+    user: "1000:1000"
+    environment:
+      CLOUD_PROVIDER: local
+      LOCAL_PATH: /data/store
+      GRAPH_NAMESPACE: default
+      GRAPH_ID: default
+      GRAPH_CELL_ID: cell-0
+      GRAPH_CELLS: cell-0
+      GRAPH_NODE_ID: node-0
+      GRAPH_BOLT_NODE_ADDRESSES: node-0=hydradb:7687
+      GRAPH_ADVERTISED_BOLT_ADDR: hydradb:7687
+      GRAPH_DATA_CACHE_DIR: /data/cache
+      GRAPH_AUTH_TOKEN_FILE: /data/auth-token
+      GRAPH_ALLOW_PLAINTEXT: "true"
+      RUST_MIN_STACK: "33554432"
+    volumes:
+      - ./data:/data
+
+  worker:
+    build:
+      context: ..
+      dockerfile: worker/Dockerfile
+    restart: unless-stopped
+    depends_on: [hydradb]
+    environment:
+      HYDRA_URI: bolt://hydradb:7687
+      HYDRA_HTTP_URL: http://hydradb:8443
+      HYDRA_DATABASE: default
+      HYDRA_TOKEN: ${HYDRA_TOKEN}
+      GITHUB_TOKEN: ${GITHUB_TOKEN}
+      REACHABLE_API_HOST: 0.0.0.0
+      REACHABLE_API_PORT: "8787"
+      REACHABLE_API_KEY: ${REACHABLE_API_KEY}
+    volumes:
+      - worker-cache:/app/.cache
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      API_HOST: ${API_HOST}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - worker
+
+volumes:
+  worker-cache:
+  caddy-data:
+  caddy-config:

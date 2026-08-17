@@ -13,6 +13,7 @@ edge counts it wrote — that is the only source for /graph/stats edge numbers
 """
 
 import json
+import os
 import queue
 import threading
 import time
@@ -324,6 +325,8 @@ def main(argv=None) -> int:
     ap.add_argument("repo")
     ap.add_argument("--api", default="http://127.0.0.1:8787")
     a = ap.parse_args(argv)
+    key = os.environ.get("REACHABLE_API_KEY", "").strip()
+    auth = {"authorization": f"Bearer {key}"} if key else {}
     try:
         urllib.request.urlopen(f"{a.api}/health", timeout=3).read()
     except (urllib.error.URLError, OSError):
@@ -333,7 +336,7 @@ def main(argv=None) -> int:
     req = urllib.request.Request(
         f"{a.api}/services/add",
         data=json.dumps({"repo": a.repo}).encode(),
-        headers={"content-type": "application/json"},
+        headers={"content-type": "application/json", **auth},
     )
     try:
         r = json.load(urllib.request.urlopen(req, timeout=10))
@@ -345,7 +348,11 @@ def main(argv=None) -> int:
     jid = r["job_id"]
     log(f"job {jid} queued for {a.repo} (waiting)")
     while True:
-        d = json.load(urllib.request.urlopen(f"{a.api}/jobs/{jid}", timeout=10))
+        d = json.load(
+            urllib.request.urlopen(
+                urllib.request.Request(f"{a.api}/jobs/{jid}", headers=auth), timeout=10
+            )
+        )
         if d["status"] in TERMINAL:
             break
         time.sleep(3)

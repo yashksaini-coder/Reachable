@@ -21,7 +21,10 @@ from mcp.server.mcpserver import MCPServer
 
 logging.getLogger("httpx").setLevel(logging.WARNING)  # stdio transport: keep the pipes quiet
 API = os.environ.get("REACHABLE_API_URL", "http://127.0.0.1:8787").rstrip("/")
-_c = httpx.Client(base_url=API, timeout=60)
+_KEY = os.environ.get("REACHABLE_API_KEY", "").strip()
+_c = httpx.Client(
+    base_url=API, timeout=60, headers={"Authorization": f"Bearer {_KEY}"} if _KEY else {}
+)
 
 mcp = MCPServer(
     "reachable",
