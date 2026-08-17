@@ -1,10 +1,22 @@
+/* Both layers share one grid cell: the ghost sets the height, the typed layer paints. */
+.box {
+  display: grid;
+}
+
 .pre {
+  grid-area: 1 / 1;
   margin: 0;
   padding: 16px;
-  font: 400 12px/1.7 var(--mono);
+  font: 400 13px/1.7 var(--mono);
   color: var(--sig2);
-  overflow-x: auto;
-  min-height: 132px;
+  white-space: pre-wrap; /* long statements wrap — the card never scrolls sideways */
+  overflow-wrap: anywhere;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.ghost {
+  visibility: hidden;
 }
 
 .cursor {

@@ -5,13 +5,15 @@ import { prefersReducedMotion } from '@/lib/hooks';
 import styles from './TypedStatement.module.css';
 
 /**
- * The executed statement types itself in when the card first scrolls into view,
- * at 2 characters every 18ms. The complete statement is the render default and
- * is only cleared at the moment the typing actually begins — the statement is
- * never hidden, so a page where the observer never fires still shows all of it.
+ * The executed statement types itself in when the card first scrolls into view, at 2 characters
+ * every 18ms. Two rules keep it honest and still: (1) the complete statement is the render
+ * default and is only cleared at the moment typing begins — a page where the observer never
+ * fires shows all of it; (2) the box is sized by an invisible copy of the full statement in the
+ * same grid cell, so nothing moves or scrolls while the characters arrive. Long lines wrap; the
+ * card never scrolls sideways.
  */
 export function TypedStatement({ statement }: { statement: string }) {
-  const ref = useRef<HTMLPreElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
   const [typed, setTyped] = useState(statement);
 
   useEffect(() => {
@@ -42,11 +44,18 @@ export function TypedStatement({ statement }: { statement: string }) {
   }, [statement]);
 
   return (
-    <pre ref={ref} className={styles.pre}>
-      {typed}
-      <span className={styles.cursor} aria-hidden="true">
-        ▍
-      </span>
-    </pre>
+    <div ref={ref} className={styles.box}>
+      {/* sizing layer: the full statement, invisible, reserves the final height */}
+      <pre className={`${styles.pre} ${styles.ghost}`} aria-hidden="true">
+        {statement}
+        <span className={styles.cursor}>▍</span>
+      </pre>
+      <pre className={styles.pre}>
+        {typed}
+        <span className={styles.cursor} aria-hidden="true">
+          ▍
+        </span>
+      </pre>
+    </div>
   );
 }
