@@ -116,7 +116,7 @@ export function Shell({ children }: { children: ReactNode }) {
               aria-label="Reachable home"
             >
               <Mark />
-              <span className="text-[14px] font-medium leading-none tracking-[-0.01em] text-fg">
+              <span className="text-[15px] font-medium leading-none tracking-[-0.01em] text-fg">
                 Reachable
               </span>
             </Link>
@@ -166,13 +166,13 @@ export function Shell({ children }: { children: ReactNode }) {
                 >
                   <span
                     className={cn(
-                      "text-[12.5px] font-medium leading-[1.35]",
+                      "text-[13.5px] font-medium leading-[1.35]",
                       active ? "text-fg" : "text-mut",
                     )}
                   >
                     {n.label}
                   </span>
-                  <span className="text-[11px] leading-[1.35] text-dim">
+                  <span className="text-[12px] leading-[1.35] text-dim">
                     {n.hint}
                   </span>
                 </Link>
@@ -199,7 +199,7 @@ export function Shell({ children }: { children: ReactNode }) {
             >
               <Menu className="size-4" />
             </button>
-            <span className="text-[12.5px] font-medium leading-none">
+            <span className="text-[13.5px] font-medium leading-none">
               Reachable
             </span>
             <Link

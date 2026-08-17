@@ -43,8 +43,8 @@ export function FindVictims({ advisory }: { advisory: string }) {
     <section className="rounded-2xl border border-border bg-card">
       <div className="flex flex-wrap items-center justify-between gap-x-[18px] gap-y-3 px-[18px] py-4">
         <div className="min-w-0">
-          <h2 className="text-[17px] font-medium leading-[1.3] tracking-[-0.01em] text-fg">Beyond the watched set</h2>
-          <div className="mt-[5px] font-mono text-[11px] leading-[1.4] text-dim">
+          <h2 className="text-[18px] font-medium leading-[1.3] tracking-[-0.01em] text-fg">Beyond the watched set</h2>
+          <div className="mt-[5px] font-mono text-[12px] leading-[1.4] text-dim">
             {state === "busy"
               ? "GitHub code search takes about ten seconds…"
               : state === "done" && data && !data.error
@@ -56,7 +56,7 @@ export function FindVictims({ advisory }: { advisory: string }) {
           type="button"
           onClick={search}
           disabled={state === "busy"}
-          className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-[7px] border border-border px-3.5 text-[12px] font-medium leading-none text-mut transition-[color,background-color,transform] duration-[180ms] ease-[var(--ease)] hover:bg-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-[7px] border border-border px-3.5 text-[13px] font-medium leading-none text-mut transition-[color,background-color,transform] duration-[180ms] ease-[var(--ease)] hover:bg-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {state === "busy" && <Loader2 className="size-3.5 animate-spin" />}
           {state === "idle" ? "search GitHub" : state === "busy" ? "searching lockfiles" : "search again"}
@@ -88,7 +88,7 @@ export function FindVictims({ advisory }: { advisory: string }) {
               </ul>
             )}
             {(data.limitations?.length || (data.errors?.length && rows.length > 0)) ? (
-              <div className="space-y-1 px-[18px] py-3 font-mono text-[11px] leading-[1.6] text-dim">
+              <div className="space-y-1 px-[18px] py-3 font-mono text-[12px] leading-[1.6] text-dim">
                 {data.limitations?.map((l) => (
                   <p key={l} className="text-pretty">
                     {l}
@@ -136,19 +136,19 @@ function VictimRow({ v, onWatched }: { v: Victim; onWatched: () => void }) {
   return (
     <li className="flex items-center justify-between gap-4 border-b border-line px-[18px] py-3 last:border-b-0">
       <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
-        <a href={v.url} target="_blank" rel="noreferrer" className="group inline-flex min-w-0 items-center gap-1 font-mono text-[12px] leading-none text-mut hover:text-signal-2">
+        <a href={v.url} target="_blank" rel="noreferrer" className="group inline-flex min-w-0 items-center gap-1 font-mono text-[13px] leading-none text-mut hover:text-signal-2">
           <span className="truncate">{v.repo}</span>
           <ArrowUpRight className="size-3 shrink-0 opacity-0 transition-opacity duration-[180ms] group-hover:opacity-100" />
         </a>
-        <span className="hidden max-w-[22ch] truncate font-mono text-[11px] text-dim sm:block">{v.versions.map(short).join(", ")}</span>
+        <span className="hidden max-w-[22ch] truncate font-mono text-[12px] text-dim sm:block">{v.versions.map(short).join(", ")}</span>
       </div>
       {watched ? (
         jobId ? (
-          <Link href="/services" className="inline-flex min-h-10 shrink-0 items-center gap-1 rounded-[7px] border border-l0/35 px-3 text-[11px] font-medium leading-none text-l0 hover:text-l0">
+          <Link href="/services" className="inline-flex min-h-10 shrink-0 items-center gap-1 rounded-[7px] border border-l0/35 px-3 text-[12px] font-medium leading-none text-l0 hover:text-l0">
             <Check className="size-3" /> watched · ingesting
           </Link>
         ) : (
-          <span className="inline-flex min-h-10 shrink-0 items-center gap-1 rounded-[7px] border border-l0/35 px-3 text-[11px] font-medium leading-none text-l0">
+          <span className="inline-flex min-h-10 shrink-0 items-center gap-1 rounded-[7px] border border-l0/35 px-3 text-[12px] font-medium leading-none text-l0">
             <Check className="size-3" /> watched
           </span>
         )
@@ -159,7 +159,7 @@ function VictimRow({ v, onWatched }: { v: Victim; onWatched: () => void }) {
           disabled={busy}
           title={err ?? undefined}
           className={cn(
-            "inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-[7px] border border-border px-3 text-[11px] font-medium leading-none text-mut transition-[color,background-color,transform] duration-[180ms] ease-[var(--ease)] hover:bg-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50 active:scale-[0.97] disabled:opacity-50",
+            "inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-[7px] border border-border px-3 text-[12px] font-medium leading-none text-mut transition-[color,background-color,transform] duration-[180ms] ease-[var(--ease)] hover:bg-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50 active:scale-[0.97] disabled:opacity-50",
             err && "border-l2/60 text-l2",
           )}
         >

@@ -82,7 +82,7 @@ export function AddRepository({ disabled, recent, prominent = false }: { disable
           </label>
         </div>
         <div className={BODY}>
-          {prominent && <p className="mb-3.5 text-[12.5px] text-mut text-pretty">Watch a GitHub repository. Its lockfile history becomes the first service in the graph.</p>}
+          {prominent && <p className="mb-3.5 text-[13.5px] text-mut text-pretty">Watch a GitHub repository. Its lockfile history becomes the first service in the graph.</p>}
           {/* input + button as one control: shared border, the button sits inside the field */}
           <div className={cn("flex overflow-hidden rounded-[9px] border bg-code transition-colors duration-200 ease-[var(--ease)]", invalid ? "border-l2/60" : "border-input focus-within:border-signal/45", (disabled || busy) && "opacity-60")}>
             <input
@@ -93,7 +93,7 @@ export function AddRepository({ disabled, recent, prominent = false }: { disable
                 if (invalid) setErr(null);
               }}
               placeholder="owner/repository"
-              className="h-11 min-w-0 flex-1 bg-transparent px-[13px] font-mono text-[12.5px] text-fg outline-none placeholder:text-dim disabled:cursor-not-allowed"
+              className="h-11 min-w-0 flex-1 bg-transparent px-[13px] font-mono text-[13.5px] text-fg outline-none placeholder:text-dim disabled:cursor-not-allowed"
               disabled={disabled || busy}
               aria-invalid={invalid || undefined}
               aria-describedby="add-repo-hint"
@@ -103,13 +103,13 @@ export function AddRepository({ disabled, recent, prominent = false }: { disable
             <button
               type="submit"
               disabled={disabled || busy}
-              className="h-11 shrink-0 bg-signal px-[18px] text-[12px] font-medium leading-none text-ink transition-[filter,transform] duration-[180ms] ease-[var(--ease)] hover:brightness-[1.08] active:scale-[0.97] disabled:cursor-not-allowed"
+              className="h-11 shrink-0 bg-signal px-[18px] text-[13px] font-medium leading-none text-ink transition-[filter,transform] duration-[180ms] ease-[var(--ease)] hover:brightness-[1.08] active:scale-[0.97] disabled:cursor-not-allowed"
             >
               Add
             </button>
           </div>
           {/* helper: validation / API errors or the default hint — queued/running state lives in the JobCard */}
-          <p id="add-repo-hint" aria-live="polite" className={cn("mt-[9px] font-mono text-[11px] leading-[1.5] text-pretty", invalid ? "text-l2" : "text-dim")}>
+          <p id="add-repo-hint" aria-live="polite" className={cn("mt-[9px] font-mono text-[12px] leading-[1.5] text-pretty", invalid ? "text-l2" : "text-dim")}>
             {err ?? helper}
           </p>
           {jobId ? (
@@ -128,7 +128,7 @@ export function AddRepository({ disabled, recent, prominent = false }: { disable
       <div className={CARD}>
         <div className={HEAD}>
           <span className="label">recent jobs</span>
-          <span className="num text-[11px] leading-none text-dim">{recent.length > shown.length ? `showing ${shown.length} of ${recent.length}` : recent.length}</span>
+          <span className="num text-[12px] leading-none text-dim">{recent.length > shown.length ? `showing ${shown.length} of ${recent.length}` : recent.length}</span>
         </div>
         {shown.length === 0 ? (
           <StateView icon={Radio} sentence={disabled ? "live API unavailable — no job history" : "no jobs yet"} className="min-h-[160px] flex-1 p-4" />
@@ -137,10 +137,10 @@ export function AddRepository({ disabled, recent, prominent = false }: { disable
             {shown.map((j) => (
               <li key={j.job_id} className="grid h-10 shrink-0 grid-cols-[6px_minmax(0,1fr)_minmax(0,auto)_76px] items-center gap-3 border-b border-line last:border-b-0">
                 <span aria-hidden className={cn("size-1.5 rounded-full", DOT[j.status] ?? "bg-l1")} />
-                <span className="min-w-0 truncate font-mono text-[12px] leading-none text-mut" title={j.repo}>
+                <span className="min-w-0 truncate font-mono text-[13px] leading-none text-mut" title={j.repo}>
                   {j.repo}
                 </span>
-                <span suppressHydrationWarning className="num min-w-0 truncate whitespace-nowrap text-[10.5px] leading-none text-dim" title={`job ${j.job_id}${j.error ? ` — ${j.error}` : ""} · ${j.started_at ?? ""}`}>
+                <span suppressHydrationWarning className="num min-w-0 truncate whitespace-nowrap text-[11.5px] leading-none text-dim" title={`job ${j.job_id}${j.error ? ` — ${j.error}` : ""} · ${j.started_at ?? ""}`}>
                   {what(j)} · {ago(j.started_at)}
                 </span>
                 <span className="flex justify-end">{(j.status === "failed" || j.status === "interrupted") && !disabled && <RetryButton onClick={() => retry(j.job_id)} disabled={busy} compact />}</span>
@@ -168,7 +168,7 @@ function RetryButton({ onClick, disabled, compact = false }: { onClick: () => vo
       disabled={disabled}
       className={cn(
         "inline-flex shrink-0 items-center gap-1 rounded-md border border-border font-mono text-signal-2 transition-colors duration-[180ms] ease-[var(--ease)] hover:border-signal/40 hover:text-signal active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60",
-        compact ? "min-h-10 px-2 text-[10.5px]" : "min-h-10 px-3 text-[12px]",
+        compact ? "min-h-10 px-2 text-[11.5px]" : "min-h-10 px-3 text-[13px]",
       )}
     >
       <RotateCcw className={compact ? "size-3" : "size-3.5"} /> retry
@@ -234,21 +234,21 @@ function JobCard({ id, onRetry, busy }: { id: string; onRetry: (id: string) => v
   return (
     <div className="mt-3.5 flex min-h-0 flex-1 flex-col animate-[en_.3s_var(--ease)_both] rounded-[10px] border border-border bg-card2 p-3.5" aria-live="polite">
       <div className="flex min-h-10 flex-wrap items-center gap-x-3 gap-y-1">
-        <span className="min-w-[40%] flex-1 truncate font-mono text-[12px] leading-none text-fg max-[760px]:basis-full" title={job?.repo}>
+        <span className="min-w-[40%] flex-1 truncate font-mono text-[13px] leading-none text-fg max-[760px]:basis-full" title={job?.repo}>
           {job?.repo ?? "…"}
         </span>
-        <span className="num min-w-0 truncate text-[10.5px] leading-none text-dim" title={`job ${id}`}>
+        <span className="num min-w-0 truncate text-[11.5px] leading-none text-dim" title={`job ${id}`}>
           <span className={cn(status === "failed" && "text-l2", status === "interrupted" && "text-unknown")}>{line}</span> · job {id.slice(0, 8)}
         </span>
         {canRetry && <RetryButton onClick={() => onRetry(id)} disabled={busy} compact />}
       </div>
-      {err && <p className="mt-2 font-mono text-[11px] text-l1">{err} — retrying</p>}
+      {err && <p className="mt-2 font-mono text-[12px] text-l1">{err} — retrying</p>}
       <ol className="mt-2 flex-1">
         {steps.map((s) => (
           <Step key={s.name} step={s} />
         ))}
         {steps.length === 0 && (
-          <li className="flex h-8 items-center gap-2.5 font-mono text-[11.5px] leading-none text-mut">
+          <li className="flex h-8 items-center gap-2.5 font-mono text-[12.5px] leading-none text-mut">
             <span className="grid size-3.5 place-items-center">
               <span className={cn("size-[7px] rounded-full", job && SETTLED.has(status) ? "bg-input" : "blip bg-signal")} />
             </span>
@@ -257,13 +257,13 @@ function JobCard({ id, onRetry, busy }: { id: string; onRetry: (id: string) => v
         )}
       </ol>
       {job?.error && (
-        <p className={cn("mt-2 line-clamp-2 font-mono text-[11px] leading-[1.5]", status === "interrupted" ? "text-mut" : "text-l2")} title={job.error}>
+        <p className={cn("mt-2 line-clamp-2 font-mono text-[12px] leading-[1.5]", status === "interrupted" ? "text-mut" : "text-l2")} title={job.error}>
           {job.error}
         </p>
       )}
       {status === "done" && (
         <div className="mt-auto flex justify-end pt-2 animate-[en_.3s_var(--ease)_both]">
-          <Link href="/board" className="inline-flex min-h-10 items-center gap-1 rounded-md px-2 text-[12px] text-signal-2 transition-colors duration-[180ms] hover:text-signal">
+          <Link href="/board" className="inline-flex min-h-10 items-center gap-1 rounded-md px-2 text-[13px] text-signal-2 transition-colors duration-[180ms] hover:text-signal">
             view on board <ArrowRight className="size-3.5" />
           </Link>
         </div>
@@ -290,11 +290,11 @@ function Step({ step }: { step: JobStep }) {
           <span className={cn("size-[7px] rounded-full", st === "running" ? "blip bg-signal" : "bg-input")} />
         )}
       </span>
-      <span className={cn("shrink-0 font-mono text-[11.5px] leading-none", st === "done" || st === "skipped" ? "text-mut" : "text-fg")}>{step.name}</span>
-      <span className="min-w-0 flex-1 truncate font-mono text-[11px] leading-none text-dim" title={step.detail ?? undefined}>
+      <span className={cn("shrink-0 font-mono text-[12.5px] leading-none", st === "done" || st === "skipped" ? "text-mut" : "text-fg")}>{step.name}</span>
+      <span className="min-w-0 flex-1 truncate font-mono text-[12px] leading-none text-dim" title={step.detail ?? undefined}>
         {step.detail ?? ""}
       </span>
-      <span className="num shrink-0 text-[10.5px] leading-none text-dim">{st === "running" || step.ms == null ? "—" : fmtMs(step.ms)}</span>
+      <span className="num shrink-0 text-[11.5px] leading-none text-dim">{st === "running" || step.ms == null ? "—" : fmtMs(step.ms)}</span>
       <span className="h-[3px] w-16 shrink-0 overflow-hidden rounded-[2px] bg-hover max-[900px]:hidden">
         <span className={cn("block h-full transition-[width] duration-300 ease-[var(--ease)]", w, bar)} />
       </span>

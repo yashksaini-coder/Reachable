@@ -26,21 +26,21 @@ export default function Q5NearNames() {
           <Box cx={n.x} cy={n.y} w={150} h={38} kind="Package · suspect" label={n.label} />
           <Edge id={id} d={`M ${n.x + 75} ${n.y} L ${C.x - 76} ${C.y + (n.y < C.y ? -12 : 12)}`} tone="signal" />
           <rect x={n.x + 96} y={n.y - 32 + (n.y < C.y ? 0 : 52)} width={78} height={16} rx={4} className="fill-card2 stroke-border" strokeWidth={1} />
-          <text x={n.x + 135} y={n.y - 21 + (n.y < C.y ? 0 : 52)} textAnchor="middle" className="fill-mut font-mono text-[9.5px]">{n.kind} · d={n.d}</text>
+          <text x={n.x + 135} y={n.y - 21 + (n.y < C.y ? 0 : 52)} textAnchor="middle" className="fill-mut font-mono text-[10.5px]">{n.kind} · d={n.d}</text>
         </g>
       ))}
-      <text x={290} y={C.y - 4} textAnchor="middle" className="fill-signal font-mono text-[10px]">NAME_SIMILAR_TO</text>
-      <text x={290} y={C.y + 9} textAnchor="middle" className="fill-dim font-mono text-[10px]">{"{kind, distance}"}</text>
-      <text x={290} y={C.y + 22} textAnchor="middle" className="fill-dim font-mono text-[10px]">suspect → popular</text>
+      <text x={290} y={C.y - 4} textAnchor="middle" className="fill-signal font-mono text-[11px]">NAME_SIMILAR_TO</text>
+      <text x={290} y={C.y + 9} textAnchor="middle" className="fill-dim font-mono text-[11px]">{"{kind, distance}"}</text>
+      <text x={290} y={C.y + 22} textAnchor="middle" className="fill-dim font-mono text-[11px]">suspect → popular</text>
 
       {/* the other kinds the ingest materialises when a package with that name exists */}
-      <text x={720} y={40} textAnchor="middle" className="fill-dim text-[9.5px] uppercase tracking-[0.08em]">one-edit kinds · examples</text>
+      <text x={720} y={40} textAnchor="middle" className="fill-dim text-[10.5px] uppercase tracking-[0.08em]">one-edit kinds · examples</text>
       {kinds.map((k) => (
         <g key={k.kind}>
           <Edge id={id} d={`M ${C.x + 76} ${C.y} L 640 ${k.y}`} tone="input" dashed />
           <rect x={640} y={k.y - 12} width={72} height={20} rx={4} className="fill-card2 stroke-border" strokeWidth={1} />
-          <text x={676} y={k.y + 2} textAnchor="middle" className="fill-mut font-mono text-[9.5px]">{k.kind}</text>
-          <text x={724} y={k.y + 2} className="fill-dim font-mono text-[10.5px]">{k.ex}</text>
+          <text x={676} y={k.y + 2} textAnchor="middle" className="fill-mut font-mono text-[10.5px]">{k.kind}</text>
+          <text x={724} y={k.y + 2} className="fill-dim font-mono text-[11.5px]">{k.ex}</text>
         </g>
       ))}
 

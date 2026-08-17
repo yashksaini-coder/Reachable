@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 // (max 44ch), optional second dim line, one outlined orange action. Vertically centred in
 // whatever slot it sits in — full page by default, or a card slot via `className` (h-full etc.).
 export const ACTION =
-  "inline-flex min-h-10 items-center rounded-lg border border-signal/40 px-[15px] text-[12px] font-medium leading-none text-signal transition-[background-color,transform] duration-[180ms] ease-[var(--ease)] hover:bg-sigfill active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50";
+  "inline-flex min-h-10 items-center rounded-lg border border-signal/40 px-[15px] text-[13px] font-medium leading-none text-signal transition-[background-color,transform] duration-[180ms] ease-[var(--ease)] hover:bg-sigfill active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50";
 
 export function StateView({
   icon: Icon = Search,
@@ -29,8 +29,8 @@ export function StateView({
       <span className="grid size-11 shrink-0 place-items-center rounded-full border border-border text-dim" aria-hidden>
         <Icon className="size-[17px]" />
       </span>
-      <p className="max-w-[44ch] text-pretty text-[13px] leading-[1.5] text-mut">{sentence}</p>
-      {hint && <p className="-mt-1.5 max-w-[44ch] text-pretty font-mono text-[11px] leading-[1.5] text-dim">{hint}</p>}
+      <p className="max-w-[44ch] text-pretty text-[14px] leading-[1.5] text-mut">{sentence}</p>
+      {hint && <p className="-mt-1.5 max-w-[44ch] text-pretty font-mono text-[12px] leading-[1.5] text-dim">{hint}</p>}
       {action &&
         (action.href ? (
           <Link href={action.href} className={cn(ACTION, "mt-1.5")}>
@@ -52,7 +52,7 @@ export function NotFoundView() {
   return (
     <div className="flex min-h-[70vh] flex-col items-center justify-center gap-[18px] p-10 text-center">
       <Image src="/art/404-strip.png" alt="" width={512} height={115} className="pixel max-w-full opacity-90" unoptimized priority />
-      <p className="max-w-[44ch] text-pretty text-[13px] leading-[1.5] text-mut">No page at that address — the advisory or service may not be tracked yet.</p>
+      <p className="max-w-[44ch] text-pretty text-[14px] leading-[1.5] text-mut">No page at that address — the advisory or service may not be tracked yet.</p>
       <Link href="/incidents" className={ACTION}>
         Back to incidents
       </Link>
@@ -69,7 +69,7 @@ export function EmptySlot({ icon: Icon = Network, children, className }: { icon?
       <span className="grid size-11 place-items-center rounded-full border border-border text-dim" aria-hidden>
         <Icon className="size-[17px]" />
       </span>
-      <p className="m-0 max-w-[44ch] text-pretty text-[12.5px] leading-[1.5] text-mut">{children}</p>
+      <p className="m-0 max-w-[44ch] text-pretty text-[13.5px] leading-[1.5] text-mut">{children}</p>
     </div>
   );
 }

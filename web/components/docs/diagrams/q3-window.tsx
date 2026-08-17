@@ -27,7 +27,7 @@ export default function Q3Window() {
       {TICKS.map((t, i) => (
         <g key={t}>
           <line x1={X0 + i * 95} y1={AX} x2={X0 + i * 95} y2={AX + 5} className="stroke-input" strokeWidth={1} />
-          <text x={X0 + i * 95} y={AX + 18} textAnchor="middle" className="fill-dim font-mono text-[10px]">{t}</text>
+          <text x={X0 + i * 95} y={AX + 18} textAnchor="middle" className="fill-dim font-mono text-[11px]">{t}</text>
         </g>
       ))}
 
@@ -35,35 +35,35 @@ export default function Q3Window() {
       <rect x={LIVE_FROM} y={AX - 34} width={LIVE_TO - LIVE_FROM} height={24} className="fill-card2" />
       <path d={`M ${LIVE_TO} ${AX - 34} H ${LIVE_FROM} V ${AX - 10} H ${LIVE_TO}`} fill="none" className="stroke-signal" strokeWidth={1.4} />
       <line x1={LIVE_TO} y1={AX - 34} x2={LIVE_TO} y2={AX - 10} className="stroke-signal" strokeWidth={1.4} strokeDasharray="4 3" />
-      <text x={LIVE_FROM} y={AX - 42} className="fill-signal font-mono text-[10px]">live_from 13:12:39 · exact</text>
+      <text x={LIVE_FROM} y={AX - 42} className="fill-signal font-mono text-[11px]">live_from 13:12:39 · exact</text>
 
       {/* advisory published = live_to */}
       <line x1={LIVE_TO} y1={72} x2={LIVE_TO} y2={AX + 34} className="stroke-input" strokeWidth={1} strokeDasharray="4 3" />
-      <text x={LIVE_TO + 8} y={AX - 62} className="fill-mut font-mono text-[10px]">advisory published 14:26:51</text>
-      <text x={LIVE_TO + 8} y={AX - 48} className="fill-dim font-mono text-[10px]">= live_to · upper bound (npm publishes no takedown time)</text>
+      <text x={LIVE_TO + 8} y={AX - 62} className="fill-mut font-mono text-[11px]">advisory published 14:26:51</text>
+      <text x={LIVE_TO + 8} y={AX - 48} className="fill-dim font-mono text-[11px]">= live_to · upper bound (npm publishes no takedown time)</text>
 
       {/* in-window commits */}
       {COMMITS.map((c) => (
         <g key={c.t}>
           <line x1={c.x} y1={c.ly + 6} x2={c.x} y2={AX - 22} className="stroke-l1" strokeWidth={1} />
           <circle cx={c.x} cy={AX - 22} r={4} className="fill-l1" />
-          <text x={c.x - 6} y={c.ly} textAnchor="end" className="fill-l1 font-mono text-[10px]">{c.who} · {c.t}</text>
+          <text x={c.x - 6} y={c.ly} textAnchor="end" className="fill-l1 font-mono text-[11px]">{c.who} · {c.t}</text>
         </g>
       ))}
-      <text x={X0} y={80} className="fill-l1 text-[10.5px]">in_window: pin committed while installable</text>
+      <text x={X0} y={80} className="fill-l1 text-[11.5px]">in_window: pin committed while installable</text>
 
       {/* pins of the erased version, after the window */}
       {PINS.map((p) => (
         <g key={p.t}>
           <circle cx={p.x} cy={AX} r={4} className="fill-l2" />
-          <text x={p.x + 4} y={AX + 40} textAnchor="end" className="fill-l2 font-mono text-[10px]">{p.who} · {p.t}</text>
+          <text x={p.x + 4} y={AX + 40} textAnchor="end" className="fill-l2 font-mono text-[11px]">{p.who} · {p.t}</text>
         </g>
       ))}
-      <text x={PINS[0].x} y={AX + 56} textAnchor="middle" className="fill-dim text-[10.5px]">pinned_removed: the lockfile pins a version npm has erased — only possible while it was live</text>
-      <text x={830} y={AX + 72} textAnchor="end" className="fill-dim font-mono text-[10px]">+2 later pins: 09-09 15:54 · 09-13 04:37</text>
+      <text x={PINS[0].x} y={AX + 56} textAnchor="middle" className="fill-dim text-[11.5px]">pinned_removed: the lockfile pins a version npm has erased — only possible while it was live</text>
+      <text x={830} y={AX + 72} textAnchor="end" className="fill-dim font-mono text-[11px]">+2 later pins: 09-09 15:54 · 09-13 04:37</text>
 
       {/* the predicate */}
-      <text x={X0} y={300} className="fill-signal-2 font-mono text-[11px]">WHERE r.at &gt;= af.live_from AND r.at &lt;= af.live_to</text>
+      <text x={X0} y={300} className="fill-signal-2 font-mono text-[12px]">WHERE r.at &gt;= af.live_from AND r.at &lt;= af.live_to</text>
       <Note x={X0} y={320}>one engine-side predicate: RESOLVED.at against the AFFECTS window — the window lives on the edge, so a version hit by two advisories has two windows.</Note>
     </Svg>
   );

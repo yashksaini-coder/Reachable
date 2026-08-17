@@ -29,12 +29,12 @@ export function Lane({ title, hint, tone, wide, cards }: { title: string; hint: 
     >
       <header className="border-b border-line px-3.5 pb-3 pt-3.5">
         <div className="flex items-center justify-between gap-2.5">
-          <span className="text-[12.5px] font-medium leading-[1.2] text-fg">{title}</span>
-          <span className={cn("num text-[11px] font-medium leading-none", tone.text)} aria-label={`${cards.length} exposures`}>
+          <span className="text-[13.5px] font-medium leading-[1.2] text-fg">{title}</span>
+          <span className={cn("num text-[12px] font-medium leading-none", tone.text)} aria-label={`${cards.length} exposures`}>
             {cards.length}
           </span>
         </div>
-        <div className="mt-1.5 font-mono text-[10.5px] leading-[1.4] text-dim text-pretty">{hint}</div>
+        <div className="mt-1.5 font-mono text-[11.5px] leading-[1.4] text-dim text-pretty">{hint}</div>
       </header>
       <div className="flex flex-col gap-2 p-2.5">
         {cards.length === 0 ? (
@@ -42,7 +42,7 @@ export function Lane({ title, hint, tone, wide, cards }: { title: string; hint: 
             <span className="grid size-11 place-items-center rounded-full border border-border text-dim" aria-hidden>
               <Inbox className="size-[17px]" />
             </span>
-            <p className="m-0 max-w-[44ch] text-pretty font-mono text-[10.5px] text-dim">nothing in this state</p>
+            <p className="m-0 max-w-[44ch] text-pretty font-mono text-[11.5px] text-dim">nothing in this state</p>
           </div>
         ) : (
           cards.map((c) => {
@@ -54,10 +54,10 @@ export function Lane({ title, hint, tone, wide, cards }: { title: string; hint: 
                 className="block min-h-11 w-full rounded-[9px] border border-border bg-card2 px-[13px] py-3 transition-[background-color,transform] duration-[180ms] ease-[var(--ease)] hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50 active:scale-[0.98] group-has-[:checked]:px-[11px] group-has-[:checked]:py-[9px]"
               >
                 <div className="flex items-center justify-between gap-2.5">
-                  <span className="truncate font-mono text-[12px] font-medium leading-none text-fg">{c.slug}</span>
-                  <span className="shrink-0 font-mono text-[10.5px] leading-none text-signal">{c.advisory}</span>
+                  <span className="truncate font-mono text-[13px] font-medium leading-none text-fg">{c.slug}</span>
+                  <span className="shrink-0 font-mono text-[11.5px] leading-none text-signal">{c.advisory}</span>
                 </div>
-                <div className="mt-[9px] font-mono text-[11px] leading-[1.5] text-dim [overflow-wrap:anywhere] group-has-[:checked]:hidden">
+                <div className="mt-[9px] font-mono text-[12px] leading-[1.5] text-dim [overflow-wrap:anywhere] group-has-[:checked]:hidden">
                   via {c.via}
                   <br />
                   {c.sha} · {c.time}

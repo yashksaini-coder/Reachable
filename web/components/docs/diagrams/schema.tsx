@@ -21,12 +21,12 @@ export default function Schema() {
 
       {/* AFFECTS with the window */}
       <Edge id={id} d={`M 160 ${R1} H 278`} tone="signal" label="AFFECTS" lx={219} ly={R1 - 10} />
-      <text x={219} y={R1 + 18} textAnchor="middle" className="fill-mut font-mono text-[9.5px]">{"{live_from, live_to,"}</text>
-      <text x={219} y={R1 + 30} textAnchor="middle" className="fill-mut font-mono text-[9.5px]">{"live_to_kind}"}</text>
+      <text x={219} y={R1 + 18} textAnchor="middle" className="fill-mut font-mono text-[10.5px]">{"{live_from, live_to,"}</text>
+      <text x={219} y={R1 + 30} textAnchor="middle" className="fill-mut font-mono text-[10.5px]">{"live_to_kind}"}</text>
 
       {/* RESOLVED with at */}
       <Edge id={id} d={`M 530 ${R1} H 412`} tone="signal" label="RESOLVED" lx={471} ly={R1 - 10} />
-      <text x={471} y={R1 + 18} textAnchor="middle" className="fill-mut font-mono text-[9.5px]">{"{at}"}</text>
+      <text x={471} y={R1 + 18} textAnchor="middle" className="fill-mut font-mono text-[10.5px]">{"{at}"}</text>
 
       <Edge id={id} d={`M 760 ${R1} H 662`} label="HAS_LOCKFILE" lx={711} ly={R1 - 10} />
 

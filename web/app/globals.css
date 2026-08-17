@@ -208,7 +208,7 @@
   body {
     @apply bg-bg text-fg;
     margin: 0;
-    font-size: 13px;
+    font-size: 14px;
     line-height: 1.55;
     font-weight: 400;
     /* tabular numerals everywhere: dynamic numbers must never shift layout */
@@ -307,7 +307,7 @@
 }
 /* uppercase tracked metadata label: 10.5px, .09–.11em, --dim */
 @utility label {
-  font-size: 10.5px;
+  font-size: 11.5px;
   line-height: 1;
   font-weight: 500;
   letter-spacing: 0.09em;
@@ -332,9 +332,9 @@
    markdown is set back explicitly here. Rhythm: 12px between blocks, 40px above an h2 with a
    hairline, 24px above an h3; measure 72ch. */
 .doc {
-  max-width: 72ch;
-  font-size: 13.5px;
-  line-height: 1.65;
+  max-width: 880px;
+  font-size: 16px;
+  line-height: 1.7;
   color: var(--color-mut);
 }
 .doc > h1 {
@@ -345,10 +345,10 @@
   color: var(--color-mut);
 }
 .doc h2 {
-  margin: 40px 0 12px;
-  padding-top: 24px;
+  margin: 48px 0 14px;
+  padding-top: 28px;
   border-top: 1px solid var(--color-line);
-  font-size: 17px;
+  font-size: 24px;
   line-height: 1.3;
   font-weight: 500;
   letter-spacing: -0.01em;
@@ -362,14 +362,14 @@
   border-top: 0;
 }
 .doc h3 {
-  margin: 24px 0 8px;
-  font-size: 14px;
+  margin: 28px 0 10px;
+  font-size: 18px;
   font-weight: 500;
   color: var(--color-fg);
   scroll-margin-top: 84px;
 }
 .doc p {
-  margin: 0 0 12px;
+  margin: 0 0 16px;
   text-wrap: pretty;
 }
 .doc strong {
@@ -406,14 +406,14 @@
 .doc li::marker {
   color: var(--color-dim);
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 14px;
 }
 .doc li > p {
   margin: 0;
 }
 .doc code {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 14px;
   color: var(--color-signal-2);
   background: var(--color-code);
   border: 1px solid var(--color-line);
@@ -429,8 +429,8 @@
   border-radius: 8px;
   border: 1px solid var(--color-line);
   background: var(--color-code);
-  font-size: 11.5px;
-  line-height: 1.65;
+  font-size: 13px;
+  line-height: 1.7;
 }
 .doc td code,
 .doc li code {
@@ -445,14 +445,14 @@
 }
 .doc table {
   width: 100%;
-  margin: 12px 0 18px;
+  margin: 14px 0 22px;
   border-collapse: collapse;
-  font-size: 12.5px;
+  font-size: 14.5px;
   display: block;
   overflow-x: auto;
 }
 .doc thead th {
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.09em;
   text-transform: uppercase;
@@ -463,7 +463,7 @@
   white-space: nowrap;
 }
 .doc td {
-  padding: 10px 14px 10px 0;
+  padding: 12px 16px 12px 0;
   border-bottom: 1px solid var(--color-line);
   vertical-align: top;
   line-height: 1.5;

@@ -47,12 +47,12 @@ export default async function Home() {
         <div>
           <div className="mb-[18px] flex items-center gap-2">
             <span className="size-[5px] rounded-full bg-signal" aria-hidden />
-            <span className="text-[10.5px] font-medium uppercase leading-none tracking-[0.11em] text-signal">
+            <span className="text-[11.5px] font-medium uppercase leading-none tracking-[0.11em] text-signal">
               supply chain{watching != null && <> · watching {watching} services</>}
             </span>
           </div>
-          <h1 className="max-w-[15ch] text-balance text-[30px] font-medium leading-[1.22] tracking-[-0.02em] text-fg">Compromised packages, and who they reached.</h1>
-          <p className="mt-4 max-w-[52ch] text-[13px] text-mut">Six answers per incident, each carrying the statement that produced it. Verdicts are computed, never inferred.</p>
+          <h1 className="max-w-[15ch] text-balance text-[32px] font-medium leading-[1.22] tracking-[-0.02em] text-fg">Compromised packages, and who they reached.</h1>
+          <p className="mt-4 max-w-[52ch] text-[14px] text-mut">Six answers per incident, each carrying the statement that produced it. Verdicts are computed, never inferred.</p>
         </div>
         <StatStrip min={132}>
           <Stat n={totals.l2} label="act now" rule="bg-l2" tone="text-l2" size="lg" />
@@ -70,8 +70,8 @@ export default async function Home() {
           <span className="grid size-11 place-items-center rounded-full border border-border text-dim" aria-hidden>
             <Radar className="size-[17px]" />
           </span>
-          <p className="m-0 max-w-[44ch] text-pretty text-[13px] text-mut">No incident composed yet — add a repository, then compose one.</p>
-          <code className="mt-1 max-w-full rounded-md border border-line bg-code px-3 py-2 font-mono text-[12px] text-signal-2 [overflow-wrap:anywhere]">make add REPO=owner/repo &amp;&amp; make incident ID=GHSA-…</code>
+          <p className="m-0 max-w-[44ch] text-pretty text-[14px] text-mut">No incident composed yet — add a repository, then compose one.</p>
+          <code className="mt-1 max-w-full rounded-md border border-line bg-code px-3 py-2 font-mono text-[13px] text-signal-2 [overflow-wrap:anywhere]">make add REPO=owner/repo &amp;&amp; make incident ID=GHSA-…</code>
         </div>
       ) : (
         <div className="overflow-hidden rounded-xl border border-border bg-card elev">
@@ -88,13 +88,13 @@ export default async function Home() {
                 <div className="flex items-start gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2.5">
-                      <span className="font-mono text-[13px] font-medium leading-none text-signal">{i.advisory.key}</span>
+                      <span className="font-mono text-[14px] font-medium leading-none text-signal">{i.advisory.key}</span>
                       {level ? <Level level={level} /> : <Chip>none exposed</Chip>}
                       <Kind kind={i.advisory.kind} />
                       <Chip>{i.advisory.severity}</Chip>
                     </div>
-                    <div className="mt-[9px] max-w-[76ch] text-pretty text-[13px] text-fg">{i.advisory.summary}</div>
-                    <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 font-mono text-[11px] leading-[1.2] text-dim">
+                    <div className="mt-[9px] max-w-[76ch] text-pretty text-[14px] text-fg">{i.advisory.summary}</div>
+                    <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 font-mono text-[12px] leading-[1.2] text-dim">
                       <span>
                         exposed <span className="text-mut">{h.services_exposed}</span>
                       </span>
@@ -122,7 +122,7 @@ export default async function Home() {
               </Link>
             );
           })}
-          <div className="px-5 py-3.5 font-mono text-[11px] leading-[1.3] text-dim">
+          <div className="px-5 py-3.5 font-mono text-[12px] leading-[1.3] text-dim">
             {incidents.length} composed{newest && <> · reports generated {fmtUtc(newest.provenance.generated_at)}</>}
           </div>
         </div>

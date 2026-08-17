@@ -49,8 +49,8 @@ export function Rail({ entries }: { entries: RailEntry[] }) {
             )}
           >
             <span className={cn("size-[5px] shrink-0 rounded-full", e.dot)} aria-hidden />
-            <span className={cn("min-w-0 flex-1 truncate text-[11.5px] leading-[1.3]", on ? "text-fg" : "text-mut")}>{e.label}</span>
-            <span className="num text-[10.5px] leading-none text-dim">{e.n}</span>
+            <span className={cn("min-w-0 flex-1 truncate text-[12.5px] leading-[1.3]", on ? "text-fg" : "text-mut")}>{e.label}</span>
+            <span className="num text-[11.5px] leading-none text-dim">{e.n}</span>
           </button>
         );
       })}

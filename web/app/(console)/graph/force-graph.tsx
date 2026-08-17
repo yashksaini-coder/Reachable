@@ -229,7 +229,7 @@ export function ForceGraph({
                   {isSel && <circle r={n.r + 5} fill="none" stroke={c.color} strokeWidth={1} strokeOpacity={0.4} />}
                   <circle r={n.r} fill={c.color} fillOpacity={0.9} />
                   {showLabel && (
-                    <text x={n.r + 6} y={3.5} className="font-mono text-[10.5px]" fill={off ? "var(--color-dim)" : "var(--color-mut)"}>
+                    <text x={n.r + 6} y={3.5} className="font-mono text-[11.5px]" fill={off ? "var(--color-dim)" : "var(--color-mut)"}>
                       {text.length > 34 ? text.slice(0, 32) + "…" : text}
                     </text>
                   )}
@@ -242,7 +242,7 @@ export function ForceGraph({
         {tip && (
           <div
             role="tooltip"
-            className="pointer-events-none absolute -translate-x-1/2 -translate-y-[130%] whitespace-nowrap rounded-[7px] border border-border bg-pop px-[9px] py-[7px] font-mono text-[11px] leading-[1.4] text-mut elev animate-[fade_.15s_var(--ease)_both]"
+            className="pointer-events-none absolute -translate-x-1/2 -translate-y-[130%] whitespace-nowrap rounded-[7px] border border-border bg-pop px-[9px] py-[7px] font-mono text-[12px] leading-[1.4] text-mut elev animate-[fade_.15s_var(--ease)_both]"
             style={{ left: view.x + (tip.x ?? 0) * view.k, top: view.y + (tip.y ?? 0) * view.k }}
           >
             {short(tip.id)}
@@ -256,7 +256,7 @@ export function ForceGraph({
       </div>
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2.5 border-t border-line px-4 py-2.5">
-        <div className="flex min-w-0 flex-1 flex-wrap gap-x-3.5 gap-y-2 font-mono text-[10.5px] leading-none text-dim max-[600px]:basis-full">
+        <div className="flex min-w-0 flex-1 flex-wrap gap-x-3.5 gap-y-2 font-mono text-[11.5px] leading-none text-dim max-[600px]:basis-full">
           {LEGEND.map((g) => (
             <span key={g.kind} className="inline-flex items-center gap-1.5">
               <span className={cn("size-1.5 rounded-full", g.bg)} aria-hidden />
@@ -264,7 +264,7 @@ export function ForceGraph({
             </span>
           ))}
         </div>
-        <span className="num ml-auto whitespace-nowrap text-[10.5px] leading-none text-dim">
+        <span className="num ml-auto whitespace-nowrap text-[11.5px] leading-none text-dim">
           {nodes.length} nodes · {edges.length} edges
         </span>
         <div className="flex gap-1" role="group" aria-label="zoom">
@@ -274,7 +274,7 @@ export function ForceGraph({
           <button type="button" onClick={() => zoomBy(1.2)} className={CTRL} aria-label="zoom in">
             +
           </button>
-          <button type="button" onClick={fitTo} className={cn(CTRL, "px-2.5 text-[11px] font-medium")} aria-label="fit to view">
+          <button type="button" onClick={fitTo} className={cn(CTRL, "px-2.5 text-[12px] font-medium")} aria-label="fit to view">
             fit
           </button>
         </div>

@@ -46,10 +46,10 @@ const KIND_LABEL: Record<string, string> = {
 // Prototype table: th 10.5px tracked --dim on a --border rule; td 12px --mut on --line rules; row hover --hover.
 const TABLE =
   "w-full border-collapse [&_th]:label [&_th]:whitespace-nowrap [&_th]:border-b [&_th]:border-border [&_th]:px-3 [&_th]:pb-[9px] [&_th]:text-left " +
-  "[&_td]:h-10 [&_td]:border-b [&_td]:border-line [&_td]:px-3 [&_td]:py-3 [&_td]:align-middle [&_td]:whitespace-nowrap [&_td]:text-[12.5px] [&_td]:text-mut " +
+  "[&_td]:h-10 [&_td]:border-b [&_td]:border-line [&_td]:px-3 [&_td]:py-3 [&_td]:align-middle [&_td]:whitespace-nowrap [&_td]:text-[13.5px] [&_td]:text-mut " +
   "[&_tbody_tr]:transition-colors [&_tbody_tr]:duration-[180ms] [&_tbody_tr:hover]:bg-hover [&_tbody_tr:last-child_td]:border-b-0";
-const CHIP = "inline-flex items-center gap-2 rounded-[7px] border border-border bg-card2 px-2.5 py-[7px] font-mono text-[11.5px] leading-none text-mut";
-const CODE = "inline-block rounded-md border border-border bg-code px-2.5 py-2 font-mono text-[11.5px] leading-[1.5] text-signal-2 [overflow-wrap:anywhere]";
+const CHIP = "inline-flex items-center gap-2 rounded-[7px] border border-border bg-card2 px-2.5 py-[7px] font-mono text-[12.5px] leading-none text-mut";
+const CODE = "inline-block rounded-md border border-border bg-code px-2.5 py-2 font-mono text-[12.5px] leading-[1.5] text-signal-2 [overflow-wrap:anywhere]";
 const LINK = "rounded-sm text-fg transition-colors duration-[180ms] hover:text-signal-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50";
 
 function SvcLink({ inc, svc, className }: { inc: Incident; svc: string; className?: string }) {
@@ -119,7 +119,7 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
     <PrintMode>
     <div className="mx-auto grid max-w-[1280px] grid-cols-[minmax(0,1fr)_188px] items-start gap-12 px-10 py-[52px] pb-[72px] max-[1180px]:grid-cols-1 max-[900px]:px-5 print:grid-cols-1 print:p-0">
       <div className="min-w-0">
-        <div className="flex items-center gap-2 font-mono text-[11px] leading-none text-dim animate-[en_.3s_var(--ease)_both]">
+        <div className="flex items-center gap-2 font-mono text-[12px] leading-none text-dim animate-[en_.3s_var(--ease)_both]">
           <Link href="/incidents" className="-my-2 inline-flex min-h-10 items-center rounded-sm text-mut hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50">
             incidents
           </Link>
@@ -129,13 +129,13 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
 
         <header className="mt-5 animate-[en_.3s_var(--ease)_both] [animation-delay:60ms]">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2.5">
-            <h1 className="m-0 min-w-0 font-mono text-[30px] font-medium leading-[1.15] tracking-[-0.025em] text-fg [overflow-wrap:anywhere] max-[600px]:basis-full">{inc.advisory.key}</h1>
+            <h1 className="m-0 min-w-0 font-mono text-[32px] font-medium leading-[1.15] tracking-[-0.025em] text-fg [overflow-wrap:anywhere] max-[600px]:basis-full">{inc.advisory.key}</h1>
             {worst && <Level level={worst} className="rounded-md px-2 py-1.5" />}
             <Kind kind={inc.advisory.kind} className="rounded-md px-2 py-1.5" />
             <Kind kind={inc.advisory.severity} className="rounded-md px-2 py-1.5" />
             <ExportButton />
           </div>
-          <div className="mt-3.5 flex flex-wrap gap-x-[22px] gap-y-1.5 font-mono text-[11px] leading-[1.3] text-dim">
+          <div className="mt-3.5 flex flex-wrap gap-x-[22px] gap-y-1.5 font-mono text-[12px] leading-[1.3] text-dim">
             <span>
               published <span className="text-mut">{fmtUtc(inc.advisory.published_at_iso)}</span>
             </span>
@@ -152,7 +152,7 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
               </span>
             )}
           </div>
-          <p className="m-0 mt-5 max-w-[70ch] text-pretty text-[14px] leading-[1.6] text-fg">
+          <p className="m-0 mt-5 max-w-[70ch] text-pretty text-[15px] leading-[1.6] text-fg">
             {inc.advisory.summary.replace(/\.$/, "")}. {verdict}.
           </p>
         </header>
@@ -198,19 +198,19 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
                     const latest = rows[0];
                     return (
                       <tr key={svc}>
-                        <td className="font-mono !text-[12px] !text-fg">
+                        <td className="font-mono !text-[13px] !text-fg">
                           <SvcLink inc={inc} svc={svc} />
                         </td>
                         <td>
                           <Level level={level(svc)} />
                         </td>
                         <td className="num">{rows.length}</td>
-                        <td className="font-mono !text-[11.5px]">{latest.via ? `${short(latest.via)} · ${latest.hops} hop${latest.hops === 1 ? "" : "s"}` : "direct dependency"}</td>
-                        <td className="font-mono !text-[11.5px]">
+                        <td className="font-mono !text-[12.5px]">{latest.via ? `${short(latest.via)} · ${latest.hops} hop${latest.hops === 1 ? "" : "s"}` : "direct dependency"}</td>
+                        <td className="font-mono !text-[12.5px]">
                           {latest.sha.slice(0, 7)} · {epoch(latest.committed_at)}
                         </td>
                         <td className="text-right">
-                          <Link href={`/incident/${inc.advisory.key}/${svcSlug(svc)}`} className="inline-flex min-h-10 items-center px-0.5 text-[11px] font-medium leading-none text-signal-2 hover:text-signal">
+                          <Link href={`/incident/${inc.advisory.key}/${svcSlug(svc)}`} className="inline-flex min-h-10 items-center px-0.5 text-[12px] font-medium leading-none text-signal-2 hover:text-signal">
                             open →
                           </Link>
                         </td>
@@ -292,7 +292,7 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
             summary={q3 ? <Two a={`${q3.in_window} in window`} b={`${q3.pinned_removed} pin removed`} /> : <Two a="n/a" b="not time-bounded" />}
           >
             {q3 === null ? (
-              <p className="m-0 max-w-[64ch] text-pretty text-[12.5px] text-mut">
+              <p className="m-0 max-w-[64ch] text-pretty text-[13.5px] text-mut">
                 Not applicable: this is a CVE — the artifact is still on the registry, so exposure is not time-bounded and “resolved while live” collapses into “resolved at
                 all” (Q1).
               </p>
@@ -316,17 +316,17 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
                     <tbody>
                       {q3.rows.map((r, i) => (
                         <tr key={i}>
-                          <td className="font-mono !text-[12px] !text-fg">
+                          <td className="font-mono !text-[13px] !text-fg">
                             <SvcLink inc={inc} svc={r.service} />
                           </td>
-                          <td className="font-mono !text-[11.5px]">{short(r.version)}</td>
-                          <td className="font-mono !text-[11.5px]">{fmtUtc(r.resolved_at_iso)}</td>
-                          <td className="font-mono !text-[11.5px]">{r.sha.slice(0, 7)}</td>
-                          <td className="font-mono !text-[11.5px]">
+                          <td className="font-mono !text-[12.5px]">{short(r.version)}</td>
+                          <td className="font-mono !text-[12.5px]">{fmtUtc(r.resolved_at_iso)}</td>
+                          <td className="font-mono !text-[12.5px]">{r.sha.slice(0, 7)}</td>
+                          <td className="font-mono !text-[12.5px]">
                             {r.evidence.includes("in_window") ? <span className="text-l1">yes</span> : <span className="text-dim">no</span>}
                             {r.evidence.includes("pinned_removed") && <span className="text-l2"> · pins removed</span>}
                           </td>
-                          <td className="font-mono !text-[11px]">
+                          <td className="font-mono !text-[12px]">
                             {fmtUtc(r.live_from_iso)} → {fmtUtc(r.live_to_iso)} <Kind kind={r.live_to_kind} className="ml-1" />
                           </td>
                         </tr>
@@ -414,7 +414,7 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
                   }
                   return (
                     <div key={pkg} className="flex flex-col gap-4">
-                      {q5.length > 1 && <div className="font-mono text-[11px] leading-none text-dim">near {short(pkg)}</div>}
+                      {q5.length > 1 && <div className="font-mono text-[12px] leading-none text-dim">near {short(pkg)}</div>}
                       {[...groups].map(([kind, rs]) => (
                         <div key={kind}>
                           <div className="label mb-2.5">{kind}</div>
@@ -422,7 +422,7 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
                             {rs.map((r) => (
                               <span key={r.package} className={cn(CHIP, "rounded-md px-[9px] py-1.5")}>
                                 {short(r.package)}
-                                <span className="text-[10.5px] text-dim">
+                                <span className="text-[11.5px] text-dim">
                                   d{r.distance}
                                   {r.kind === "homoglyph" && " · homoglyph"}
                                 </span>
@@ -438,7 +438,7 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
                 <div className="flex min-h-[200px] flex-col items-center justify-center gap-3 px-5 py-4 text-center">
                   {/* the report carries no art except this hole: Q5 with nothing to show */}
                   <Image src="/art/typosquat-pair.png" alt="" width={256} height={140} className="pixel max-w-full opacity-90" unoptimized />
-                  <p className="m-0 max-w-[44ch] text-pretty text-[12.5px] leading-[1.5] text-mut">
+                  <p className="m-0 max-w-[44ch] text-pretty text-[13.5px] leading-[1.5] text-mut">
                     no near-names in the ingested corpus{q5.length > 1 ? ` across ${plural(q5.length, "package")}` : q5[0] ? ` for ${short(q5[0][0])}` : ""}
                   </p>
                 </div>
@@ -470,7 +470,7 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
                     <div className="flex flex-wrap items-center gap-3">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={`/badge/${svcSlug(services[0])}.svg`} alt={`reachable badge for ${svcSlug(services[0])}`} height={20} className="h-5 w-auto" />
-                      <code className="font-mono text-[11px] text-dim [overflow-wrap:anywhere]">{`![reachable](/badge/${svcSlug(services[0])}.svg)`}</code>
+                      <code className="font-mono text-[12px] text-dim [overflow-wrap:anywhere]">{`![reachable](/badge/${svcSlug(services[0])}.svg)`}</code>
                     </div>
                   </div>
                 )}
@@ -480,40 +480,40 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
             <div className="grid grid-cols-[repeat(auto-fit,minmax(196px,1fr))] gap-px overflow-hidden rounded-lg border border-border bg-border max-[760px]:grid-cols-1">
               <Column dot="bg-l2" title="act now" n={l2.length}>
                 {l2.map((s) => (
-                  <SvcLink key={s} inc={inc} svc={s} className="font-mono text-[12px] leading-[1.3] !text-mut hover:!text-signal-2" />
+                  <SvcLink key={s} inc={inc} svc={s} className="font-mono text-[13px] leading-[1.3] !text-mut hover:!text-signal-2" />
                 ))}
-                {l2.length === 0 && <span className="font-mono text-[12px] text-dim">none</span>}
+                {l2.length === 0 && <span className="font-mono text-[13px] text-dim">none</span>}
               </Column>
               <Column dot="bg-l1" title="resolved while live" n={q3 ? liveBySvc.size : "n/a"}>
                 {[...liveBySvc.values()].map((r) => (
-                  <span key={r.service} className="flex flex-wrap items-baseline gap-x-2 font-mono text-[12px] leading-[1.3]">
+                  <span key={r.service} className="flex flex-wrap items-baseline gap-x-2 font-mono text-[13px] leading-[1.3]">
                     <SvcLink inc={inc} svc={r.service} className="!text-mut hover:!text-signal-2" />
-                    <span className="text-[11px] text-dim">
+                    <span className="text-[12px] text-dim">
                       {r.sha.slice(0, 7)} · {fmtUtc(r.resolved_at_iso)}
                     </span>
                   </span>
                 ))}
-                {liveBySvc.size === 0 && <span className="font-mono text-[12px] text-dim">{q3 ? "none" : "not time-bounded (CVE)"}</span>}
+                {liveBySvc.size === 0 && <span className="font-mono text-[13px] text-dim">{q3 ? "none" : "not time-bounded (CVE)"}</span>}
               </Column>
               <Column dot="bg-l0" title="present only" n={services.filter((s) => level(s) === "L0" || level(s) === "L1").length}>
                 {services
                   .filter((s) => level(s) === "L0" || level(s) === "L1")
                   .map((s) => (
-                    <span key={s} className="flex flex-wrap items-baseline gap-x-2 font-mono text-[12px] leading-[1.3]">
+                    <span key={s} className="flex flex-wrap items-baseline gap-x-2 font-mono text-[13px] leading-[1.3]">
                       <SvcLink inc={inc} svc={s} className="!text-mut hover:!text-signal-2" />
-                      {level(s) === "L1" && <span className={cn("text-[11px]", LEVEL.L1.text)}>— {LEVEL.L1.label}</span>}
+                      {level(s) === "L1" && <span className={cn("text-[12px]", LEVEL.L1.text)}>— {LEVEL.L1.label}</span>}
                     </span>
                   ))}
-                {services.filter((s) => level(s) === "L0" || level(s) === "L1").length === 0 && <span className="font-mono text-[12px] text-dim">none</span>}
+                {services.filter((s) => level(s) === "L0" || level(s) === "L1").length === 0 && <span className="font-mono text-[13px] text-dim">none</span>}
               </Column>
               {/* unscanned gets its own column and its own grey dot: exposed, source not read — never under the green header */}
               <Column dot="bg-unknown" title="unscanned" n={services.filter((s) => level(s) === "unscanned").length}>
                 {services
                   .filter((s) => level(s) === "unscanned")
                   .map((s) => (
-                    <SvcLink key={s} inc={inc} svc={s} className="font-mono text-[12px] leading-[1.3] !text-mut hover:!text-signal-2" />
+                    <SvcLink key={s} inc={inc} svc={s} className="font-mono text-[13px] leading-[1.3] !text-mut hover:!text-signal-2" />
                   ))}
-                {services.filter((s) => level(s) === "unscanned").length === 0 && <span className="font-mono text-[12px] text-dim">none</span>}
+                {services.filter((s) => level(s) === "unscanned").length === 0 && <span className="font-mono text-[13px] text-dim">none</span>}
               </Column>
             </div>
             <Notes
@@ -545,7 +545,7 @@ function Column({ dot, title, n, children }: { dot: string; title: string; n: nu
       <div className="mb-3 flex items-center gap-2">
         <span className={cn("size-1.5 rounded-full", dot)} aria-hidden />
         <span className="label !text-mut">{title}</span>
-        <span className="num text-[11px] leading-none text-dim">{n}</span>
+        <span className="num text-[12px] leading-none text-dim">{n}</span>
       </div>
       <div className="flex flex-col gap-2">{children}</div>
     </div>
@@ -555,16 +555,16 @@ function Column({ dot, title, n, children }: { dot: string; title: string; n: nu
 function versionRow(r: Incident["q2_versions"]["rows"][number], first: string | undefined) {
   return (
     <tr key={r.version}>
-      <td className="font-mono !text-[12px] !text-fg">
+      <td className="font-mono !text-[13px] !text-fg">
         {short(r.version)}
         {first === r.version && <Kind kind="first" className="ml-2" />}
       </td>
-      <td className="font-mono !text-[11.5px]">{fmtUtc(r.published_at_iso)}</td>
-      <td className="font-mono !text-[11.5px]">
+      <td className="font-mono !text-[12.5px]">{fmtUtc(r.published_at_iso)}</td>
+      <td className="font-mono !text-[12.5px]">
         {r.live_to_kind === "unbounded" ? "still installable" : fmtUtc(r.live_to_iso)}
         {r.live_to_kind !== "exact" && <Kind kind={r.live_to_kind} className="ml-1.5" />}
       </td>
-      <td className="font-mono !text-[11.5px]">
+      <td className="font-mono !text-[12.5px]">
         {r.removed ? <span className="text-l2">removed</span> : r.removed === false ? "present" : <span className="text-dim">not recorded</span>}
       </td>
     </tr>
@@ -577,18 +577,18 @@ function reachRow(r: Incident["q4_maintainers"]["rows"][number], max: number) {
   const n = r.services_at_risk;
   return (
     <tr key={r.package}>
-      <td className="font-mono !text-[12px] !text-fg">{short(r.package)}</td>
-      <td className="num !text-[11.5px]">{r.downloads == null ? <span className="font-mono text-dim">not recorded</span> : r.downloads.toLocaleString()}</td>
+      <td className="font-mono !text-[13px] !text-fg">{short(r.package)}</td>
+      <td className="num !text-[12.5px]">{r.downloads == null ? <span className="font-mono text-dim">not recorded</span> : r.downloads.toLocaleString()}</td>
       <td>
         <div className="flex items-center gap-2.5">
-          <span className={cn("num min-w-[22px] text-[12px] font-medium leading-none", n === null || n.length === 0 ? "text-dim" : "text-fg")}>{n === null ? "" : n.length}</span>
+          <span className={cn("num min-w-[22px] text-[13px] font-medium leading-none", n === null || n.length === 0 ? "text-dim" : "text-fg")}>{n === null ? "" : n.length}</span>
           <span className="h-[5px] w-[84px] shrink-0 overflow-hidden rounded-[3px] bg-hover" aria-hidden>
             <span
               className={cn("block h-full origin-left animate-[grow_.5s_var(--ease)_both]", n === null ? "w-0 bg-unknown" : "bg-signal/80")}
               style={n === null ? undefined : { width: `${(n.length / max) * 100}%` }}
             />
           </span>
-          <span className="min-w-0 flex-1 truncate font-mono text-[11px] leading-[1.3] text-dim" title={n === null ? undefined : n.map(svcSlug).join(", ")}>
+          <span className="min-w-0 flex-1 truncate font-mono text-[12px] leading-[1.3] text-dim" title={n === null ? undefined : n.map(svcSlug).join(", ")}>
             {n === null ? "— not computed" : n.length === 0 ? "none" : n.map((s) => svcSlug(s).split("/").pop()).join(", ")}
           </span>
         </div>
@@ -610,7 +610,7 @@ function Distribution({ parts }: { parts: [keyof typeof LEVEL, number][] }) {
             <span key={k} className={cn("origin-left animate-[grow_.5s_var(--ease)_both] [animation-delay:180ms]", LEVEL[k].dot)} style={{ width: `${(c / Math.max(total, 1)) * 100}%` }} />
           ))}
       </div>
-      <div className="mt-[11px] flex flex-wrap gap-5 font-mono text-[11px] leading-none text-dim">
+      <div className="mt-[11px] flex flex-wrap gap-5 font-mono text-[12px] leading-none text-dim">
         {parts.map(([k, c]) => (
           <span key={k} className="inline-flex items-center gap-[7px]">
             <span className={cn("size-1.5 rounded-full", LEVEL[k].dot)} aria-hidden />
@@ -626,7 +626,7 @@ function Provenance({ inc, statements, rows }: { inc: Incident; statements: numb
   const p = inc.provenance;
   const digest = p.hydradb_image?.match(/sha256:([0-9a-f]+)/)?.[1];
   return (
-    <footer id="provenance" className="mt-6 scroll-mt-24 border-t border-line pt-[18px] font-mono text-[10.5px] leading-[1.6] text-dim [overflow-wrap:anywhere]">
+    <footer id="provenance" className="mt-6 scroll-mt-24 border-t border-line pt-[18px] font-mono text-[11.5px] leading-[1.6] text-dim [overflow-wrap:anywhere]">
       <div className="flex flex-wrap gap-x-6 gap-y-1">
         <span>report generated {fmtUtc(p.generated_at)}</span>
         <span>

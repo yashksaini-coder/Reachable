@@ -42,7 +42,7 @@ async function cohorts(): Promise<Map<string, string>> {
 
 // Token table: th 10.5px uppercase tracked --dim on a --border rule; td 12.5px --mut on --line rules.
 const TABLE =
-  "w-full min-w-[880px] border-collapse [&_th]:whitespace-nowrap [&_th]:px-3 [&_th]:pb-[9px] [&_th]:pt-3.5 [&_th]:text-left [&_th]:text-[10.5px] [&_th]:font-medium [&_th]:uppercase [&_th]:leading-none [&_th]:tracking-[0.09em] [&_th]:text-dim [&_td]:h-10 [&_td]:whitespace-nowrap [&_td]:border-b [&_td]:border-line [&_td]:p-3 [&_td]:align-middle [&_td]:text-[12.5px] [&_td]:text-mut [&_tbody_tr:last-child_td]:border-b-0";
+  "w-full min-w-[880px] border-collapse [&_th]:whitespace-nowrap [&_th]:px-3 [&_th]:pb-[9px] [&_th]:pt-3.5 [&_th]:text-left [&_th]:text-[11.5px] [&_th]:font-medium [&_th]:uppercase [&_th]:leading-none [&_th]:tracking-[0.09em] [&_th]:text-dim [&_td]:h-10 [&_td]:whitespace-nowrap [&_td]:border-b [&_td]:border-line [&_td]:p-3 [&_td]:align-middle [&_td]:text-[13.5px] [&_td]:text-mut [&_tbody_tr:last-child_td]:border-b-0";
 
 export default async function Services() {
   const [svcs, recent, incidents, cohort] = await Promise.all([services(), jobs(), listIncidents(), cohorts()]);
@@ -69,8 +69,8 @@ export default async function Services() {
   // scrolls normally. On viewports too short for the top row, main falls back to scrolling.
   return (
     <div className="mx-auto w-full max-w-[1280px] px-10 pb-24 pt-9 max-[900px]:px-5 min-[900px]:flex min-[900px]:h-full min-[900px]:min-h-0 min-[900px]:flex-col min-[900px]:pb-6">
-      <h1 className="text-[22px] font-medium leading-[1.25] tracking-[-0.015em] text-fg">Services</h1>
-      <p className="mt-2 text-[12.5px] text-mut text-pretty">
+      <h1 className="text-[24px] font-medium leading-[1.25] tracking-[-0.015em] text-fg">Services</h1>
+      <p className="mt-2 text-[13.5px] text-mut text-pretty">
         {live ? (
           <>
             <span className="num">{list.length}</span> repositor{list.length === 1 ? "y" : "ies"} watched · lockfile history ingested per commit · badge per repo.
@@ -87,14 +87,14 @@ export default async function Services() {
       {empty ? (
         <div className="elev mt-3.5 flex flex-col items-center gap-3 rounded-xl border border-border bg-card px-5 py-10 text-center">
           <Image src="/art/reachable-path-512.png" alt="" width={256} height={256} className="pixel opacity-90" unoptimized />
-          <p className="max-w-[44ch] font-mono text-[11.5px] leading-[1.6] text-dim text-pretty">nothing is watched yet · add a repository above and its lockfile history becomes the first service in the graph.</p>
+          <p className="max-w-[44ch] font-mono text-[12.5px] leading-[1.6] text-dim text-pretty">nothing is watched yet · add a repository above and its lockfile history becomes the first service in the graph.</p>
         </div>
       ) : (
         live && (
           <div className="elev mt-3.5 flex flex-col overflow-hidden rounded-xl border border-border bg-card min-[900px]:min-h-[160px] min-[900px]:flex-1">
             <div className="flex items-baseline justify-between border-b border-line px-[18px] py-4">
               <span className="label">watched services</span>
-              <span className="num text-[11px] leading-none text-dim">{list.length} rows</span>
+              <span className="num text-[12px] leading-none text-dim">{list.length} rows</span>
             </div>
             <div className="max-h-[420px] overflow-auto min-[900px]:max-h-none min-[900px]:min-h-0 min-[900px]:flex-1">
               <table className={TABLE}>
@@ -119,24 +119,24 @@ export default async function Services() {
                     const partial = lj && (lj.status === "failed" || lj.status === "interrupted");
                     return (
                       <tr key={s.key} className="transition-colors duration-[180ms] ease-[var(--ease)] hover:bg-hover">
-                        <td className="font-mono text-[12px] text-fg" title={s.note ?? slug}>
+                        <td className="font-mono text-[13px] text-fg" title={s.note ?? slug}>
                           <a href={s.repo_url || `https://github.com/${slug}`} className="inline-block max-w-[260px] truncate align-middle text-fg hover:text-signal-2" target="_blank" rel="noreferrer" title={slug}>
                             {slug}
                           </a>
                           {partial && (
-                            <span className="ml-2 font-mono text-[10.5px] text-signal-2" title={lj.error ?? `latest job ${lj.status}`}>
+                            <span className="ml-2 font-mono text-[11.5px] text-signal-2" title={lj.error ?? `latest job ${lj.status}`}>
                               partial · retry
                             </span>
                           )}
                         </td>
                         <td>{co ? <Chip>{co}</Chip> : <span className="text-dim">—</span>}</td>
                         <td className="num">{s.lockfiles}</td>
-                        <td className="num text-[11.5px]">
+                        <td className="num text-[12.5px]">
                           <span title={sha(s.latest_commit) ?? undefined}>{shortSha(sha(s.latest_commit))}</span>
                           {lc && <> · {day(lc.committed_at_iso ?? lc.committed_at)}</>}
                         </td>
-                        <td className="num text-[11.5px]">{e ? <Link href="/board">{e.incidents}</Link> : <span className="text-dim">0</span>}</td>
-                        <td className="num text-[11.5px]">{e?.whileLive ? <span className="text-l1">{e.whileLive}</span> : <span className="text-dim">0</span>}</td>
+                        <td className="num text-[12.5px]">{e ? <Link href="/board">{e.incidents}</Link> : <span className="text-dim">0</span>}</td>
+                        <td className="num text-[12.5px]">{e?.whileLive ? <span className="text-l1">{e.whileLive}</span> : <span className="text-dim">0</span>}</td>
                         <td>
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={`/badge/${slug}.svg`} alt={`reachable badge for ${slug}`} width={168} height={22} className="block h-[22px] w-auto" />

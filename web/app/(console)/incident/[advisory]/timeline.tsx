@@ -60,7 +60,7 @@ export function Timeline({ rows, versions, advisoryPublished }: { rows: WhileLiv
         {ticks.map((t) => (
           <g key={t}>
             <line x1={x(t)} y1={AXIS} x2={x(t)} y2={AXIS + 6} className="stroke-input" strokeWidth={1} />
-            <text x={x(t)} y={AXIS + 22} textAnchor="middle" className="fill-dim font-mono text-[10.5px]">
+            <text x={x(t)} y={AXIS + 22} textAnchor="middle" className="fill-dim font-mono text-[11.5px]">
               {tickLabel(t)}
             </text>
           </g>
@@ -71,16 +71,16 @@ export function Timeline({ rows, versions, advisoryPublished }: { rows: WhileLiv
           </rect>
         ))}
         {upper && <line x1={x(barEnd)} y1={70} x2={x(barEnd)} y2={106} className="stroke-signal" strokeWidth={1.4} strokeDasharray="3 3" />}
-        <text x={narrow ? x(barStart) - 8 : x(barStart) + 8} y={92} textAnchor={narrow ? "end" : "start"} className="fill-signal-2 font-mono text-[11px]">
+        <text x={narrow ? x(barStart) - 8 : x(barStart) + 8} y={92} textAnchor={narrow ? "end" : "start"} className="fill-signal-2 font-mono text-[12px]">
           installable · {bounded.length} version{bounded.length === 1 ? "" : "s"}
         </text>
         {upper && (
-          <text x={x(barEnd) + 8} y={92} className="fill-signal-2 font-mono text-[10.5px]">
+          <text x={x(barEnd) + 8} y={92} className="fill-signal-2 font-mono text-[11.5px]">
             upper bound
           </text>
         )}
         <line x1={adX} y1={48} x2={adX} y2={AXIS} className="stroke-mut" strokeWidth={1} />
-        <text x={adX + (adFlip ? -8 : 8)} y={54} textAnchor={adFlip ? "end" : "start"} className="fill-mut font-mono text-[10.5px]">
+        <text x={adX + (adFlip ? -8 : 8)} y={54} textAnchor={adFlip ? "end" : "start"} className="fill-mut font-mono text-[11.5px]">
           advisory published
         </text>
         {inWin.map((c, i) => {
@@ -89,7 +89,7 @@ export function Timeline({ rows, versions, advisoryPublished }: { rows: WhileLiv
             <g key={`w${i}`}>
               <title>{c.rows.map(tip).join("\n")}</title>
               <path d={`M${c.x} ${AXIS - 16} l6 11 h-12 z`} className="fill-l1" />
-              <text x={c.x + (flip ? -10 : 0)} y={AXIS - 22} textAnchor={flip ? "end" : "middle"} className="fill-l1 font-mono text-[10.5px]">
+              <text x={c.x + (flip ? -10 : 0)} y={AXIS - 22} textAnchor={flip ? "end" : "middle"} className="fill-l1 font-mono text-[11.5px]">
                 {c.label}
               </text>
             </g>
@@ -101,14 +101,14 @@ export function Timeline({ rows, versions, advisoryPublished }: { rows: WhileLiv
             <g key={`r${i}`}>
               <title>{c.rows.map(tip).join("\n")}</title>
               <path d={`M${c.x} ${AXIS + 34} l6 -11 h-12 z`} className="fill-l2" />
-              <text x={c.x + (flip ? -10 : 10)} y={AXIS + 44} textAnchor={flip ? "end" : "start"} className="fill-l2 font-mono text-[10.5px]">
+              <text x={c.x + (flip ? -10 : 10)} y={AXIS + 44} textAnchor={flip ? "end" : "start"} className="fill-l2 font-mono text-[11.5px]">
                 {c.label}
               </text>
             </g>
           );
         })}
       </svg>
-      <ul className="mt-1.5 flex flex-wrap gap-[18px] px-2 pb-3.5 font-mono text-[10.5px] leading-none text-dim" aria-label="legend">
+      <ul className="mt-1.5 flex flex-wrap gap-[18px] px-2 pb-3.5 font-mono text-[11.5px] leading-none text-dim" aria-label="legend">
         <li className="inline-flex items-center gap-1.5">
           <span className="inline-block h-1.5 w-3.5 border border-signal bg-sigfill" aria-hidden />
           installable window

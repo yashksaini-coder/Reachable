@@ -72,14 +72,14 @@ export default async function Board() {
     <div className="group px-10 py-9 pb-[72px] max-[900px]:px-5">
       <div className="mx-auto mb-[22px] flex max-w-[1600px] flex-wrap items-baseline justify-between gap-5">
         <div>
-          <h1 className="text-balance text-[22px] font-medium leading-[1.25] tracking-[-0.015em] text-fg">Remediation board</h1>
-          <p className="mt-2 text-pretty text-[12.5px] text-mut">
+          <h1 className="text-balance text-[24px] font-medium leading-[1.25] tracking-[-0.015em] text-fg">Remediation board</h1>
+          <p className="mt-2 text-pretty text-[13.5px] text-mut">
             Every exposed service across the <span className="num">{incidents.length}</span> composed incident{incidents.length === 1 ? "" : "s"}, by what it needs.{" "}
             <span className="num">{cards.length}</span> exposure{cards.length === 1 ? "" : "s"} · states are computed from the graph, not assigned.
           </p>
         </div>
         {/* Density switch: a native checkbox drives `group-has-[:checked]` on the lanes — no client JS. */}
-        <label className="inline-flex min-h-10 cursor-pointer select-none items-center rounded-lg border border-border px-[13px] text-[11.5px] font-medium leading-none text-mut transition-colors duration-[180ms] ease-[var(--ease)] hover:bg-hover hover:text-fg has-[:checked]:bg-hover has-[:checked]:text-fg has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-signal/50">
+        <label className="inline-flex min-h-10 cursor-pointer select-none items-center rounded-lg border border-border px-[13px] text-[12.5px] font-medium leading-none text-mut transition-colors duration-[180ms] ease-[var(--ease)] hover:bg-hover hover:text-fg has-[:checked]:bg-hover has-[:checked]:text-fg has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-signal/50">
           <input type="checkbox" role="switch" className="sr-only" />
           compact cards
         </label>
@@ -89,7 +89,7 @@ export default async function Board() {
           <span className="grid size-11 place-items-center rounded-full border border-border text-dim" aria-hidden>
             <KanbanSquare className="size-[17px]" />
           </span>
-          <p className="m-0 max-w-[44ch] text-pretty text-[13px] text-mut">No incident composed yet — nothing to triage.</p>
+          <p className="m-0 max-w-[44ch] text-pretty text-[14px] text-mut">No incident composed yet — nothing to triage.</p>
           <Link
             href="/incidents"
             className={ACTION}

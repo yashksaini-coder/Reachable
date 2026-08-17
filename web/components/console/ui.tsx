@@ -59,9 +59,9 @@ export function HydraCard({
   const body = (
     <div className="px-[13px] pb-[13px]">
       {statements.length === 0 ? (
-        <div className="rounded-md border border-line bg-code p-3 font-mono text-[11.5px] text-dim">no statement executed</div>
+        <div className="rounded-md border border-line bg-code p-3 font-mono text-[12.5px] text-dim">no statement executed</div>
       ) : (
-        <pre className="m-0 overflow-x-auto rounded-md border border-line bg-code p-3 font-mono text-[11.5px] leading-[1.65] text-signal-2">
+        <pre className="m-0 overflow-x-auto rounded-md border border-line bg-code p-3 font-mono text-[12.5px] leading-[1.65] text-signal-2">
           {statements.map(([q, n], i) => (
             <span key={i} className="block">
               {i > 0 && "\n"}
@@ -73,7 +73,7 @@ export function HydraCard({
       )}
       <div className="mt-[9px] flex items-center gap-2">
         {statements.length > 0 && <CopyStatement text={statements.map(([q]) => q).join("\n\n")} />}
-        <span className="font-mono text-[10.5px] leading-[1.6] text-dim">
+        <span className="font-mono text-[11.5px] leading-[1.6] text-dim">
           as sent over Bolt · integer literals are 52-bit ids · timings are wall-clock from the driver over loopback
         </span>
       </div>
@@ -87,9 +87,9 @@ export function HydraCard({
         onClick={() => setOpen((o) => !o)}
         className="flex min-h-11 w-full items-center gap-3.5 px-[13px] py-[11px] text-left transition-colors duration-[180ms] ease-[var(--ease)] hover:bg-hover/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-signal/50 max-[760px]:flex-wrap"
       >
-        <span className="shrink-0 rounded-xs bg-sigfill px-1.5 py-[5px] font-mono text-[10.5px] font-medium uppercase leading-none tracking-[0.1em] text-signal">hydradb</span>
-        <span className="min-w-0 flex-1 truncate text-[12.5px] text-mut max-[760px]:order-2 max-[760px]:basis-full max-[760px]:whitespace-normal">{title}</span>
-        <span className="num shrink-0 text-[10.5px] leading-none text-dim">
+        <span className="shrink-0 rounded-xs bg-sigfill px-1.5 py-[5px] font-mono text-[11.5px] font-medium uppercase leading-none tracking-[0.1em] text-signal">hydradb</span>
+        <span className="min-w-0 flex-1 truncate text-[13.5px] text-mut max-[760px]:order-2 max-[760px]:basis-full max-[760px]:whitespace-normal">{title}</span>
+        <span className="num shrink-0 text-[11.5px] leading-none text-dim">
           {rows} rows · {fmtMs(ms)}
           {warm && (
             <>
@@ -139,7 +139,7 @@ function CopyStatement({ text }: { text: string }) {
         setDone(true);
         setTimeout(() => setDone(false), 1500);
       }}
-      className="grid min-h-10 shrink-0 rounded-md border border-border px-[11px] text-[11px] font-medium leading-none text-mut transition-[color,background-color,transform] duration-[180ms] ease-[var(--ease)] hover:bg-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50 active:scale-[0.97] [&>*]:[grid-area:1/1]"
+      className="grid min-h-10 shrink-0 rounded-md border border-border px-[11px] text-[12px] font-medium leading-none text-mut transition-[color,background-color,transform] duration-[180ms] ease-[var(--ease)] hover:bg-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50 active:scale-[0.97] [&>*]:[grid-area:1/1]"
     >
       <motion.span initial={false} animate={done ? { opacity: 0, scale: 0.25, filter: "blur(4px)" } : { opacity: 1, scale: 1, filter: "blur(0px)" }} transition={t} className="inline-flex items-center">
         copy statement
@@ -164,7 +164,7 @@ export function Notes({ items, prefix = "notes" }: { items: string[]; prefix?: "
   const list = items.filter(Boolean);
   if (!list.length) return null;
   return (
-    <div className="mt-3.5 space-y-1 font-mono text-[11px] leading-[1.6] text-dim">
+    <div className="mt-3.5 space-y-1 font-mono text-[12px] leading-[1.6] text-dim">
       {list.map((t, i) => (
         <p key={i} className="text-pretty">
           {i === 0 && <span className="mr-1">{prefix} ·</span>}
@@ -202,11 +202,11 @@ export function Question({
       <header className="flex items-start gap-x-[18px] gap-y-2 border-b border-line px-[18px] pb-[14px] pt-[18px] max-[760px]:flex-wrap">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline gap-x-2.5">
-            <span className="font-mono text-[11px] font-medium leading-none text-signal">{`Q${n}`}</span>
-            <h2 className="text-balance text-[17px] font-medium leading-[1.3] tracking-[-0.01em] text-fg">{title}</h2>
+            <span className="font-mono text-[12px] font-medium leading-none text-signal">{`Q${n}`}</span>
+            <h2 className="text-balance text-[18px] font-medium leading-[1.3] tracking-[-0.01em] text-fg">{title}</h2>
           </div>
         </div>
-        {summary && <div className="num max-w-[46%] shrink-0 text-right text-[11px] leading-[1.5] text-dim max-[760px]:w-full max-[760px]:max-w-none max-[760px]:text-left">{summary}</div>}
+        {summary && <div className="num max-w-[46%] shrink-0 text-right text-[12px] leading-[1.5] text-dim max-[760px]:w-full max-[760px]:max-w-none max-[760px]:text-left">{summary}</div>}
       </header>
       <div className="p-[18px]">{children}</div>
       {footer && <footer className="border-t border-line">{footer}</footer>}
@@ -229,7 +229,7 @@ export function ShowAll({ n, cols, children, more }: { n: number; cols: number; 
             <button
               type="button"
               onClick={() => setOpen(true)}
-              className="flex min-h-10 w-full cursor-pointer items-center justify-center gap-1 text-[11px] text-dim transition-colors duration-[180ms] hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-signal/50"
+              className="flex min-h-10 w-full cursor-pointer items-center justify-center gap-1 text-[12px] text-dim transition-colors duration-[180ms] hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-signal/50"
             >
               <ChevronDown className="size-3.5" /> show all <span className="num">{n}</span>
             </button>
@@ -243,7 +243,7 @@ export function ShowAll({ n, cols, children, more }: { n: number; cols: number; 
 export { LEVEL } from "@/lib/level";
 
 // Pill geometry (shared): 10.5px/500 uppercase, tracking .07em, padding 5px 7px, 5px radius.
-const PILL = "inline-flex items-center gap-1.5 whitespace-nowrap rounded-sm px-[7px] py-[5px] text-[10.5px] font-medium uppercase leading-none tracking-[0.07em]";
+const PILL = "inline-flex items-center gap-1.5 whitespace-nowrap rounded-sm px-[7px] py-[5px] text-[11.5px] font-medium uppercase leading-none tracking-[0.07em]";
 
 // Level pill — verdict colour on its /14 tint.
 export function Level({ level, className }: { level: string; className?: string }) {
@@ -268,7 +268,7 @@ export function Kind({ kind, className }: { kind: string; className?: string }) 
 // Chip — the generic pill for metadata (kinds, cohorts, distances). `tone` may add semantic text
 // colour; the surface stays --hover.
 export function Chip({ children, tone = "", className }: { children: ReactNode; tone?: string; className?: string }) {
-  return <span className={cn(PILL, "bg-hover font-mono normal-case tracking-normal text-[10.5px] text-mut", tone, className)}>{children}</span>;
+  return <span className={cn(PILL, "bg-hover font-mono normal-case tracking-normal text-[11.5px] text-mut", tone, className)}>{children}</span>;
 }
 
 // Stat — big mono numeral (30–40px/500, −.03em; 32px at ≤600px), lowercase 10.5px --dim label, and a 2px × 22px rule
@@ -297,7 +297,7 @@ export function Stat({
       <div className={cn("num font-medium leading-none tracking-[-0.03em]", size === "lg" ? "text-[40px] max-[600px]:text-[32px]" : "text-[32px]", tone)}>
         {typeof n === "number" ? <CountUp n={n} delay={delay} /> : n == null ? <span className="text-dim">—</span> : n}
       </div>
-      <div className="mt-[7px] text-[10.5px] lowercase text-dim">{label}</div>
+      <div className="mt-[7px] text-[11.5px] lowercase text-dim">{label}</div>
     </div>
   );
 }
@@ -317,7 +317,7 @@ export function SectionLabel({ children, note, className }: { children: ReactNod
   return (
     <div className={cn("flex items-baseline justify-between gap-4", className)}>
       <span className="label">{children}</span>
-      {note && <span className="font-mono text-[10.5px] text-dim">{note}</span>}
+      {note && <span className="font-mono text-[11.5px] text-dim">{note}</span>}
     </div>
   );
 }

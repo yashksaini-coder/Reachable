@@ -22,7 +22,7 @@ export const DIAGRAMS: Record<string, ComponentType> = {
 
 export function Missing({ name }: { name: string }) {
   return (
-    <div className="my-4 flex min-h-[120px] items-center justify-center rounded-lg border border-dashed border-input px-4 text-center font-mono text-[11px] text-dim">
+    <div className="my-4 flex min-h-[120px] items-center justify-center rounded-lg border border-dashed border-input px-4 text-center font-mono text-[12px] text-dim">
       diagram “{name}” is not drawn yet
     </div>
   );

@@ -99,7 +99,7 @@ export function GraphExplorer({ services, initial }: { services: string[]; initi
         ...(selected.kind ? ([["kind", `${selected.kind} · ${selected.severity ?? "n/a"}`]] as [string, string][]) : []),
       ]
     : [];
-  const field = "h-10 min-w-0 bg-transparent px-2.5 font-mono text-[11.5px] text-fg placeholder:text-dim focus:outline-none focus-visible:bg-hover";
+  const field = "h-10 min-w-0 bg-transparent px-2.5 font-mono text-[12.5px] text-fg placeholder:text-dim focus:outline-none focus-visible:bg-hover";
   const has = !!data && data.nodes.length > 0;
 
   return (
@@ -115,7 +115,7 @@ export function GraphExplorer({ services, initial }: { services: string[]; initi
               aria-pressed={seed === k}
               onClick={() => setSeed(k)}
               className={cn(
-                "min-h-10 rounded-[7px] border px-[11px] font-mono text-[11.5px] leading-none transition-[background-color,color,border-color] duration-[180ms] ease-[var(--ease)] active:scale-[0.97]",
+                "min-h-10 rounded-[7px] border px-[11px] font-mono text-[12.5px] leading-none transition-[background-color,color,border-color] duration-[180ms] ease-[var(--ease)] active:scale-[0.97]",
                 seed === k ? "border-signal/40 bg-sigfill text-signal" : "border-border text-mut hover:bg-hover hover:text-fg",
                 HIT,
               )}
@@ -151,7 +151,7 @@ export function GraphExplorer({ services, initial }: { services: string[]; initi
                 </option>
               ))}
             </select>
-            <span className="grid place-items-center border-l border-border px-2 text-[10.5px] text-dim max-[600px]:border-l-0" aria-hidden>
+            <span className="grid place-items-center border-l border-border px-2 text-[11.5px] text-dim max-[600px]:border-l-0" aria-hidden>
               or
             </span>
             <input value={advisory} aria-label="advisory" onChange={(e) => setAdvisory(e.target.value)} placeholder="GHSA-… / MAL-…" className={cn(field, "w-40 border-l border-border max-[900px]:w-auto max-[900px]:flex-1")} />
@@ -159,7 +159,7 @@ export function GraphExplorer({ services, initial }: { services: string[]; initi
               type="submit"
               disabled={pending || !advisory.trim()}
               className={cn(
-                "inline-flex items-center gap-1.5 border-l border-border px-2.5 text-[11.5px] font-medium text-mut transition-[background-color,color] duration-[180ms] ease-[var(--ease)] hover:bg-hover hover:text-fg active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40",
+                "inline-flex items-center gap-1.5 border-l border-border px-2.5 text-[12.5px] font-medium text-mut transition-[background-color,color] duration-[180ms] ease-[var(--ease)] hover:bg-hover hover:text-fg active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40",
                 HIT,
               )}
             >
@@ -174,9 +174,9 @@ export function GraphExplorer({ services, initial }: { services: string[]; initi
             <span className="grid size-11 place-items-center rounded-full border border-border text-dim">
               <Loader2 className="size-[17px] animate-spin text-signal" />
             </span>
-            <span className="text-[13px] text-mut">laying out…</span>
+            <span className="text-[14px] text-mut">laying out…</span>
             {data && (
-              <span className="num text-[10.5px] text-dim">
+              <span className="num text-[11.5px] text-dim">
                 {data.nodes.length} nodes · {data.edges.length} edges
               </span>
             )}
@@ -195,7 +195,7 @@ export function GraphExplorer({ services, initial }: { services: string[]; initi
                       <span className={cn("size-1.5 rounded-full", sel.bg)} aria-hidden />
                       <span className="label">{sel.kind}</span>
                     </div>
-                    <div className="mt-[9px] break-all font-mono text-[12.5px] leading-[1.4] text-fg">{selected.id}</div>
+                    <div className="mt-[9px] break-all font-mono text-[13.5px] leading-[1.4] text-fg">{selected.id}</div>
                   </div>
                   <button
                     type="button"
@@ -206,7 +206,7 @@ export function GraphExplorer({ services, initial }: { services: string[]; initi
                     <X className="size-[13px]" />
                   </button>
                 </div>
-                <dl className="mt-3.5 flex flex-col gap-2 font-mono text-[11px] leading-[1.4] text-dim">
+                <dl className="mt-3.5 flex flex-col gap-2 font-mono text-[12px] leading-[1.4] text-dim">
                   {facts.map(([k, v]) => (
                     <div key={k} className="flex justify-between gap-2.5">
                       <dt>{k}</dt>
@@ -219,7 +219,7 @@ export function GraphExplorer({ services, initial }: { services: string[]; initi
                   {ask && (
                     <Link
                       href={`/ask?q=${encodeURIComponent(ask)}`}
-                      className="inline-flex min-h-10 items-center justify-center rounded-lg border border-signal/40 text-[11.5px] font-medium leading-none text-signal transition-[background-color] duration-[180ms] ease-[var(--ease)] hover:bg-sigfill active:scale-[0.97]"
+                      className="inline-flex min-h-10 items-center justify-center rounded-lg border border-signal/40 text-[12.5px] font-medium leading-none text-signal transition-[background-color] duration-[180ms] ease-[var(--ease)] hover:bg-sigfill active:scale-[0.97]"
                     >
                       ask about this →
                     </Link>
@@ -228,7 +228,7 @@ export function GraphExplorer({ services, initial }: { services: string[]; initi
                     <button
                       type="button"
                       onClick={() => neighbourhood(selected)}
-                      className="inline-flex min-h-10 items-center justify-center rounded-lg border border-border text-[11.5px] font-medium leading-none text-mut transition-[background-color,color] duration-[180ms] ease-[var(--ease)] hover:bg-hover hover:text-fg active:scale-[0.97]"
+                      className="inline-flex min-h-10 items-center justify-center rounded-lg border border-border text-[12.5px] font-medium leading-none text-mut transition-[background-color,color] duration-[180ms] ease-[var(--ease)] hover:bg-hover hover:text-fg active:scale-[0.97]"
                     >
                       show neighbourhood
                     </button>
@@ -242,10 +242,10 @@ export function GraphExplorer({ services, initial }: { services: string[]; initi
             <span className="grid size-11 place-items-center rounded-full border border-border text-dim">
               <Network className="size-[17px]" />
             </span>
-            <p className="max-w-[44ch] text-pretty text-center text-[13px] text-mut">
+            <p className="max-w-[44ch] text-pretty text-center text-[14px] text-mut">
               {error ? "The worker could not return this neighbourhood." : data ? "Nothing in the neighbourhood yet — advisories may not be ingested." : "Pick a service or an advisory to render its neighbourhood."}
             </p>
-            {error && <p className="max-w-[44ch] break-words font-mono text-[11px] leading-[1.6] text-l1">{error}</p>}
+            {error && <p className="max-w-[44ch] break-words font-mono text-[12px] leading-[1.6] text-l1">{error}</p>}
           </Canvas>
         )}
       </div>
@@ -263,7 +263,7 @@ export function GraphExplorer({ services, initial }: { services: string[]; initi
 // The canvas (320px on phones, 430px from 600px) in its non-graph states (loading / empty / error): centred stack, one sentence.
 function Canvas({ children, role }: { children: React.ReactNode; role?: string }) {
   return (
-    <div role={role} className="flex h-[320px] flex-col items-center justify-center gap-3 px-6 text-center text-[12px] text-mut min-[600px]:h-[430px]">
+    <div role={role} className="flex h-[320px] flex-col items-center justify-center gap-3 px-6 text-center text-[13px] text-mut min-[600px]:h-[430px]">
       {children}
     </div>
   );

@@ -59,7 +59,7 @@ export default async function ServicePage({ params }: PageProps<"/incident/[advi
 
   return (
     <div className="mx-auto max-w-[1000px] px-10 pb-24 pt-9 max-[900px]:px-5">
-      <nav aria-label="breadcrumb" className="flex flex-wrap items-center gap-2 font-mono text-[11px] leading-none text-dim">
+      <nav aria-label="breadcrumb" className="flex flex-wrap items-center gap-2 font-mono text-[12px] leading-none text-dim">
         <Link href="/incidents" className={linkCls}>
           incidents
         </Link>
@@ -73,13 +73,13 @@ export default async function ServicePage({ params }: PageProps<"/incident/[advi
 
       <header className="mt-5 animate-[en_.3s_var(--ease)_both] motion-reduce:animate-none">
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-balance font-mono text-[26px] font-medium leading-[1.2] tracking-[-0.02em] text-fg">{slug}</h1>
+          <h1 className="text-balance font-mono text-[28px] font-medium leading-[1.2] tracking-[-0.02em] text-fg">{slug}</h1>
           <Level level={level} />
-          <a href={`https://github.com/${slug}`} target="_blank" rel="noreferrer" className={cn(linkCls, "text-[11px]")}>
+          <a href={`https://github.com/${slug}`} target="_blank" rel="noreferrer" className={cn(linkCls, "text-[12px]")}>
             github <ExternalLink className="size-3" strokeWidth={1.75} />
           </a>
         </div>
-        <div className="mt-3.5 flex flex-wrap gap-x-[22px] gap-y-1.5 font-mono text-[11px] leading-[1.3] text-dim">
+        <div className="mt-3.5 flex flex-wrap gap-x-[22px] gap-y-1.5 font-mono text-[12px] leading-[1.3] text-dim">
           <span>
             lockfiles <span className="num text-mut">{rows.length}</span>
           </span>
@@ -95,7 +95,7 @@ export default async function ServicePage({ params }: PageProps<"/incident/[advi
             </span>
           )}
         </div>
-        <p className="mt-[18px] max-w-[70ch] text-pretty text-[14px] leading-[1.6] text-fg">{VERDICT[level]}</p>
+        <p className="mt-[18px] max-w-[70ch] text-pretty text-[15px] leading-[1.6] text-fg">{VERDICT[level]}</p>
       </header>
 
       {/* one card per exposed lockfile — the proving-path chain is the signature */}
@@ -103,16 +103,16 @@ export default async function ServicePage({ params }: PageProps<"/incident/[advi
         {rows.map((r, idx) => (
           <div key={r.lockfile} className={cn(CARD, "animate-[en_.3s_var(--ease)_both] motion-reduce:animate-none")} style={{ animationDelay: `${80 + idx * 60}ms` }}>
             <div className={CARD_HEAD}>
-              <span className="flex flex-wrap items-center gap-2 font-mono text-[12px] leading-none text-fg">
+              <span className="flex flex-wrap items-center gap-2 font-mono text-[13px] leading-none text-fg">
                 {short(r.lockfile)}
                 {live.some((l) => l.lockfile === r.lockfile) && <Chip tone="text-l1">resolved while live</Chip>}
               </span>
-              <span className="num font-mono text-[11px] leading-none text-dim">
+              <span className="num font-mono text-[12px] leading-none text-dim">
                 {hops(r.hops)} · {r.sha.slice(0, 7)} · {fmtUtc(new Date(r.committed_at * 1000).toISOString())}
               </span>
             </div>
             {r.paths.length === 0 ? (
-              <div className="p-[18px] font-mono text-[11px] leading-[1.5] text-dim [overflow-wrap:anywhere]">
+              <div className="p-[18px] font-mono text-[12px] leading-[1.5] text-dim [overflow-wrap:anywhere]">
                 direct RESOLVED edge to {r.bad_versions.map(short).join(", ")} (no explanation path requested)
               </div>
             ) : (
@@ -123,7 +123,7 @@ export default async function ServicePage({ params }: PageProps<"/incident/[advi
                     {r.paths.map((p, i) => (
                       <div key={i} className="flex items-center gap-3">
                         <Chain chain={p.chain} />
-                        <span className="num shrink-0 font-mono text-[10.5px] text-dim">{hops(p.hops)}</span>
+                        <span className="num shrink-0 font-mono text-[11.5px] text-dim">{hops(p.hops)}</span>
                       </div>
                     ))}
                   </div>
@@ -131,7 +131,7 @@ export default async function ServicePage({ params }: PageProps<"/incident/[advi
                 <span aria-hidden className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-linear-to-l from-card to-transparent" />
               </div>
             )}
-            <div className="px-[18px] pb-[18px] font-mono text-[11px] leading-[1.6] text-dim">
+            <div className="px-[18px] pb-[18px] font-mono text-[12px] leading-[1.6] text-dim">
               <span className={cn("mr-1", level === "L2" && "text-l2")}>reachability ·</span>
               {reachNote}
             </div>
@@ -144,7 +144,7 @@ export default async function ServicePage({ params }: PageProps<"/incident/[advi
         <div className={cn(CARD, "mt-3")}>
           <div className={CARD_HEAD}>
             <span className="label">reachability</span>
-            <span className="num font-mono text-[11px] leading-none text-dim">
+            <span className="num font-mono text-[12px] leading-none text-dim">
               {plural(reach.files_scanned, "first-party file")} scanned · {plural(reach.imports.length, "import")} · {plural(reach.symbols.length, "symbol use")}
             </span>
           </div>
@@ -152,7 +152,7 @@ export default async function ServicePage({ params }: PageProps<"/incident/[advi
             {reach.imports.length > 0 && (
               <div>
                 <div className="label mb-1.5">imports</div>
-                <ul className="space-y-1 font-mono text-[12px] text-fg [overflow-wrap:anywhere]">
+                <ul className="space-y-1 font-mono text-[13px] text-fg [overflow-wrap:anywhere]">
                   {reach.imports.map((i, k) => (
                     <li key={k}>
                       {i.path}:{i.line} <span className="text-dim">imports {short(i.package)}</span>
@@ -164,7 +164,7 @@ export default async function ServicePage({ params }: PageProps<"/incident/[advi
             {reach.symbols.length > 0 && (
               <div>
                 <div className="label mb-1.5">vulnerable symbols</div>
-                <ul className="space-y-1 font-mono text-[12px] text-l2 [overflow-wrap:anywhere]">
+                <ul className="space-y-1 font-mono text-[13px] text-l2 [overflow-wrap:anywhere]">
                   {reach.symbols.map((s, k) => (
                     <li key={k}>
                       {s.path}:{s.line} uses {s.symbol}
@@ -186,9 +186,9 @@ export default async function ServicePage({ params }: PageProps<"/incident/[advi
         <div className={cn(CARD, "mt-3")}>
           <div className={CARD_HEAD}>
             <span className="label">resolved while live</span>
-            <span className="num font-mono text-[11px] leading-none text-dim">{plural(live.length, "lockfile")}</span>
+            <span className="num font-mono text-[12px] leading-none text-dim">{plural(live.length, "lockfile")}</span>
           </div>
-          <ul className="divide-y divide-line font-mono text-[11.5px]">
+          <ul className="divide-y divide-line font-mono text-[12.5px]">
             {live.map((l, i) => (
               <li key={i} className="flex min-h-10 flex-wrap items-center gap-x-3 gap-y-1 px-[18px] py-2.5">
                 <span className="text-fg">{l.sha.slice(0, 12)}</span>
@@ -212,7 +212,7 @@ export default async function ServicePage({ params }: PageProps<"/incident/[advi
         )}
       </div>
       <Notes items={[...inc.q1_exposed.limitations, ...(reach?.limitations ?? [])]} />
-      <div className="mt-2 font-mono text-[10.5px] text-dim">
+      <div className="mt-2 font-mono text-[11.5px] text-dim">
         {plural(rows.length, "lockfile")} · {plural(nPaths, "proving path")}
       </div>
     </div>

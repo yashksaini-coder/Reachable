@@ -16,7 +16,7 @@ export function Chain({ chain, className }: { chain: string[]; className?: strin
       {chain.map((el, i) =>
         i % 2 === 1 ? (
           <div key={i} className="flex flex-col items-center gap-1 px-1">
-            <span className="font-mono text-[10.5px] leading-none tracking-[0.04em] text-dim">←{el}←</span>
+            <span className="font-mono text-[11.5px] leading-none tracking-[0.04em] text-dim">←{el}←</span>
             <svg width="34" height="7" viewBox="0 0 34 7" aria-hidden className="text-input">
               <path d="M33 3.5H1M6 1 1 3.5 6 6" fill="none" stroke="currentColor" strokeWidth="1.2" />
             </svg>
@@ -29,8 +29,8 @@ export function Chain({ chain, className }: { chain: string[]; className?: strin
               i === 0 ? "border-l2/40" : "border-border",
             )}
           >
-            <span className={cn("font-mono text-[11.5px] leading-none", i === 0 ? "text-l2" : "text-fg")}>{short(el)}</span>
-            <span className="font-mono text-[10.5px] uppercase leading-none tracking-[0.06em] text-dim">{kindOf(el, i)}</span>
+            <span className={cn("font-mono text-[12.5px] leading-none", i === 0 ? "text-l2" : "text-fg")}>{short(el)}</span>
+            <span className="font-mono text-[11.5px] uppercase leading-none tracking-[0.06em] text-dim">{kindOf(el, i)}</span>
           </span>
         ),
       )}

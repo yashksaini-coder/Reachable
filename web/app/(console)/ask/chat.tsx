@@ -84,30 +84,30 @@ export function Chat({ initialQ, healthy: initialHealthy }: { initialQ: string; 
         <div className={cn(EN, "flex flex-1 flex-col items-center justify-center py-6 text-center")}>
           {/* cold state only: the thesis image (inert stack, one traced route) — never next to data */}
           <Image src="/art/reachable-path-512.png" alt="" width={256} height={256} className="pixel mb-2 h-auto w-[192px] opacity-90 min-[600px]:w-[256px]" unoptimized />
-          <h1 className="text-balance text-[22px] font-medium leading-[1.25] tracking-[-0.015em] text-fg">Ask the graph.</h1>
-          <p className="mt-2.5 max-w-[44ch] text-pretty text-[13px] text-mut">One sentence back, then the rows it came from.</p>
+          <h1 className="text-balance text-[24px] font-medium leading-[1.25] tracking-[-0.015em] text-fg">Ask the graph.</h1>
+          <p className="mt-2.5 max-w-[44ch] text-pretty text-[14px] text-mut">One sentence back, then the rows it came from.</p>
         </div>
       ) : (
         <div aria-live="polite" aria-relevant="additions" className="flex flex-col gap-[22px]">
           {msgs.map((m) => (
             <article key={m.id} className="flex min-w-0 flex-col gap-[22px]">
               <div className={EN}>
-                <div className="mb-2.5 font-mono text-[12px] leading-none text-dim">you asked</div>
-                <div className="text-[14px] text-fg">{m.q}</div>
+                <div className="mb-2.5 font-mono text-[13px] leading-none text-dim">you asked</div>
+                <div className="text-[15px] text-fg">{m.q}</div>
               </div>
               <div className={cn(EN, "[animation-delay:80ms]")}>
                 {m.state === "loading" && (
-                  <div className="flex items-center gap-2.5 text-[14px] leading-[1.6] text-mut">
+                  <div className="flex items-center gap-2.5 text-[15px] leading-[1.6] text-mut">
                     <span className="blip size-[7px] rounded-full bg-signal" aria-hidden />
                     traversing · {describe(m.ask)}
                   </div>
                 )}
                 {m.state === "error" && (
-                  <div className="text-[13px] text-mut">
+                  <div className="text-[14px] text-mut">
                     <Chip tone="mr-2 text-l2">{m.ask ? "no answer" : "not understood"}</Chip>
                     {m.error}
                     {!m.ask && (
-                      <p className="mt-2.5 text-[12px] text-dim text-pretty">
+                      <p className="mt-2.5 text-[13px] text-dim text-pretty">
                         Try e.g. <code className="text-signal-2">what pulls chalk into owner/repo</code> or a read-only <code className="text-signal-2">MATCH</code>.
                       </p>
                     )}
@@ -115,7 +115,7 @@ export function Chat({ initialQ, healthy: initialHealthy }: { initialQ: string; 
                 )}
                 {m.state === "done" && (
                   <>
-                    <p className="max-w-[64ch] text-[14px] leading-[1.6] text-fg text-pretty">{sentence(m.ask, m.data)}</p>
+                    <p className="max-w-[64ch] text-[15px] leading-[1.6] text-fg text-pretty">{sentence(m.ask, m.data)}</p>
                     <div className="mt-3.5">
                       <Answer ask={m.ask} data={m.data} />
                     </div>
@@ -136,7 +136,7 @@ export function Chat({ initialQ, healthy: initialHealthy }: { initialQ: string; 
                   type="button"
                   onClick={() => insert(f, true)}
                   style={{ animationDelay: `${120 + i * 60}ms` }}
-                  className={cn(EN, "inline-flex min-h-10 min-w-0 max-w-full items-center gap-1.5 rounded-lg border border-border px-3 text-[12px] text-mut transition-colors duration-[180ms] ease-[var(--ease)] hover:bg-hover hover:text-fg active:scale-[0.97]")}
+                  className={cn(EN, "inline-flex min-h-10 min-w-0 max-w-full items-center gap-1.5 rounded-lg border border-border px-3 text-[13px] text-mut transition-colors duration-[180ms] ease-[var(--ease)] hover:bg-hover hover:text-fg active:scale-[0.97]")}
                   title={f}
                 >
                   <CornerDownRight className="size-3 shrink-0" /> <span className="truncate">{f}</span>
@@ -166,7 +166,7 @@ export function Chat({ initialQ, healthy: initialHealthy }: { initialQ: string; 
             aria-label="Ask the graph"
             autoComplete="off"
             spellCheck={false}
-            className="h-11 min-w-0 flex-1 bg-transparent text-[13px] text-fg outline-none placeholder:text-dim disabled:cursor-not-allowed"
+            className="h-11 min-w-0 flex-1 bg-transparent text-[14px] text-fg outline-none placeholder:text-dim disabled:cursor-not-allowed"
           />
           <button
             type="submit"
@@ -194,8 +194,8 @@ export function Chat({ initialQ, healthy: initialHealthy }: { initialQ: string; 
                 style={{ animationDelay: `${120 + i * 60}ms` }}
                 className={cn(EN, "flex min-h-10 w-full flex-wrap items-baseline gap-x-2.5 gap-y-0.5 rounded-lg px-3 py-[9px] text-left transition-colors duration-[180ms] ease-[var(--ease)] hover:bg-hover active:scale-[0.98] disabled:opacity-40")}
               >
-                <span className="min-w-0 text-[12.5px] leading-[1.4] text-mut">{e.q}</span>
-                <span className="min-w-0 font-mono text-[11px] leading-[1.4] text-dim">{e.hint}</span>
+                <span className="min-w-0 text-[13.5px] leading-[1.4] text-mut">{e.q}</span>
+                <span className="min-w-0 font-mono text-[12px] leading-[1.4] text-dim">{e.hint}</span>
               </button>
             </li>
           ))}
@@ -212,8 +212,8 @@ function Banner() {
       <span className="grid size-11 shrink-0 place-items-center rounded-full border border-border text-dim" aria-hidden>
         <PlugZap className="size-[17px]" />
       </span>
-      <p className="max-w-[44ch] text-pretty text-[13px] text-mut">Live API unavailable — questions run inside HydraDB through the local worker.</p>
-      <p className="font-mono text-[11px] leading-[1.6] text-dim">start it with make up and reload · nothing here is served from cache</p>
+      <p className="max-w-[44ch] text-pretty text-[14px] text-mut">Live API unavailable — questions run inside HydraDB through the local worker.</p>
+      <p className="font-mono text-[12px] leading-[1.6] text-dim">start it with make up and reload · nothing here is served from cache</p>
     </div>
   );
 }

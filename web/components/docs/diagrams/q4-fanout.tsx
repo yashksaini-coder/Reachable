@@ -37,7 +37,7 @@ export default function Q4Fanout() {
           <Box cx={xP} cy={p.y} w={140} h={32} label={p.label} />
         </g>
       ))}
-      <text x={xP} y={26} textAnchor="middle" className="fill-dim text-[9.5px] uppercase tracking-[0.08em]">also maintains · Package</text>
+      <text x={xP} y={26} textAnchor="middle" className="fill-dim text-[10.5px] uppercase tracking-[0.08em]">also maintains · Package</text>
 
       {RESOLVES.map(([pi, si]) => (
         <Edge key={`${pi}-${si}`} id={id} d={`M ${xP + 70} ${PKGS[pi].y} L ${xS - 81} ${SVCS[si].y}`} tone="input" />
@@ -45,8 +45,8 @@ export default function Q4Fanout() {
       {SVCS.map((s) => (
         <Box key={s.label} cx={xS} cy={s.y} w={160} h={32} label={s.label} />
       ))}
-      <text x={xS} y={26} textAnchor="middle" className="fill-dim text-[9.5px] uppercase tracking-[0.08em]">resolves it today · Service</text>
-      <text x={xS - 81 - 4} y={44} textAnchor="end" className="fill-dim font-mono text-[10px]">RESOLVED ← VERSION_OF</text>
+      <text x={xS} y={26} textAnchor="middle" className="fill-dim text-[10.5px] uppercase tracking-[0.08em]">resolves it today · Service</text>
+      <text x={xS - 81 - 4} y={44} textAnchor="end" className="fill-dim font-mono text-[11px]">RESOLVED ← VERSION_OF</text>
 
       <Note x={40} y={326}>32 co-maintained packages · top 8 by downloads computed · rest not computed — one RESOLVED query per package, so the fan is capped on purpose.</Note>
       <Note x={40} y={344}>“services at risk” = exposure if that package is compromised next, not exposure to this incident.</Note>

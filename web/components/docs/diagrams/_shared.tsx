@@ -8,9 +8,9 @@ const STROKE: Record<Tone, string> = { input: "stroke-input", signal: "stroke-si
 // Shared primitives for the guide diagrams. Server components, inline SVG, design tokens only:
 // boxes are fill-card2/stroke-border, quiet edges stroke-input, highlighted walks stroke-signal.
 
-export function Svg({ id, title, h, children }: { id: string; title: string; h: number; children: ReactNode }) {
+export function Svg({ id, title, h, w = 900, children }: { id: string; title: string; h: number; w?: number; children: ReactNode }) {
   return (
-    <svg role="img" viewBox={`0 0 900 ${h}`} className="block w-full min-w-[720px]" aria-labelledby={`${id}-title`}>
+    <svg role="img" viewBox={`0 0 ${w} ${h}`} className="block w-full min-w-[760px]" aria-labelledby={`${id}-title`}>
       <title id={`${id}-title`}>{title}</title>
       <defs>
         {(Object.keys(FILL) as Tone[]).map((c) => (
@@ -32,9 +32,9 @@ export function Box({ cx, cy, w = 150, h = 38, kind, label, stroke = "stroke-bor
     <g>
       <rect x={cx - w / 2} y={cy - h / 2} width={w} height={h} rx={4} className={`fill-card2 ${stroke}`} strokeWidth={stroke === "stroke-border" ? 1 : 1.4} />
       {kind && (
-        <text x={cx} y={cy - 7} textAnchor="middle" className="fill-dim text-[9.5px] uppercase tracking-[0.08em]">{kind}</text>
+        <text x={cx} y={cy - 7} textAnchor="middle" className="fill-dim text-[11.5px] uppercase tracking-[0.08em]">{kind}</text>
       )}
-      <text x={cx} y={kind ? cy + 9 : cy + 4} textAnchor="middle" className="fill-fg font-mono text-[11px]">{label}</text>
+      <text x={cx} y={kind ? cy + 9 : cy + 4} textAnchor="middle" className="fill-fg font-mono text-[13px]">{label}</text>
       {dot && <circle cx={cx + w / 2 - 9} cy={cy - h / 2 + 9} r={3.5} className={dot} />}
     </g>
   );
@@ -49,22 +49,22 @@ export function Edge({ id, d, tone = "input", dashed, label, lx, ly, anchor = "m
     <g>
       <path d={d} fill="none" className={STROKE[tone]} strokeWidth={tone === "input" ? 1 : 1.4} strokeDasharray={dashed ? "4 3" : undefined} markerEnd={`url(#${id}-${tone})`} />
       {label && (
-        <text x={lx} y={ly} textAnchor={anchor} className={`font-mono text-[10px] ${labelTone ?? (tone === "input" ? "fill-dim" : FILL[tone])}`}>{label}</text>
+        <text x={lx} y={ly} textAnchor={anchor} className={`font-mono text-[12.5px] ${labelTone ?? (tone === "input" ? "fill-dim" : FILL[tone])}`}>{label}</text>
       )}
     </g>
   );
 }
 
 export function Note({ x, y, children, anchor = "start", tone = "fill-dim" }: { x: number; y: number; children: ReactNode; anchor?: "start" | "middle" | "end"; tone?: string }) {
-  return <text x={x} y={y} textAnchor={anchor} className={`text-[10.5px] ${tone}`}>{children}</text>;
+  return <text x={x} y={y} textAnchor={anchor} className={`text-[13px] ${tone}`}>{children}</text>;
 }
 
 // Numbered walk badge (Q1..Q6): a small ring in the walk's tone.
 export function Badge({ x, y, n, tone }: { x: number; y: number; n: number; tone: Tone }) {
   return (
     <g>
-      <circle cx={x} cy={y} r={9} className={`fill-card2 ${STROKE[tone]}`} strokeWidth={1.4} />
-      <text x={x} y={y + 3.5} textAnchor="middle" className={`font-mono text-[9.5px] ${FILL[tone]}`}>Q{n}</text>
+      <circle cx={x} cy={y} r={10} className={`fill-card2 ${STROKE[tone]}`} strokeWidth={1.4} />
+      <text x={x} y={y + 3.5} textAnchor="middle" className={`font-mono text-[11px] ${FILL[tone]}`}>Q{n}</text>
     </g>
   );
 }

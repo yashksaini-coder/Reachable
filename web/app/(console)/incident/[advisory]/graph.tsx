@@ -83,7 +83,7 @@ export function BlastGraph({ inc }: { inc: Incident }) {
     >
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-[18px] pt-4">
         <span className="label tracking-[0.11em]">blast radius</span>
-        <span className="font-mono text-[11px] leading-none text-dim">
+        <span className="font-mono text-[12px] leading-none text-dim">
           version → dependency → lockfile → service
           {shown < services.length && <span className="num"> · showing {shown} of {services.length} services, worst verdicts first</span>}
         </span>
@@ -94,7 +94,7 @@ export function BlastGraph({ inc }: { inc: Incident }) {
         <div className={cn(SCROLLER, "px-2 pt-1")}>
           <svg viewBox="0 0 1180 300" className="h-auto w-full min-w-[1000px]" role="img" aria-label={`blast radius graph: ${shown} services, ${lock.size} lockfiles, ${edges.size} edges`}>
             {heads.map((h, i) => (
-              <text key={h} x={X[i] - 6} y={26} className="fill-dim text-[10.5px] font-medium uppercase tracking-[0.11em]">
+              <text key={h} x={X[i] - 6} y={26} className="fill-dim text-[11.5px] font-medium uppercase tracking-[0.11em]">
                 {h}
               </text>
             ))}
@@ -126,10 +126,10 @@ export function BlastGraph({ inc }: { inc: Incident }) {
                   <g key={`${ci}|${n.key}`}>
                     {n.title && <title>{n.title}</title>}
                     <rect x={x - 6} y={y - 6} width={12} height={12} rx={3} className={cn("fill-card2", n.stroke)} strokeWidth={1.2} />
-                    <text x={x + 13} y={y + 1} className={cn("font-mono text-[11.5px]", ci === 0 ? "fill-fg" : "fill-mut")}>
+                    <text x={x + 13} y={y + 1} className={cn("font-mono text-[12.5px]", ci === 0 ? "fill-fg" : "fill-mut")}>
                       {n.label}
                     </text>
-                    <text x={x + 13} y={y + 15} className={cn("font-mono text-[10.5px]", n.sub === "in window" ? "fill-l1" : "fill-dim")}>
+                    <text x={x + 13} y={y + 15} className={cn("font-mono text-[11.5px]", n.sub === "in window" ? "fill-l1" : "fill-dim")}>
                       {n.sub}
                     </text>
                   </g>
@@ -145,10 +145,10 @@ export function BlastGraph({ inc }: { inc: Incident }) {
                 <g key={s.key}>
                   <title>{svcSlug(s.key)}</title>
                   <circle cx={x} cy={y} r={3.5} className={fill} />
-                  <text x={x + 12} y={y + 4} className="fill-mut font-mono text-[11.5px]">
+                  <text x={x + 12} y={y + 4} className="fill-mut font-mono text-[12.5px]">
                     {trunc(svcSlug(s.key), 22)}
                   </text>
-                  <text x={x + 12} y={y + 18} className={cn("text-[10.5px] font-medium uppercase tracking-[0.08em]", fill)}>
+                  <text x={x + 12} y={y + 18} className={cn("text-[11.5px] font-medium uppercase tracking-[0.08em]", fill)}>
                     {l.label}
                   </text>
                 </g>
@@ -157,7 +157,7 @@ export function BlastGraph({ inc }: { inc: Incident }) {
           </svg>
         </div>
       )}
-      <ul className="mt-1 flex flex-wrap gap-[18px] border-t border-line px-[18px] pb-4 pt-2 font-mono text-[10.5px] leading-none text-dim" aria-label="legend">
+      <ul className="mt-1 flex flex-wrap gap-[18px] border-t border-line px-[18px] pb-4 pt-2 font-mono text-[11.5px] leading-none text-dim" aria-label="legend">
         <li className="inline-flex items-center gap-1.5">
           <span className="inline-block h-0.5 w-2 bg-l1" aria-hidden />
           lockfile resolved while installable

@@ -15,7 +15,7 @@ export default function ConsoleError({ error, reset }: { error: Error & { digest
       icon={Unplug}
       sentence="This page could not be rendered — the live worker or the graph did not answer."
       action={{ label: "Try again", onClick: reset }}
-      extra={<p className="max-w-[60ch] font-mono text-[11px] leading-[1.6] text-dim">{error.message.slice(0, 240)}{error.digest ? ` · ${error.digest}` : ""}</p>}
+      extra={<p className="max-w-[60ch] font-mono text-[12px] leading-[1.6] text-dim">{error.message.slice(0, 240)}{error.digest ? ` · ${error.digest}` : ""}</p>}
     />
   );
 }

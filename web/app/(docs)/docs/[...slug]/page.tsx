@@ -27,8 +27,8 @@ export default async function DocPage({ params }: PageProps<"/docs/[...slug]">) 
     { key: "reference", label: "reference", items: DOCS.filter((d) => d.section === "reference") },
   ];
   return (
-    <div className="mx-auto grid max-w-[1280px] grid-cols-[200px_minmax(0,1fr)_180px] gap-12 px-10 py-10 pb-[72px] max-[1180px]:grid-cols-[200px_minmax(0,1fr)] max-[900px]:grid-cols-1 max-[900px]:gap-8 max-[900px]:px-5 max-[900px]:pt-6">
-      <nav aria-label="Guide" className="min-w-0 max-[900px]:order-first">
+    <div className="mx-auto grid w-full max-w-[1520px] grid-cols-[236px_minmax(0,1fr)_200px] gap-x-12 px-10 py-12 pb-24 max-[1280px]:grid-cols-[236px_minmax(0,1fr)] max-[900px]:grid-cols-1 max-[900px]:gap-8 max-[900px]:px-5 max-[900px]:pt-6">
+      <nav aria-label="Guide" className="min-w-0 max-[900px]:order-first min-[900px]:sticky min-[900px]:top-[84px] min-[900px]:self-start">
         {groups.map((g) => (
           <div key={g.key} className="mb-6">
             <div className="label mb-3">{g.label}</div>
@@ -45,8 +45,8 @@ export default async function DocPage({ params }: PageProps<"/docs/[...slug]">) 
                         active ? "border-signal" : "border-transparent",
                       )}
                     >
-                      <span className={cn("truncate text-[12.5px] font-medium leading-[1.35]", active ? "text-fg" : "text-mut")}>{d.title}</span>
-                      <span className="truncate text-[11px] leading-[1.35] text-dim max-[900px]:hidden">{d.hint}</span>
+                      <span className={cn("truncate text-[13.5px] font-medium leading-[1.35]", active ? "text-fg" : "text-mut")}>{d.title}</span>
+                      <span className="truncate text-[12px] leading-[1.35] text-dim max-[900px]:hidden">{d.hint}</span>
                     </Link>
                   </li>
                 );
@@ -54,7 +54,7 @@ export default async function DocPage({ params }: PageProps<"/docs/[...slug]">) 
             </ul>
           </div>
         ))}
-        <p className="font-mono text-[10.5px] leading-[1.6] text-dim max-[900px]:hidden">
+        <p className="font-mono text-[11.5px] leading-[1.6] text-dim max-[900px]:hidden">
           rendered from the repository&apos;s markdown ·{" "}
           <a href="https://github.com/yashksaini-coder/Reachable/tree/master/docs" target="_blank" rel="noreferrer">
             docs/
@@ -62,17 +62,17 @@ export default async function DocPage({ params }: PageProps<"/docs/[...slug]">) 
         </p>
       </nav>
       <article className="doc min-w-0">
-        <h1 className="text-balance text-[26px] font-medium leading-[1.2] tracking-[-0.02em]">{doc.title}</h1>
+        <h1 className="text-balance text-[40px] font-medium leading-[1.15] tracking-[-0.025em]">{doc.title}</h1>
         {doc.parts.map((p, i) => (typeof p === "string" ? <div key={i} dangerouslySetInnerHTML={{ __html: p }} /> : <Block key={i} m={p} />))}
       </article>
-      <aside className="max-[1180px]:hidden">
+      <aside className="max-[1280px]:hidden">
         {doc.headings.length > 0 && (
-          <div className="sticky top-[76px]">
+          <div className="sticky top-[84px]">
             <div className="label mb-3">on this page</div>
             <ul className="flex flex-col gap-1.5">
               {doc.headings.map((h) => (
                 <li key={h.id}>
-                  <a href={`#${h.id}`} className="block text-[11.5px] leading-[1.4] text-mut transition-colors duration-[180ms] hover:text-fg">
+                  <a href={`#${h.id}`} className="block text-[12.5px] leading-[1.4] text-mut transition-colors duration-[180ms] hover:text-fg">
                     {h.text}
                   </a>
                 </li>
@@ -99,13 +99,13 @@ function Block({ m }: { m: Marker }) {
     return (
       <div className="my-4 overflow-hidden rounded-lg border border-border border-l-2 border-l-signal/55 bg-card2">
         <div className="flex min-h-10 items-center gap-3 px-[13px]">
-          <span className="rounded-xs bg-sigfill px-1.5 py-[5px] font-mono text-[10.5px] font-medium uppercase leading-none tracking-[0.1em] text-signal">hydradb</span>
-          <span className="font-mono text-[11px] text-dim">executed statement · {m.section}</span>
+          <span className="rounded-xs bg-sigfill px-1.5 py-[5px] font-mono text-[11.5px] font-medium uppercase leading-none tracking-[0.1em] text-signal">hydradb</span>
+          <span className="font-mono text-[12px] text-dim">executed statement · {m.section}</span>
         </div>
         {m.statements.length === 0 ? (
-          <div className="mx-[13px] mb-[13px] rounded-md border border-line bg-code p-3 font-mono text-[11.5px] text-dim">— not computed</div>
+          <div className="mx-[13px] mb-[13px] rounded-md border border-line bg-code p-3 font-mono text-[12.5px] text-dim">— not computed</div>
         ) : (
-          <pre className="mx-[13px] mb-[13px] mt-0 overflow-x-auto rounded-md border border-line bg-code p-3 font-mono text-[11.5px] leading-[1.65] text-signal-2">
+          <pre className="mx-[13px] mb-[13px] mt-0 overflow-x-auto rounded-md border border-line bg-code p-3 font-mono text-[12.5px] leading-[1.65] text-signal-2">
             {m.statements.join("\n\n")}
           </pre>
         )}
@@ -119,11 +119,11 @@ function Block({ m }: { m: Marker }) {
         // eslint-disable-next-line @next/next/no-img-element
         <img src={`/guide/${m.file}`} alt={m.caption} className={cn("mx-auto block max-h-[400px] w-auto max-w-full rounded-xl border border-border", m.kindOf === "png" && "pixel")} loading="lazy" />
       ) : (
-        <div className="flex min-h-[140px] items-center justify-center rounded-xl border border-dashed border-input px-6 text-center font-mono text-[11px] leading-[1.6] text-dim">
+        <div className="flex min-h-[140px] items-center justify-center rounded-xl border border-dashed border-input px-6 text-center font-mono text-[12px] leading-[1.6] text-dim">
           {m.caption} — <span className="ml-1">{m.file} not added yet</span>
         </div>
       )}
-      {m.exists && <figcaption className="mt-2 font-mono text-[11px] leading-[1.6] text-dim">{m.caption}</figcaption>}
+      {m.exists && <figcaption className="mt-2 font-mono text-[12px] leading-[1.6] text-dim">{m.caption}</figcaption>}
     </figure>
   );
 }

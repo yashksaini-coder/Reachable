@@ -51,8 +51,8 @@ export default async function GraphPage() {
 
   return (
     <div className="mx-auto max-w-[1280px] px-10 pb-24 pt-9 max-[900px]:px-5">
-      <h1 className="text-balance text-[22px] font-medium leading-[1.25] tracking-[-0.015em] text-fg">Graph</h1>
-      <p className="mt-2 text-[12.5px] text-mut">What HydraDB holds, and how to walk it.</p>
+      <h1 className="text-balance text-[24px] font-medium leading-[1.25] tracking-[-0.015em] text-fg">Graph</h1>
+      <p className="mt-2 text-[13.5px] text-mut">What HydraDB holds, and how to walk it.</p>
 
       {/* tiles per label — the true count is server-rendered; CountUp only replays it */}
       {!stats ? (
@@ -64,15 +64,15 @@ export default async function GraphPage() {
             return (
               <div key={l} className="bg-card px-[13px] pb-[15px] pt-[13px] cell-lines">
                 <span aria-hidden className={cn("mb-3 block h-0.5 w-[18px]", rule)} />
-                <div className="num text-[22px] font-medium leading-none tracking-[-0.02em] text-fg">{n == null ? <span className="text-dim">n/a</span> : <CountUp n={n} delay={i * 90} />}</div>
-                <div className="mt-1.5 text-[10.5px] text-dim">{n == null ? `${label} — count refused past 250k` : label}</div>
+                <div className="num text-[24px] font-medium leading-none tracking-[-0.02em] text-fg">{n == null ? <span className="text-dim">n/a</span> : <CountUp n={n} delay={i * 90} />}</div>
+                <div className="mt-1.5 text-[11.5px] text-dim">{n == null ? `${label} — count refused past 250k` : label}</div>
               </div>
             );
           })}
         </StatStrip>
       )}
       {stats && (
-        <p className="mt-2 font-mono text-[10.5px] leading-[1.6] text-dim">
+        <p className="mt-2 font-mono text-[11.5px] leading-[1.6] text-dim">
           last ingest {when(stats.last_ingest)}
           {stats.edges_written &&
             Object.entries(stats.edges_written).map(([k, v]) => (
@@ -99,7 +99,7 @@ export default async function GraphPage() {
         <section className="overflow-hidden rounded-xl border border-border bg-card">
           <div className="label border-b border-line px-[18px] py-4">schema</div>
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse [&_td]:h-10 [&_td]:border-b [&_td]:border-line [&_td]:px-3 [&_td]:py-3 [&_td]:align-middle [&_td]:text-[12.5px] [&_td]:text-mut [&_th]:whitespace-nowrap [&_th]:border-b [&_th]:border-border [&_th]:px-3 [&_th]:pb-[9px] [&_th]:pt-3 [&_th]:text-left [&_th]:text-[10.5px] [&_th]:font-medium [&_th]:uppercase [&_th]:leading-none [&_th]:tracking-[0.09em] [&_th]:text-dim [&_tbody_tr:last-child_td]:border-b-0 [&_tbody_tr]:transition-colors [&_tbody_tr]:duration-[180ms] [&_tbody_tr:hover]:bg-hover">
+            <table className="w-full border-collapse [&_td]:h-10 [&_td]:border-b [&_td]:border-line [&_td]:px-3 [&_td]:py-3 [&_td]:align-middle [&_td]:text-[13.5px] [&_td]:text-mut [&_th]:whitespace-nowrap [&_th]:border-b [&_th]:border-border [&_th]:px-3 [&_th]:pb-[9px] [&_th]:pt-3 [&_th]:text-left [&_th]:text-[11.5px] [&_th]:font-medium [&_th]:uppercase [&_th]:leading-none [&_th]:tracking-[0.09em] [&_th]:text-dim [&_tbody_tr:last-child_td]:border-b-0 [&_tbody_tr]:transition-colors [&_tbody_tr]:duration-[180ms] [&_tbody_tr:hover]:bg-hover">
               <thead>
                 <tr>
                   <th>from</th>
@@ -111,16 +111,16 @@ export default async function GraphPage() {
               <tbody>
                 {SCHEMA.map(([a, r, b, src]) => (
                   <tr key={r + a + b}>
-                    <td className="font-mono text-[12px] text-fg">{a}</td>
-                    <td className="font-mono text-[11.5px] text-signal-2">{r}</td>
-                    <td className="font-mono text-[12px] text-fg">{b}</td>
-                    <td className="text-[11.5px]">{src}</td>
+                    <td className="font-mono text-[13px] text-fg">{a}</td>
+                    <td className="font-mono text-[12.5px] text-signal-2">{r}</td>
+                    <td className="font-mono text-[13px] text-fg">{b}</td>
+                    <td className="text-[12.5px]">{src}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          <p className="border-t border-line px-[18px] py-3 font-mono text-[10.5px] leading-[1.6] text-dim">
+          <p className="border-t border-line px-[18px] py-3 font-mono text-[11.5px] leading-[1.6] text-dim">
             ids are 52-bit <code>gid(key)</code> integers; every node carries its human <code>key</code> · timestamps are int epoch seconds · full rules in <code>docs/schema.md</code>
           </p>
         </section>
@@ -128,7 +128,7 @@ export default async function GraphPage() {
         <section className="overflow-hidden rounded-xl border border-border bg-card">
           <div className="flex items-baseline justify-between gap-4 border-b border-line px-[18px] py-4">
             <span className="label">ingest jobs</span>
-            {list && list.length > 0 && <span className="num text-[10.5px] leading-none text-dim">{list.length}</span>}
+            {list && list.length > 0 && <span className="num text-[11.5px] leading-none text-dim">{list.length}</span>}
           </div>
           {!list ? (
             <Unavailable what="jobs" className="m-[18px]" />
@@ -140,11 +140,11 @@ export default async function GraphPage() {
                 <li key={j.job_id} className="border-b border-line py-2.5 last:border-b-0">
                   <div className="flex items-center gap-3">
                     <span className={cn("size-1.5 shrink-0 rounded-full", DOT[j.status] ?? "bg-unknown", j.status === "running" && "blip")} aria-hidden />
-                    <span className="min-w-0 flex-1 truncate font-mono text-[12px] leading-none text-mut">{j.repo}</span>
-                    <span className={cn("shrink-0 whitespace-nowrap font-mono text-[10.5px] leading-none", STATUS[j.status] ?? "text-dim")}>{j.status}</span>
-                    <span className="num shrink-0 whitespace-nowrap text-[10.5px] leading-none text-dim">{when(j.started_at)}</span>
+                    <span className="min-w-0 flex-1 truncate font-mono text-[13px] leading-none text-mut">{j.repo}</span>
+                    <span className={cn("shrink-0 whitespace-nowrap font-mono text-[11.5px] leading-none", STATUS[j.status] ?? "text-dim")}>{j.status}</span>
+                    <span className="num shrink-0 whitespace-nowrap text-[11.5px] leading-none text-dim">{when(j.started_at)}</span>
                   </div>
-                  <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 pl-[18px] font-mono text-[10.5px] leading-[1.6] text-dim">
+                  <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 pl-[18px] font-mono text-[11.5px] leading-[1.6] text-dim">
                     <span className="num">
                       → {when(j.ended_at)} · {j.job_id}
                     </span>
@@ -175,8 +175,8 @@ function Unavailable({ what, className }: { what: string; className?: string }) 
       <span className="grid size-11 place-items-center rounded-full border border-border text-dim" aria-hidden>
         <PlugZap className="size-[17px]" />
       </span>
-      <p className="max-w-[44ch] text-pretty text-[13px] text-mut">Live API unavailable — {what} not shown.</p>
-      <p className="font-mono text-[11px] leading-[1.6] text-dim">start it with make up · nothing here is served from cache</p>
+      <p className="max-w-[44ch] text-pretty text-[14px] text-mut">Live API unavailable — {what} not shown.</p>
+      <p className="font-mono text-[12px] leading-[1.6] text-dim">start it with make up · nothing here is served from cache</p>
     </div>
   );
 }
@@ -188,7 +188,7 @@ function Empty({ icon: Icon, sentence, action, className }: { icon: typeof PlugZ
       <span className="grid size-11 place-items-center rounded-full border border-border text-dim" aria-hidden>
         <Icon className="size-[17px]" />
       </span>
-      <p className="max-w-[44ch] text-pretty text-[13px] text-mut">{sentence}</p>
+      <p className="max-w-[44ch] text-pretty text-[14px] text-mut">{sentence}</p>
       <Link
         href="/services"
         className={ACTION}
