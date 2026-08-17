@@ -57,7 +57,6 @@ export default async function Services() {
   const live = svcs !== null;
   const list = svcs ?? [];
   const jobsSorted = [...(recent ?? [])].sort((a, b) => Number(b.started_at ?? 0) - Number(a.started_at ?? 0));
-  const recentSorted = jobsSorted.slice(0, 5);
   // Latest job per repo (jobs are newest first). A service whose latest job did not finish is
   // flagged partial: some steps may have written, later ones did not.
   const latestJob = new Map<string, (typeof jobsSorted)[number]>();
@@ -77,8 +76,8 @@ export default async function Services() {
         )}
       </p>
 
-      <div className="mt-6 grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-start gap-3.5 max-[900px]:grid-cols-1">
-        <AddRepository disabled={!live} recent={recentSorted} prominent={empty} />
+      <div className="mt-6 grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-stretch gap-3.5 max-[900px]:grid-cols-1">
+        <AddRepository disabled={!live} recent={jobsSorted} prominent={empty} />
       </div>
 
       {empty ? (
@@ -116,8 +115,8 @@ export default async function Services() {
                     const partial = lj && (lj.status === "failed" || lj.status === "interrupted");
                     return (
                       <tr key={s.key} className="transition-colors duration-[180ms] ease-[var(--ease)] hover:bg-hover">
-                        <td className="font-mono text-[12px] text-fg" title={s.note ?? undefined}>
-                          <a href={s.repo_url || `https://github.com/${slug}`} className="text-fg hover:text-signal-2" target="_blank" rel="noreferrer">
+                        <td className="font-mono text-[12px] text-fg" title={s.note ?? slug}>
+                          <a href={s.repo_url || `https://github.com/${slug}`} className="inline-block max-w-[260px] truncate align-middle text-fg hover:text-signal-2" target="_blank" rel="noreferrer" title={slug}>
                             {slug}
                           </a>
                           {partial && (
@@ -136,7 +135,7 @@ export default async function Services() {
                         <td className="num text-[11.5px]">{e?.whileLive ? <span className="text-l1">{e.whileLive}</span> : <span className="text-dim">0</span>}</td>
                         <td>
                           {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={`/badge/${slug}.svg`} alt={`reachable badge for ${slug}`} height={20} className="block" />
+                          <img src={`/badge/${slug}.svg`} alt={`reachable badge for ${slug}`} width={168} height={22} className="block h-[22px] w-auto" />
                         </td>
                       </tr>
                     );

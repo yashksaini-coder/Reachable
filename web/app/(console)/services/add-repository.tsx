@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Check, RotateCcw, X } from "lucide-react";
+import { ArrowRight, Check, Radio, RotateCcw, X } from "lucide-react";
 import type { Job, JobStep } from "@/lib/api";
 import { fmtMs } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -15,68 +15,61 @@ const normalise = (raw: string) => {
   return SLUG.test(s) ? s : null;
 };
 
+const RECENT_MAX = 8;
+// Both cards share ONE fixed height so the top row never jumps, whatever the data: 420px, flex
+// columns; the job region on the left always renders (placeholder or JobCard, filling the slot,
+// steps scroll inside), and the recent list scrolls inside its card. Nothing here grows with jobs.
+const CARD = "elev flex h-[420px] flex-col overflow-hidden rounded-xl border border-border bg-card p-[18px]";
+
 // Renders the two cells of the /services top row: the add-repository card (with the running
-// JobCard beneath it) and the recent-jobs card. The page owns the grid.
+// JobCard beneath it) and the recent-jobs card. The page owns the grid; `recent` is newest first.
 export function AddRepository({ disabled, recent, prominent = false }: { disabled: boolean; recent: Job[]; prominent?: boolean }) {
   const [value, setValue] = useState("");
-  const [msg, setMsg] = useState<{ text: string; tone: "error" | "note" } | null>(null);
+  const [err, setErr] = useState<string | null>(null);
   const toast = useToast();
   const [busy, setBusy] = useState(false);
   const [jobId, setJobId] = useState<string | null>(null);
 
-  // Re-submits a finished/failed/interrupted job's repo; attaches to the new (or already running) job.
-  async function retry(id: string) {
+  // Queue or retry; 409 = a job is already running and the worker hands back its id — attach to it.
+  async function post(url: string, body: BodyInit | undefined, failTitle: string) {
     setBusy(true);
     try {
-      const r = await fetch(`/api/jobs/${encodeURIComponent(id)}/retry`, { method: "POST" });
-      const body = (await r.json().catch(() => ({}))) as { job_id?: string; error?: string };
-      if (body.job_id && (r.ok || r.status === 409)) {
-        setJobId(body.job_id);
-        setMsg(r.status === 409 ? { text: "an ingest is already running — attached to it", tone: "note" } : { text: `retrying · job ${body.job_id.slice(0, 8)}`, tone: "note" });
-      } else {
-        toast.error("could not retry the job", body.error ?? `HTTP ${r.status}`);
+      const r = await fetch(url, { method: "POST", headers: body ? { "content-type": "application/json" } : undefined, body });
+      const res = (await r.json().catch(() => ({}))) as { job_id?: string; error?: string };
+      if (res.job_id && (r.ok || r.status === 409)) {
+        setJobId(res.job_id);
+        setErr(null);
+        if (r.status === 409) toast.note("an ingest is already running", "attached to it");
+        return true;
       }
+      setErr(res.error ?? `HTTP ${r.status}`);
+      toast.error(failTitle, res.error ?? `HTTP ${r.status}`);
     } catch {
-      toast.error("live API unavailable", "the worker on :8787 did not answer");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    const repo = normalise(value);
-    if (!repo) return setMsg({ text: "needs owner/repository — e.g. owner/repo", tone: "error" });
-    setMsg(null);
-    setBusy(true);
-    try {
-      const r = await fetch("/api/services", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ repo }) });
-      const body = (await r.json().catch(() => ({}))) as { job_id?: string; error?: string };
-      if (body.job_id && (r.ok || r.status === 409)) {
-        // 409 = a job is already running; the worker hands back its id — attach to it.
-        setJobId(body.job_id);
-        setValue("");
-        setMsg(r.status === 409 ? { text: "an ingest is already running — attached to it", tone: "note" } : { text: `queued · job ${body.job_id.slice(0, 8)}`, tone: "note" });
-      } else {
-        setMsg({ text: body.error ?? `HTTP ${r.status}`, tone: "error" });
-        toast.error("could not queue the repository", body.error ?? `HTTP ${r.status}`);
-      }
-    } catch {
-      setMsg({ text: "live API unavailable", tone: "error" });
+      setErr("live API unavailable");
       toast.error("live API unavailable", "the worker on :8787 did not answer — start it with make up");
     } finally {
       setBusy(false);
     }
+    return false;
+  }
+  const retry = (id: string) => post(`/api/jobs/${encodeURIComponent(id)}/retry`, undefined, "could not retry the job");
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    const repo = normalise(value);
+    if (!repo) return setErr("needs owner/repository — e.g. owner/repo");
+    if (await post("/api/services", JSON.stringify({ repo }), "could not queue the repository")) setValue("");
   }
 
-  const invalid = msg?.tone === "error";
+  const invalid = err != null;
   const helper = disabled
     ? "adding needs the live worker API (make up) · offline: make add REPO=owner/repo"
     : "package-lock.json (v2/v3) or pnpm-lock.yaml (v6/v9) history is ingested · versions enriched from npm · OSV advisories linked · imports scanned at the latest commit";
+  const shown = recent.slice(0, RECENT_MAX);
 
   return (
     <>
-      <form onSubmit={submit} noValidate className="elev rounded-xl border border-border bg-card p-[18px]">
+      <form onSubmit={submit} noValidate className={CARD}>
         <label htmlFor="add-repo" className="label block">
           add repository
         </label>
@@ -88,7 +81,7 @@ export function AddRepository({ disabled, recent, prominent = false }: { disable
             value={value}
             onChange={(e) => {
               setValue(e.target.value);
-              if (invalid) setMsg(null);
+              if (invalid) setErr(null);
             }}
             placeholder="owner/repository"
             className="h-11 min-w-0 flex-1 bg-transparent px-[13px] font-mono text-[12.5px] text-fg outline-none placeholder:text-dim disabled:cursor-not-allowed"
@@ -106,40 +99,49 @@ export function AddRepository({ disabled, recent, prominent = false }: { disable
             Add
           </button>
         </div>
-        <p id="add-repo-hint" aria-live="polite" className={cn("mt-[9px] font-mono text-[11px] leading-[1.5] text-pretty", invalid ? "text-l2" : msg ? "text-mut" : "text-dim")}>
-          {msg?.text ?? helper}
+        {/* helper: validation / API errors or the default hint — queued/running state lives in the JobCard */}
+        <p id="add-repo-hint" aria-live="polite" className={cn("mt-[9px] font-mono text-[11px] leading-[1.5] text-pretty", invalid ? "text-l2" : "text-dim")}>
+          {err ?? helper}
         </p>
-        {jobId && <JobCard key={jobId} id={jobId} onRetry={retry} busy={busy} />}
+        {jobId ? (
+          <JobCard key={jobId} id={jobId} onRetry={retry} busy={busy} />
+        ) : (
+          <div className="mt-3.5 flex flex-1 items-center gap-3 rounded-[10px] border border-dashed border-input p-3.5">
+            <span className="grid size-8 shrink-0 place-items-center rounded-full border border-border text-dim">
+              <Radio className="size-3.5" />
+            </span>
+            <p className="font-mono text-[11px] leading-[1.5] text-dim text-pretty">no job running · add a repository to start one</p>
+          </div>
+        )}
       </form>
 
-      <div className="rounded-xl border border-border bg-card p-[18px]">
+      <div className={CARD}>
         <div className="flex items-baseline justify-between">
           <span className="label">recent jobs</span>
-          <span className="num text-[11px] leading-none text-dim">{recent.length}</span>
+          <span className="num text-[11px] leading-none text-dim">{recent.length > shown.length ? `showing ${shown.length} of ${recent.length}` : recent.length}</span>
         </div>
-        <ul className="mt-3 flex flex-col">
-          {recent.length === 0 && <li className="py-2.5 font-mono text-[11px] text-dim">{disabled ? "live API unavailable — no job history" : "no jobs yet"}</li>}
-          {recent
-            .filter((j) => j.job_id !== jobId)
-            .map((j) => (
-              <li key={j.job_id} className="flex min-h-10 items-center gap-3 border-b border-line py-1.5 last:border-b-0">
-                <span aria-hidden className={cn("size-1.5 shrink-0 rounded-full", DOT[j.status] ?? "bg-l1")} />
-                <span className="min-w-0 flex-1 truncate font-mono text-[12px] leading-none text-mut" title={`job ${j.job_id}${j.error ? ` — ${j.error}` : ""}`}>
-                  {j.repo}
-                </span>
-                <span suppressHydrationWarning className="num min-w-0 max-w-[50%] truncate text-[10.5px] leading-none text-dim" title={j.error ?? String(j.started_at ?? "")}>
-                  {what(j)} · {ago(j.started_at)}
-                </span>
-                {(j.status === "failed" || j.status === "interrupted") && !disabled && <RetryButton onClick={() => retry(j.job_id)} disabled={busy} compact />}
-              </li>
-            ))}
+        <ul className="mt-3 flex min-h-0 flex-1 flex-col overflow-y-auto">
+          {shown.length === 0 && <li className="flex h-10 items-center font-mono text-[11px] text-dim">{disabled ? "live API unavailable — no job history" : "no jobs yet"}</li>}
+          {shown.map((j) => (
+            <li key={j.job_id} className="grid h-10 shrink-0 grid-cols-[6px_minmax(0,1fr)_minmax(0,auto)_76px] items-center gap-3 border-b border-line last:border-b-0">
+              <span aria-hidden className={cn("size-1.5 rounded-full", DOT[j.status] ?? "bg-l1")} />
+              <span className="min-w-0 truncate font-mono text-[12px] leading-none text-mut" title={j.repo}>
+                {j.repo}
+              </span>
+              <span suppressHydrationWarning className="num min-w-0 truncate whitespace-nowrap text-[10.5px] leading-none text-dim" title={`job ${j.job_id}${j.error ? ` — ${j.error}` : ""} · ${j.started_at ?? ""}`}>
+                {what(j)} · {ago(j.started_at)}
+              </span>
+              <span className="flex justify-end">{(j.status === "failed" || j.status === "interrupted") && !disabled && <RetryButton onClick={() => retry(j.job_id)} disabled={busy} compact />}</span>
+            </li>
+          ))}
         </ul>
       </div>
     </>
   );
 }
 
-const what = (j: Job) => (j.status === "running" && j.step ? `step · ${j.step}` : j.status === "failed" && j.error ? `failed · ${j.error}` : j.status);
+// Status word only; the error sentence lives in the row's title.
+const what = (j: Job) => (j.status === "running" && j.step ? `running · ${j.step}` : j.status);
 // Status dot: done → present-only green, failed → act-now red, interrupted → unknown grey, else amber (queued/running).
 const DOT: Record<string, string> = { done: "bg-l0", failed: "bg-l2", interrupted: "bg-unknown" };
 const SETTLED = new Set<Job["status"]>(["done", "failed", "interrupted"]);
@@ -161,7 +163,8 @@ function RetryButton({ onClick, disabled, compact = false }: { onClick: () => vo
   );
 }
 
-// Polls /api/jobs/[id] every 1.5 s until the job settles.
+// Polls /api/jobs/[id] every 1.5 s until the job settles. Bounded: header · steps (max 4 rows
+// visible, scrolls beyond) · error clamped to two lines · footer link only when done.
 function JobCard({ id, onRetry, busy }: { id: string; onRetry: (id: string) => void; busy: boolean }) {
   const router = useRouter();
   const [job, setJob] = useState<Job | null>(null);
@@ -200,7 +203,8 @@ function JobCard({ id, onRetry, busy }: { id: string; onRetry: (id: string) => v
 
   const status = job?.status ?? "queued";
   const steps = job?.steps ?? [];
-  const total = steps.reduce((a, s) => a + (s.ms ?? 0), 0);
+  const measured = steps.some((s) => s.ms != null);
+  const total = measured ? steps.reduce((a, s) => a + (s.ms ?? 0), 0) : null;
   // The settled line is built from what the worker reported — never a canned count.
   const line =
     status === "done"
@@ -212,37 +216,40 @@ function JobCard({ id, onRetry, busy }: { id: string; onRetry: (id: string) => v
           : status === "running" && job?.step
             ? `running · ${job.step}`
             : status;
+  const canRetry = status === "failed" || status === "interrupted";
 
   return (
-    <div className="mt-3.5 animate-[en_.3s_var(--ease)_both] rounded-[10px] border border-border bg-card2 p-3.5" aria-live="polite">
-      <div className="flex items-center justify-between gap-3">
-        <span className="min-w-0 truncate font-mono text-[12px] leading-none text-fg">{job?.repo ?? "…"}</span>
+    <div className="mt-3.5 flex min-h-0 flex-1 flex-col animate-[en_.3s_var(--ease)_both] rounded-[10px] border border-border bg-card2 p-3.5" aria-live="polite">
+      <div className="flex min-h-10 flex-wrap items-center gap-x-3 gap-y-1">
+        <span className="min-w-[40%] flex-1 truncate font-mono text-[12px] leading-none text-fg" title={job?.repo}>
+          {job?.repo ?? "…"}
+        </span>
         <span className="num min-w-0 truncate text-[10.5px] leading-none text-dim" title={`job ${id}`}>
           <span className={cn(status === "failed" && "text-l2", status === "interrupted" && "text-unknown")}>{line}</span> · job {id.slice(0, 8)}
         </span>
+        {canRetry && <RetryButton onClick={() => onRetry(id)} disabled={busy} compact />}
       </div>
       {err && <p className="mt-2 font-mono text-[11px] text-l1">{err} — retrying</p>}
-      <ol className="mt-3 flex flex-col gap-[9px]">
+      <ol className="mt-2 min-h-0 flex-1 overflow-y-auto">
         {steps.map((s) => (
           <Step key={s.name} step={s} />
         ))}
-        {!job && (
-          <li className="flex items-center gap-2.5 font-mono text-[11.5px] leading-none text-mut">
+        {steps.length === 0 && (
+          <li className="flex h-8 items-center gap-2.5 font-mono text-[11.5px] leading-none text-mut">
             <span className="grid size-3.5 place-items-center">
-              <span className="blip size-[7px] rounded-full bg-signal" />
+              <span className={cn("size-[7px] rounded-full", job && SETTLED.has(status) ? "bg-input" : "blip bg-signal")} />
             </span>
-            waiting for the job to start
+            {job && SETTLED.has(status) ? "no steps recorded" : "waiting for the job to start"}
           </li>
         )}
       </ol>
-      {job?.error && <p className={cn("mt-2.5 font-mono text-[11px] leading-[1.5] text-pretty", status === "interrupted" ? "text-mut" : "text-l2")}>{job.error}</p>}
-      {(status === "failed" || status === "interrupted") && (
-        <div className="mt-2.5 flex justify-end animate-[en_.3s_var(--ease)_both]">
-          <RetryButton onClick={() => onRetry(id)} disabled={busy} />
-        </div>
+      {job?.error && (
+        <p className={cn("mt-2 line-clamp-2 font-mono text-[11px] leading-[1.5]", status === "interrupted" ? "text-mut" : "text-l2")} title={job.error}>
+          {job.error}
+        </p>
       )}
       {status === "done" && (
-        <div className="mt-2.5 flex justify-end animate-[en_.3s_var(--ease)_both]">
+        <div className="mt-auto flex justify-end pt-2 animate-[en_.3s_var(--ease)_both]">
           <Link href="/board" className="inline-flex min-h-10 items-center gap-1 rounded-md px-2 text-[12px] text-signal-2 transition-colors duration-[180ms] hover:text-signal">
             view on board <ArrowRight className="size-3.5" />
           </Link>
@@ -252,15 +259,15 @@ function JobCard({ id, onRetry, busy }: { id: string; onRetry: (id: string) => v
   );
 }
 
-// One step row: icon (14px box) · mono label · detail · ms · 64x3 progress bar. The icon swaps from
-// a blipping --signal dot to a --l0 check with the pop keyframe (opacity + scale .25→1 + blur 4→0)
-// the moment the step reports done; the bar fills --signal while running and settles --l0.
+// One step row (fixed h-8): icon (14px box) · mono label · detail · ms · 64x3 progress bar. The icon
+// swaps from a blipping --signal dot to a --l0 check with the pop keyframe the moment the step
+// reports done; the bar fills --signal while running and settles --l0.
 function Step({ step }: { step: JobStep }) {
   const st = step.status;
   const w = st === "done" || st === "failed" || st === "skipped" ? "w-full" : st === "running" ? "w-1/2" : "w-0";
   const bar = st === "done" ? "bg-l0" : st === "failed" ? "bg-l2" : st === "skipped" ? "bg-input" : "bg-signal";
   return (
-    <li className="flex items-center gap-2.5">
+    <li className="flex h-8 shrink-0 items-center gap-2.5">
       <span className="grid size-3.5 shrink-0 place-items-center" aria-hidden>
         {st === "done" ? (
           <Check key="done" className="size-[13px] animate-[pop_.25s_var(--ease)_both] text-l0" strokeWidth={2} />
@@ -271,7 +278,9 @@ function Step({ step }: { step: JobStep }) {
         )}
       </span>
       <span className={cn("shrink-0 font-mono text-[11.5px] leading-none", st === "done" || st === "skipped" ? "text-mut" : "text-fg")}>{step.name}</span>
-      <span className="min-w-0 flex-1 truncate font-mono text-[11px] leading-none text-dim">{step.detail ?? ""}</span>
+      <span className="min-w-0 flex-1 truncate font-mono text-[11px] leading-none text-dim" title={step.detail ?? undefined}>
+        {step.detail ?? ""}
+      </span>
       <span className="num shrink-0 text-[10.5px] leading-none text-dim">{st === "running" || step.ms == null ? "—" : fmtMs(step.ms)}</span>
       <span className="h-[3px] w-16 shrink-0 overflow-hidden rounded-[2px] bg-hover max-[900px]:hidden">
         <span className={cn("block h-full transition-[width] duration-300 ease-[var(--ease)]", w, bar)} />
