@@ -130,8 +130,9 @@ benchmarks/results/    provenance-stamped timing JSON, same command (created on 
 scripts/               probe.py, roundtrip.py — Phase 0 harnesses, kept
 web/
   app/(landing)/       / — landing (design-bundle components, real incident data)
+  app/(docs)/          /docs/[slug] — the guide, own slim header (no console sidebar)
   app/(console)/       shell + /incidents · /incident/[advisory] · /incident/[advisory]/[owner]/[repo] · /board ·
-                       /services · /ask · /graph · /docs/[slug] · not-found · error · loading
+                       /services · /ask · /graph · not-found · error · loading
   app/api/*, app/badge/[owner]/[repo]   server-only proxies to the worker · README badge SVG
   components/console/  nav (Shell) · ui (HydraCard, Question, Stat…) · toast · states · skeleton · count-up
   components/landing/  landing sections
