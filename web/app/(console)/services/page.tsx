@@ -64,8 +64,11 @@ export default async function Services() {
   for (const j of jobsSorted) if (!latestJob.has(j.repo.toLowerCase())) latestJob.set(j.repo.toLowerCase(), j);
   const empty = live && list.length === 0;
 
+  // Dashboard: at >=900px the page is exactly one viewport tall — header, the fixed top row, and the
+  // watched-services table taking the rest and scrolling inside itself. Below 900px it flows and
+  // scrolls normally. On viewports too short for the top row, main falls back to scrolling.
   return (
-    <div className="mx-auto max-w-[1280px] px-10 pb-24 pt-9 max-[900px]:px-5">
+    <div className="mx-auto w-full max-w-[1280px] px-10 pb-24 pt-9 max-[900px]:px-5 min-[900px]:flex min-[900px]:h-full min-[900px]:min-h-0 min-[900px]:flex-col min-[900px]:pb-6">
       <h1 className="text-[22px] font-medium leading-[1.25] tracking-[-0.015em] text-fg">Services</h1>
       <p className="mt-2 text-[12.5px] text-mut text-pretty">
         {live ? (
@@ -77,7 +80,7 @@ export default async function Services() {
         )}
       </p>
 
-      <div className="mt-6 grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-stretch gap-3.5 max-[900px]:grid-cols-1">
+      <div className="mt-6 grid shrink-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-stretch gap-3.5 max-[900px]:grid-cols-1">
         <AddRepository disabled={!live} recent={jobsSorted} prominent={empty} />
       </div>
 
@@ -88,12 +91,12 @@ export default async function Services() {
         </div>
       ) : (
         live && (
-          <div className="elev mt-3.5 overflow-hidden rounded-xl border border-border bg-card">
+          <div className="elev mt-3.5 flex flex-col overflow-hidden rounded-xl border border-border bg-card min-[900px]:min-h-[160px] min-[900px]:flex-1">
             <div className="flex items-baseline justify-between border-b border-line px-[18px] py-4">
               <span className="label">watched services</span>
               <span className="num text-[11px] leading-none text-dim">{list.length} rows</span>
             </div>
-            <div className="max-h-[420px] overflow-auto">
+            <div className="max-h-[420px] overflow-auto min-[900px]:max-h-none min-[900px]:min-h-0 min-[900px]:flex-1">
               <table className={TABLE}>
                 <thead className="sticky top-0 z-[2] bg-card shadow-[inset_0_-1px_0_var(--color-border)]">
                   <tr>
