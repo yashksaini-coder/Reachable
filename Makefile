@@ -1,4 +1,5 @@
-.PHONY: mcp venv node node-test node-test-stop node-stop node-logs roundtrip probe fixture ingest incident lint test api web web-build up down add reset demo
+.DEFAULT_GOAL := help
+.PHONY: help mcp venv node node-test node-test-stop node-stop node-logs roundtrip probe fixture ingest incident lint test api web web-build up down add reset demo
 
 DATA    := $(CURDIR)/.hydradb
 PY      := $(CURDIR)/.venv/bin/python
@@ -11,13 +12,29 @@ TOKEN   := local-development-token-32-bytes
 endif
 export PYTHONPATH := $(CURDIR)/worker
 
+
+# `make` alone prints this. Descriptions live next to each target as `## text`.
+help: ## list every target and what it does
+	@printf "\nReachable — supply-chain incident console on HydraDB\n\n"
+	@for g in "Environment:venv node node-test node-test-stop node-stop node-logs reset" \
+	          "Run:up down api web web-build mcp" \
+	          "Data:add ingest incident demo" \
+	          "Verify:test lint probe roundtrip fixture"; do \
+	  printf "  \033[1m%s\033[0m\n" "$${g%%:*}"; \
+	  for t in $${g#*:}; do \
+	    awk -v t="$$t" 'match($$0, "^" t ":.*## ") { sub("^" t ":.*## ", ""); printf "    \033[36m%-16s\033[0m %s\n", t, $$0 }' $(MAKEFILE_LIST); \
+	  done; printf "\n"; \
+	done
+	@printf "  Two shells: \`make node\` stays in the foreground; run everything else in another.\n"
+	@printf "  Docs: README.md · docs/console/run.md · AGENTS.md\n\n"
+
 # .venv and .hydradb are gitignored, so a clean checkout has neither.
-venv:
+venv: ## create .venv and install requirements.txt (pyyaml, neo4j, httpx, mcp…)
 	python3 -m venv .venv && $(PY) -m pip install -qr requirements.txt
 
 # Runs in the foreground and does not return — that is it working, not hanging.
 # Use a second shell for everything else.
-node:
+node: ## start HydraDB (Docker, foreground — leave this shell to it)
 	@mkdir -p $(DATA)/store $(DATA)/cache
 	@printf '%s\n' '$(TOKEN)' > $(DATA)/auth-token
 	docker run --rm --name reachable-hydradb \
@@ -43,7 +60,7 @@ node:
 # (node deletion scans every relationship and is refused past 1M edges — a fixture cannot be
 # removed once loaded). Detached, own ports and store, dev token.
 TEST_DATA := $(CURDIR)/.hydradb-test
-node-test:
+node-test: ## start the throwaway TEST node on :17687 for make test
 	@mkdir -p $(TEST_DATA)/store $(TEST_DATA)/cache
 	@printf '%s\n' 'local-development-token-32-bytes' > $(TEST_DATA)/auth-token
 	docker run -d --rm --name reachable-hydradb-test \
@@ -58,55 +75,55 @@ node-test:
 	  -e RUST_MIN_STACK=33554432 $(IMAGE)
 	@for i in $$(seq 1 30); do curl -sf http://127.0.0.1:19090/readyz >/dev/null 2>&1 && break; sleep 1; done; echo "test node ready on 17687"
 
-node-test-stop:
+node-test-stop: ## stop and remove the test node
 	-docker stop reachable-hydradb-test
 
-node-stop:
+node-stop: ## stop the production node (store under .hydradb/ is kept)
 	-docker stop reachable-hydradb
 
-node-logs:
+node-logs: ## follow the production node logs
 	docker logs -f reachable-hydradb
 
-roundtrip:
+roundtrip: ## Phase-0 harness: write/read one node over Bolt
 	$(PY) scripts/roundtrip.py
 
-probe:
+probe: ## run the OpenCypher capability probes against the node
 	$(PY) scripts/probe.py
 
-fixture:   # loads into the TEST node only
+fixture:   # loads into the TEST node only ## load the golden fixture into the TEST node only
 	HYDRA_URI=bolt://127.0.0.1:17687 HYDRA_TOKEN=local-development-token-32-bytes $(PY) -m reachable.fixture
 
 # make ingest ARGS="--only reach --only typosquats" to run selected stages over demo/services.txt
 # (bulk path; the per-repo path is `make add`)
-ingest:
+ingest: ## bulk ingest over demo/services.txt (ARGS="--only reach …")
 	$(PY) -m reachable.pipeline --seeds demo/services.txt $(ARGS)
 
 # make incident ID=<advisory> ARGS="--out --runs 5"  (a bare `--out` is swallowed by make as --output-sync)
-incident:
+incident: ## compose one report: ID=<advisory> ARGS="--out --runs 5"
 	$(PY) -m reachable.incident $(ID) $(ARGS)
 
-lint:
+lint: ## ruff check + format check
 	$(PY) -m ruff check . && $(PY) -m ruff format --check .
 
 # Tests use the TEST node (make node-test) — never the production graph.
-test: lint
+test: lint ## lint + 14 golden tests on the TEST node + NEXT_PUBLIC leak check
 	@curl -sf http://127.0.0.1:19090/readyz >/dev/null 2>&1 || (echo "test node not running: make node-test"; exit 1)
 	HYDRA_URI=bolt://127.0.0.1:17687 HYDRA_TOKEN=local-development-token-32-bytes $(PY) -m pytest -q
 	@! grep -rnE "process\.env\.NEXT_PUBLIC|NEXT_PUBLIC_[A-Z_]*(HYDRA|TOKEN)" web/app web/lib web/.env* 2>/dev/null \
 	  || (echo "NEXT_PUBLIC_ var found — token leak risk"; exit 1)
 
-api:
+api: ## run the worker API on :8787 in the foreground
 	$(PY) -m reachable.api
 
 # MCP (stdio) server for coding agents; needs `make api` running. Registered for Claude Code
 # via .mcp.json; other agents: command .venv/bin/python, args -m reachable.mcp_server, PYTHONPATH=worker
-mcp:
+mcp: ## run the MCP stdio server for coding agents (needs make api)
 	$(PY) -m reachable.mcp_server
 
-web:
+web: ## run the console dev server on :3000
 	cd web && npm run dev
 
-web-build:
+web-build: ## production build of the console
 	cd web && npm ci && npm run build
 
 # ---------------------------------------------------------------- setup: up / down / add / reset / demo
@@ -115,7 +132,7 @@ API := http://127.0.0.1:8787
 
 # api in the background (pid in .cache/api.pid) + production web build; the node stays in
 # its own terminal (`make node`).
-up:
+up: ## worker API in the background + web build + console on :3000
 	@$(PY) -c "import socket; socket.create_connection(('127.0.0.1', 7687), 2)" 2>/dev/null \
 	  || { echo "HydraDB is not listening on :7687 — run make node in another terminal"; exit 1; }
 	@mkdir -p .cache
@@ -124,23 +141,23 @@ up:
 	  sleep 2; echo "api on $(API) (pid $$(cat .cache/api.pid), log .cache/api.log)"; fi
 	cd web && npm run build && npm start
 
-down:
+down: ## stop the background worker API
 	-@kill $$(cat .cache/api.pid 2>/dev/null) 2>/dev/null && echo "api stopped"; rm -f .cache/api.pid
 
 # make add REPO=owner/repo  — an ingest job via the api if it is up (waits for it), else the
 # same steps inline (python -m reachable.pipeline --repo)
-add:
+add: ## ingest one repository: REPO=owner/repo (job via the API, or inline)
 	@test -n "$(REPO)" || { echo "usage: make add REPO=owner/repo"; exit 1; }
 	$(PY) -m reachable.jobs --api $(API) $(REPO)
 
 # stop the node and archive its store + cache; then `make node` starts empty
-reset:
+reset: ## stop the node, archive .hydradb/store + .cache, start empty
 	-docker stop reachable-hydradb
 	@T=$$(date +%Y%m%d-%H%M%S); for d in store cache; do \
 	  test -d $(DATA)/$$d && mv $(DATA)/$$d $(DATA)/$$d.old-$$T && echo "archived $(DATA)/$$d -> $$d.old-$$T"; done; true
 	@echo "now run make node"
 
 # replay demo/services.txt (jobs) and demo/incidents.txt (reports)
-demo:
+demo: ## replay demo/services.txt (jobs) then demo/incidents.txt (reports)
 	@grep -vE '^\s*(#|$$)' demo/services.txt | while read -r repo _; do $(MAKE) --no-print-directory add REPO=$$repo; done
 	@grep -vE '^\s*(#|$$)' demo/incidents.txt | while read -r id _; do $(MAKE) --no-print-directory incident ID=$$id ARGS="--out --runs 5"; done
