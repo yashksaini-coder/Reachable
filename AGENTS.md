@@ -138,7 +138,7 @@ web/
   components/landing/  landing sections
   lib/                 env.ts (server-only) · incident.ts (loads worker/out JSON) · api.ts (worker) · ask.ts (grammar) ·
                        docs.ts (markdown → html) · level.ts (verdict vocabulary, server-safe)
-docs/console/          in-app docs (overview · pages · ask · data · run); docs/schema.md is also rendered
+docs/console/          in-app guide (why · how-it-works · using · ask · data · run); docs/schema.md is also rendered
 demo/services.txt      13 demo repos: two disclosed cohorts (8 core + 4 real victims) + 1 added via the console, replayed by
                        `make demo` as `make add` jobs — not configuration the code reads
 demo/incidents.txt     the demo advisory ids, replayed as `make incident … --out`
@@ -520,7 +520,13 @@ opens the guide at `/docs`; services page is a one-viewport dashboard at ≥900p
 retaken on the current UI at 1440×900. Pre-push audit clean (no banned copy, all README links 200,
 make targets exist, .env untracked, licence present).
 
-**Known open items:** push to the public GitHub repo (owner action) · Vercel
+**Guide (2026-08-17 ~15:50):** /docs is a four-chapter story (why · how-it-works · using ·
+reference/{schema,ask,run,data}); markdown in docs/console/*.md with markers `{{diagram:NAME}}`
+(web/components/docs/diagrams/*), `{{stat:PATH|ms|int|s}}` and `{{cypher:SECTION}}` pulled from
+worker/out/MAL-2025-46974.json at build, `{{figure:FILE|caption}}` served from docs/assets/guide/
+via /guide/[file]. Plan + the owner's image/GIF prompt sheet: docs/superpowers/plans/2026-08-17-guide.md.
+
+**Known open items:** push the latest local commits (owner) · Vercel
 read-only deploy from committed JSON · video ≤ 3:00 in the prescribed order ·
 form · final disqualifier pass (private-window links, no pre-Aug-12 commits,
 licence, `.env` never committed).

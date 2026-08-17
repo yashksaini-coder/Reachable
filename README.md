@@ -61,7 +61,7 @@ real and lets HydraDB do the walking.
   Codex, OpenCode, Cursor or Copilot can ask the graph the same questions.
 - **A badge** (`/badge/{owner}/{repo}.svg`) for READMEs, and **Export PDF** on every report
   (`?print=1` expands every statement; the browser's print dialog saves the page as PDF — see
-  `docs/console/pages.md`).
+  `docs/console/using.md`).
 
 ## The six questions → how HydraDB answers them
 
