@@ -10,6 +10,8 @@ reference chapters.
 
 ## Add a repository
 
+[Live: Services](/services).
+
 {{figure:add-repo.gif|Services — add a repository, watch the four steps complete, open the board}}
 
 On **Services**, type `owner/repo` or paste a GitHub URL and press **Add**. The job runs in the
@@ -36,6 +38,8 @@ now sits. The graph the guide describes holds {{stat:provenance.graph.Service|in
 {{stat:provenance.graph.Lockfile|int}} lockfile snapshots.
 
 ## Read a report
+
+[Live: the report](/incident/{{stat:advisory.key}}).
 
 Open **Incidents** and click an advisory. The report for `{{stat:advisory.key}}` reads top to
 bottom; the right rail is a mini-map that tracks the section in view.
@@ -67,6 +71,8 @@ reachability note (files scanned, imports found).
 
 ## Export a report as PDF
 
+[Live: the print view](/incident/{{stat:advisory.key}}?print=1).
+
 {{figure:export-pdf.gif|Export PDF — the print preview shows every statement and every row}}
 
 **Export PDF** in the report header opens the browser's print dialog with the whole report laid
@@ -76,6 +82,8 @@ with `?print=1` puts it in the same expanded state on load, so a link can be sha
 Ctrl/Cmd+P. The dark palette is kept on paper; numbers and Cypher are the same recorded values.
 
 ## Ask
+
+[Live: Ask](/ask).
 
 {{figure:ask.gif|Ask — a typed question, the answer, the rows and the statement that produced them}}
 
@@ -89,11 +97,15 @@ grammar is in [Ask grammar](/docs/reference/ask).
 
 ## Board
 
+[Live: Board](/board).
+
 Five lanes — Act now · Resolved while live · Imported · Unscanned · Present only. Lanes are
 **computed from the data**, not assigned: a card moves only when the graph changes. The compact
 toggle drops the detail lines.
 
 ## Beyond the watched set
+
+[Live: the section at the end of the report](/incident/{{stat:advisory.key}}#beyond).
 
 At the bottom of every report, a GitHub code search for public repositories whose lockfile pins
 an affected version today, with a **watch** button per row. These are candidates, not verdicts:
@@ -122,6 +134,8 @@ carries the Cypher that produced it under `cypher` and its caveats under `limita
 | `cypher` | a read-only OpenCypher statement (`MATCH`/`CALL`/`RETURN` only; writes are refused) |
 
 ## Badge
+
+[Live: a badge](/badge/LVQT-ss/cakestory-api.svg).
 
 `/badge/{owner}/{repo}.svg` — a two-cell SVG for READMEs: `reachable · L2 of N` in the verdict
 colour; `unscanned` in grey; `no exposure recorded` in neutral when the service is in no composed

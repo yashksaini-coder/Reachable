@@ -524,7 +524,7 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
           </Question>
         </Reveal>
 
-        <div className="mt-6 print:hidden">
+        <div id="beyond" className="mt-6 scroll-mt-24 print:hidden">
           <FindVictims advisory={inc.advisory.key} />
         </div>
 
@@ -626,7 +626,7 @@ function Provenance({ inc, statements, rows }: { inc: Incident; statements: numb
   const p = inc.provenance;
   const digest = p.hydradb_image?.match(/sha256:([0-9a-f]+)/)?.[1];
   return (
-    <footer className="mt-6 border-t border-line pt-[18px] font-mono text-[10.5px] leading-[1.6] text-dim [overflow-wrap:anywhere]">
+    <footer id="provenance" className="mt-6 scroll-mt-24 border-t border-line pt-[18px] font-mono text-[10.5px] leading-[1.6] text-dim [overflow-wrap:anywhere]">
       <div className="flex flex-wrap gap-x-6 gap-y-1">
         <span>report generated {fmtUtc(p.generated_at)}</span>
         <span>

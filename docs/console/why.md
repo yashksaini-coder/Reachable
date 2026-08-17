@@ -24,23 +24,24 @@ snapshots, {{stat:headline.services_exposed}} services resolved a compromised ve
 
 Each one is a walk over a graph that changes with every commit — not a scan over a table.
 
-1. **Which services are transitively exposed?** Every watched repository whose lockfile
+1. **[Which services are transitively exposed?](/incident/{{stat:advisory.key}}#q1)** Every watched repository whose lockfile
    resolved an affected version, at any commit, with the dependency that pulled it in and the
    proving path. A table of direct dependencies cannot answer this; the answer *is* the chain
-   `bad version ← DEPENDS_ON ← … ← RESOLVED ← lockfile ← HAS_LOCKFILE ← service`.
-2. **Which version introduced it?** Exact publish times from the registry, whether npm has since
+   `bad version ← DEPENDS_ON ← … ← RESOLVED ← lockfile ← HAS_LOCKFILE ← service`
+   ([see one such chain](/incident/{{stat:advisory.key}}/LVQT-ss/cakestory-api)).
+2. **[Which version introduced it?](/incident/{{stat:advisory.key}}#q2)** Exact publish times from the registry, whether npm has since
    erased the version, and the installable window — a property of the edge between the advisory
    and the version, because a version hit by two advisories has two windows.
-3. **Which apps resolved it while it was live?** Not "do we depend on `debug`" but "did a
+3. **[Which apps resolved it while it was live?](/incident/{{stat:advisory.key}}#q3)** Not "do we depend on `debug`" but "did a
    lockfile pin `4.4.2` between the publish and the takedown". That is one predicate comparing
    two edge properties: the commit time on `RESOLVED` against the window on `AFFECTS`.
-4. **What else do the same maintainers publish?** The next blast radius: version → package →
+4. **[What else do the same maintainers publish?](/incident/{{stat:advisory.key}}#q4)** The next blast radius: version → package →
    maintainer → every other package → the services resolving each today. Two hops out, then the
    whole exposure walk again, per package, in one statement.
-5. **Which look-alike names exist?** Names one edit away, scope confusion, hyphen and homoglyph
+5. **[Which look-alike names exist?](/incident/{{stat:advisory.key}}#q5)** Names one edit away, scope confusion, hyphen and homoglyph
    variants. Proximity is materialised as an edge at ingest, so the question is a one-hop walk
    from the package rather than a string comparison over every name in the registry.
-6. **What is the complete blast radius?** The ledger per service with a verdict — the five
+6. **[What is the complete blast radius?](/incident/{{stat:advisory.key}}#q6)** The ledger per service with a verdict — the five
    walks above composed, plus an import scan that says whether the exposure is reachable from
    first-party code.
 
@@ -48,27 +49,28 @@ Each one is a walk over a graph that changes with every commit — not a scan ov
 
 ## What breaks without the graph
 
-- **Question 3 is a bitemporal join per affected version in SQL.** Here it is one `WHERE`
+- **[Question 3 is a bitemporal join per affected version in SQL.](/incident/{{stat:advisory.key}}#q3)** Here it is one `WHERE`
   comparing two relationship properties, because the installable window lives on the `AFFECTS`
   edge and the lockfile commit time lives on the `RESOLVED` edge. On the guide incident it
   answers in {{stat:q3_while_live.ms|ms}}: {{stat:q3_while_live.pinned_removed|int}} lockfiles pin
   a version npm has since erased, {{stat:q3_while_live.in_window|int}} of them committed inside the window.
-- **Question 1's proof comes back from the engine.** `debug@4.4.2 ← DEPENDS_ON ← agent-base@6.0.2
+- **[Question 1's proof comes back from the engine.](/incident/{{stat:advisory.key}}/LVQT-ss/cakestory-api)** `debug@4.4.2 ← DEPENDS_ON ← agent-base@6.0.2
   ← RESOLVED ← lockfile` is a path returned by `algo.SPpaths`; the console never reconstructs
   paths from rows. Membership over the flattened `RESOLVED` closure, together with those
   proof paths, answers in
   {{stat:q1_exposed.timing.warm_p50_ms|ms}} warm (p50 of {{stat:q1_exposed.timing.runs|int}}
   runs; {{stat:q1_exposed.timing.cold_ms|ms}} cold, first run after the node was idle).
-- **N affected versions × M services is one call.** `algo.MSpaths` takes every compromised version
+- **[N affected versions × M services is one call.](/incident/{{stat:advisory.key}}#q1)** `algo.MSpaths` takes every compromised version
   as a source and every service as a target in a single traversal —
   {{stat:q1_mspaths.sources|int}} source × {{stat:q1_mspaths.targets|int}} targets,
   {{stat:q1_mspaths.paths|int}} paths, {{stat:q1_mspaths.timing.warm_p50_ms|ms}} warm.
-- **The graph is the same object the pipeline wrote.** {{stat:provenance.graph.Package|int}}
+- **[The graph is the same object the pipeline wrote.](/incident/{{stat:advisory.key}}#provenance)** {{stat:provenance.graph.Package|int}}
   packages, {{stat:provenance.graph.Version|int}} versions, {{stat:provenance.graph.Maintainer|int}}
   maintainers and {{stat:provenance.graph.Advisory|int}} advisories share one id scheme, so every
   ingest is a `MERGE` and every question starts from a key, not from a join plan.
 
-Every number above is read from the committed report `worker/out/{{stat:advisory.key}}.json`,
+Every number above is read from the committed report `worker/out/{{stat:advisory.key}}.json`
+([its provenance footer](/incident/{{stat:advisory.key}}#provenance)),
 generated {{stat:provenance.generated_at}} against `{{stat:provenance.hydradb_image}}`. Cold and
 warm are both reported; neither is estimated.
 
@@ -81,19 +83,20 @@ warm are both reported; neither is estimated.
 | **L0 present only** | in the install tree, never imported by any scanned file | green |
 | **unscanned** | exposed, but its source was not read — styled as unknown, never as safe, never counted as zero | grey |
 
-Verdict colours mean their verdict and nothing else. Orange is the only free accent.
+Verdict colours mean their verdict and nothing else. Orange is the only free accent
+([the verdict distribution on the report](/incident/{{stat:advisory.key}}#q1)).
 
 Three phrases appear verbatim wherever they apply, and are never softened:
 
-- `upper bound` — `live_to` is an upper bound. npm publishes no takedown time, so the window
+- [`upper bound`](/incident/{{stat:advisory.key}}#q2) — `live_to` is an upper bound. npm publishes no takedown time, so the window
   closes at the earlier of the next surviving publish and the advisory's published time.
-- `not computed` — a value that was not measured says `— not computed`; it is never shown as
+- [`not computed`](/incident/{{stat:advisory.key}}#q4) — a value that was not measured says `— not computed`; it is never shown as
   zero. Question 4 computes exposure for the eight most-downloaded co-maintained packages and
   says so for the rest.
-- `unscanned` — a service whose source was not read is `unscanned`. It is never green and never
+- [`unscanned`](/incident/{{stat:advisory.key}}#q6) — a service whose source was not read is `unscanned`. It is never green and never
   subtracted from the total.
 
-Each answer card carries a **hydradb** strip: the exact OpenCypher or `algo.*` statement that
+Each answer card carries a [**hydradb** strip](/incident/{{stat:advisory.key}}#q1): the exact OpenCypher or `algo.*` statement that
 was executed, the row count, and wall-clock latency (cold and warm when both were measured). The
 strip can be collapsed but never hidden.
 

@@ -10,6 +10,8 @@ engine turned out to be.
 
 ## The pipeline
 
+[Live: the Graph page](/graph) shows the same counts and the ingest jobs that produced them.
+
 {{diagram:pipeline}}
 
 Watching a repository is a four-step job in the worker (`worker/reachable/pipeline.py`):
@@ -43,6 +45,8 @@ nothing that was already there.
 
 ## The graph model
 
+[Live: the schema table on the Graph page](/graph).
+
 {{diagram:schema}}
 
 Seven ingested labels, nine relationship types (the fixture-only `Symbol` edges are not
@@ -69,6 +73,8 @@ integer epoch seconds throughout: the engine has no date functions and refuses t
 string against an integer.
 
 ## Q1 — which services are transitively exposed
+
+[Live: Q1 on the report](/incident/{{stat:advisory.key}}#q1) · [one proving path](/incident/{{stat:advisory.key}}/LVQT-ss/cakestory-api).
 
 {{diagram:q1-walk}}
 
@@ -101,6 +107,8 @@ was idle; warm is every run after. Both are reported and neither is estimated.
 
 ## Q2 — which version introduced it
 
+[Live: Q2 on the report](/incident/{{stat:advisory.key}}#q2).
+
 {{cypher:q2_versions}}
 
 The engine has no `min()`, so the first affected version is `ORDER BY v.published_at ASC LIMIT 1`.
@@ -111,6 +119,8 @@ not of why. For this incident the first affected version is
 `{{stat:q2_versions.first.version}}`, and the statement ran in {{stat:q2_versions.ms|ms}}.
 
 ## Q3 — which apps resolved it while it was live
+
+[Live: Q3 timeline and evidence table](/incident/{{stat:advisory.key}}#q3).
 
 {{diagram:q3-window}}
 
@@ -137,6 +147,8 @@ stays on the registry and "while live" collapses into "at all".
 
 ## Q4 — what else the same maintainers publish
 
+[Live: Q4 on the report](/incident/{{stat:advisory.key}}#q4).
+
 {{diagram:q4-fanout}}
 
 Two hops out from the affected package through its maintainers, then back down through
@@ -157,6 +169,8 @@ unknown.
 
 ## Q5 — which look-alike names exist
 
+[Live: Q5 on the report](/incident/{{stat:advisory.key}}#q5).
+
 {{diagram:q5-nearnames}}
 
 Near-name proximity is materialised at ingest as `NAME_SIMILAR_TO` edges from a suspect
@@ -173,6 +187,8 @@ decides. Candidates come only from the ingested corpus, so a look-alike that no 
 lockfile ever pulled in is not in the graph and cannot be listed.
 
 ## Q6 — the blast radius, and what is actually reachable
+
+[Live: Q6 on the report](/incident/{{stat:advisory.key}}#q6) · [the board](/board).
 
 Q6 is the composition: `worker/reachable/incident.py` runs Q1 to Q5 in one pass, records the
 statement, row count and wall-clock milliseconds of each, and writes the JSON the report renders
