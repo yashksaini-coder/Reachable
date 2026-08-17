@@ -12,7 +12,6 @@ reference chapters.
 
 [Live: Services](/services).
 
-{{figure:add-repo.gif|Services — add a repository, watch the four steps complete, open the board}}
 
 On **Services**, type `owner/repo` or paste a GitHub URL and press **Add**. The job runs in the
 worker and its progress streams into the job card, four steps in order:
@@ -73,7 +72,6 @@ reachability note (files scanned, imports found).
 
 [Live: the print view](/incident/{{stat:advisory.key}}?print=1).
 
-{{figure:export-pdf.gif|Export PDF — the print preview shows every statement and every row}}
 
 **Export PDF** in the report header opens the browser's print dialog with the whole report laid
 out for A4: every "How HydraDB answered this" card open, every capped table fully expanded, the
@@ -85,7 +83,6 @@ Ctrl/Cmd+P. The dark palette is kept on paper; numbers and Cypher are the same r
 
 [Live: Ask](/ask).
 
-{{figure:ask.gif|Ask — a typed question, the answer, the rows and the statement that produced them}}
 
 Type a question on **Ask**, or click one of the suggested shapes. There is no language model:
 the question is matched against a small grammar, each shape maps to one verified statement, and

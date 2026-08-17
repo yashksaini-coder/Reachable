@@ -117,7 +117,7 @@ function Block({ m }: { m: Marker }) {
     <figure className="my-5">
       {m.exists ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={`/guide/${m.file}`} alt={m.caption} className={cn("block w-full rounded-xl border border-border", m.kindOf === "png" && "pixel")} loading="lazy" />
+        <img src={`/guide/${m.file}`} alt={m.caption} className={cn("mx-auto block max-h-[400px] w-auto max-w-full rounded-xl border border-border", m.kindOf === "png" && "pixel")} loading="lazy" />
       ) : (
         <div className="flex min-h-[140px] items-center justify-center rounded-xl border border-dashed border-input px-6 text-center font-mono text-[11px] leading-[1.6] text-dim">
           {m.caption} — <span className="ml-1">{m.file} not added yet</span>
