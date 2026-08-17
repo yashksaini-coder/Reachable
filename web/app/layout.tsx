@@ -18,7 +18,11 @@ const code = JetBrains_Mono({
   display: "swap",
 });
 
+// Absolute URLs for link previews (server-only): SITE_URL if set, else Vercel's production URL, else :3000.
+const site = process.env.SITE_URL ?? (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000");
+
 export const metadata: Metadata = {
+  metadataBase: new URL(site),
   title: { default: "Reachable", template: "%s · Reachable" },
   description:
     "Supply-chain incident console. When a package is compromised: which services are exposed, which pulled it in while it was still installable, and which actually need action.",
