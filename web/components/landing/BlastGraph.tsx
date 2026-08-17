@@ -15,11 +15,12 @@ import { C } from '@/lib/verdict';
 const X = [60, 270, 560, 900];
 const HEADS = ['version', 'dependency', 'lockfile', 'service'];
 
-const yOf = (i: number, n: number) => 46 + (i + 0.5) * (232 / n);
+const yOf = (i: number, n: number, span = 232) => 46 + (i + 0.5) * (span / n);
+// dense columns (≥6 rows) get a taller canvas so two-line labels never touch: 300 → 340 units
 const trunc = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1) + '…' : s);
 
-const monoLabel = { fontFamily: 'var(--mono)', fontSize: 11.5, fontWeight: 400 } as const;
-const monoSub = { fontFamily: 'var(--mono)', fontSize: 9.5, fontWeight: 400 } as const;
+const monoLabel = { fontFamily: 'var(--mono)', fontSize: 11.5, fontWeight: 400, paintOrder: 'stroke', stroke: 'var(--card)', strokeWidth: 3, strokeLinejoin: 'round' } as const;
+const monoSub = { fontFamily: 'var(--mono)', fontSize: 10.5, fontWeight: 400, paintOrder: 'stroke', stroke: 'var(--card)', strokeWidth: 3, strokeLinejoin: 'round' } as const;
 const tracked = {
   fontFamily: 'var(--ui)',
   fontSize: 9.5,
@@ -32,9 +33,11 @@ export function BlastGraph({ data }: { data: BlastData }) {
   const COLS = data.cols;
   const services = COLS[3].length;
   const lockfiles = COLS[2].length;
+  const dense = Math.max(...COLS.map((c) => c.length)) >= 6;
+  const H = dense ? 340 : 300;
   return (
     <svg
-      viewBox="0 0 1180 300"
+      viewBox={`0 0 1180 ${H}`}
       style={{ width: '100%', minWidth: 1000, height: 'auto' }}
       role="img"
       aria-label={`Blast radius: ${COLS[0].map((n) => n.label).join(", ")} reaching ${services} service${services === 1 ? "" : "s"} through ${lockfiles} lockfile${lockfiles === 1 ? "" : "s"}`}
@@ -53,9 +56,9 @@ export function BlastGraph({ data }: { data: BlastData }) {
 
       {data.edges.map(([c1, i1, c2, i2, amber], k) => {
         const x1 = X[c1] + 8;
-        const y1 = yOf(i1, COLS[c1].length);
+        const y1 = yOf(i1, COLS[c1].length, H - 68);
         const x2 = X[c2] - 8;
-        const y2 = yOf(i2, COLS[c2].length);
+        const y2 = yOf(i2, COLS[c2].length, H - 68);
         const mx = (x1 + x2) / 2;
         const len = Math.abs(x2 - x1) + Math.abs(y2 - y1) + 40;
         return (
@@ -79,7 +82,7 @@ export function BlastGraph({ data }: { data: BlastData }) {
 
       {COLS.flatMap((col, ci) =>
         col.map((node, i) => {
-          const y = yOf(i, col.length);
+          const y = yOf(i, col.length, H - 68);
           const x = X[ci];
           if (ci === 3) {
             return (
