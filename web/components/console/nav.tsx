@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { BookOpen, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ToastProvider } from "@/components/console/toast";
 
@@ -44,12 +44,6 @@ const NAV = [
     hint: "schema and explorer",
     match: (p: string) => p.startsWith("/graph"),
   },
-  {
-    href: "/docs",
-    label: "Docs",
-    hint: "how it works",
-    match: (p: string) => p.startsWith("/docs"),
-  },
 ];
 const PITCH = 46;
 
@@ -80,10 +74,8 @@ export function Mark({
 export function Shell({ children }: { children: ReactNode }) {
   const path = usePathname();
   const [open, setOpen] = useState(false);
-  const idx = Math.max(
-    0,
-    NAV.findIndex((n) => n.match(path)),
-  );
+  const idx = NAV.findIndex((n) => n.match(path)); // -1 on /docs: no item is current, indicator hides
+  const onDocs = path.startsWith("/docs");
 
   // Route change closes the sheet (Link onClick), Escape closes it too.
   useEffect(() => {
@@ -128,11 +120,24 @@ export function Shell({ children }: { children: ReactNode }) {
                 Reachable
               </span>
             </Link>
+            {/* Docs is a guide, not a destination in the primary nav: one icon shortcut, always reachable */}
+            <Link
+              href="/docs"
+              aria-label="Docs — how it works"
+              title="Docs — how it works"
+              aria-current={onDocs ? "page" : undefined}
+              className={cn(
+                "ml-auto grid size-10 place-items-center rounded-lg transition-colors duration-[180ms] ease-[var(--ease)] hover:bg-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50",
+                onDocs ? "bg-hover text-signal" : "text-mut",
+              )}
+            >
+              <BookOpen className="size-4" />
+            </Link>
             <button
               type="button"
               onClick={() => setOpen(false)}
               aria-label="close navigation"
-              className="ml-auto hidden size-10 place-items-center rounded-lg text-mut hover:bg-hover hover:text-fg max-[900px]:grid"
+              className="hidden size-10 place-items-center rounded-lg text-mut hover:bg-hover hover:text-fg max-[900px]:grid"
             >
               <X className="size-4" />
             </button>
@@ -143,8 +148,11 @@ export function Shell({ children }: { children: ReactNode }) {
           >
             <span
               aria-hidden
-              className="absolute left-2.5 top-2 h-11 w-0.5 rounded-sm bg-signal transition-transform duration-300 ease-[var(--ease)]"
-              style={{ transform: `translateY(${idx * PITCH}px)` }}
+              className={cn(
+                "absolute left-2.5 top-2 h-11 w-0.5 rounded-sm bg-signal transition-[transform,opacity] duration-300 ease-[var(--ease)]",
+                idx < 0 && "opacity-0",
+              )}
+              style={{ transform: `translateY(${Math.max(0, idx) * PITCH}px)` }}
             />
             {NAV.map((n, i) => {
               const active = i === idx;
@@ -194,6 +202,13 @@ export function Shell({ children }: { children: ReactNode }) {
             <span className="text-[12.5px] font-medium leading-none">
               Reachable
             </span>
+            <Link
+              href="/docs"
+              aria-label="Docs — how it works"
+              className="ml-auto grid size-10 place-items-center rounded-lg text-mut transition-colors hover:bg-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50"
+            >
+              <BookOpen className="size-4" />
+            </Link>
           </div>
           {children}
         </main>

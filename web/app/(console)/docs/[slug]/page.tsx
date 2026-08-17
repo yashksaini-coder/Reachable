@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { notFound } from "next/navigation";
 import { DOCS, renderDoc } from "@/lib/docs";
 import { cn } from "@/lib/utils";
@@ -23,7 +24,10 @@ export default async function DocPage({ params }: PageProps<"/docs/[slug]">) {
   return (
     <div className="mx-auto grid max-w-[1280px] grid-cols-[200px_minmax(0,1fr)_180px] gap-12 px-10 py-[52px] pb-[72px] max-[1180px]:grid-cols-[200px_minmax(0,1fr)] max-[900px]:grid-cols-1 max-[900px]:gap-8 max-[900px]:px-5 max-[900px]:pt-9">
       <nav aria-label="Docs" className="min-w-0">
-        <div className="label mb-3">docs</div>
+        <Link href="/incidents" className="mb-4 inline-flex min-h-10 items-center gap-1.5 text-[12px] text-mut transition-colors duration-[180ms] hover:text-fg">
+          <ArrowLeft className="size-3.5" /> back to the console
+        </Link>
+        <div className="label mb-3">guide</div>
         <ul className="flex flex-col gap-0.5 max-[900px]:flex-row max-[900px]:flex-wrap max-[900px]:gap-1">
           {DOCS.map((d) => {
             const active = d.slug === slug;
