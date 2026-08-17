@@ -162,7 +162,7 @@ def stage_packages(
     lockfile resolved — are written: a package's full history is ~200 versions and would be
     ~1.2M dead nodes; affected-but-unresolved versions are written by the advisory stage.
     Returns {name: [all versions]} for OSV range expansion; windows re-read the cached doc.
-    `step` (a job step dict) gets live `i/n packuments` progress."""
+    `step` (a job step dict) gets live `i/n packages from npm` progress."""
     known: dict[str, list[str]] = {}
     total = 0
     for i in range(0, len(names), batch):
@@ -170,7 +170,7 @@ def stage_packages(
         pkgs, vers, vof, maints, medges = [], [], [], [], []
         for j, name in enumerate(chunk, i + 1):
             if step is not None:
-                step["detail"] = f"{j}/{len(names)} packuments"
+                step["detail"] = f"{j}/{len(names)} packages from npm"
             try:
                 r = npm.ingest_package(name)
             except HttpError as e:  # one registry refusal must not fail the whole job

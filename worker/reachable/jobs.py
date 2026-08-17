@@ -253,7 +253,7 @@ def step_lockfiles(s, job: Job, ctx: dict) -> str:
 def step_packages(s, job: Job, ctx: dict) -> str:
     touched = ctx["touched"]
     ctx["known"] = pipeline.stage_packages(s, sorted(touched), keep=touched, step=ctx["step"])
-    return f"{len(ctx['known'])} packuments, {sum(len(v) for v in touched.values())} versions kept"
+    return f"{len(ctx['known'])} packages from npm, {sum(len(v) for v in touched.values())} versions kept"
 
 
 def step_advisories(s, job: Job, ctx: dict) -> str:
