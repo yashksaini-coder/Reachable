@@ -1,10 +1,20 @@
 #!/usr/bin/env bash
-# One-shot setup on a fresh Ubuntu 24.04 droplet (2 vCPU / 4 GB is plenty). Run as root:
+# One-shot setup on a fresh Ubuntu 24.04 host (2 vCPU / 2 GB is enough to serve the graph;
+# 4 GB is more comfortable while ingesting). Run as root:
 #   curl -fsSL https://raw.githubusercontent.com/yashksaini-coder/Reachable/master/deploy/setup.sh | bash
 set -euo pipefail
 apt-get update -y && apt-get install -y ca-certificates curl git ufw
 curl -fsSL https://get.docker.com | sh
 ufw allow OpenSSH && ufw allow 80 && ufw allow 443 && ufw --force enable
+
+# Swap. Serving needs ~735 MB (node ~660 + worker ~75, measured); an ingest peak is not measured
+# and once cost 9 GB before packuments were streamed (pipeline.py). On a 2 GB host swap is what
+# turns "the kernel killed the graph node mid-demo" into "that ingest ran slowly".
+if [ ! -f /swapfile ]; then
+  fallocate -l 4G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
+  grep -q '^/swapfile' /etc/fstab || echo '/swapfile none swap sw 0 0' >> /etc/fstab
+  sysctl -w vm.swappiness=10 && grep -q '^vm.swappiness' /etc/sysctl.conf || echo 'vm.swappiness=10' >> /etc/sysctl.conf
+fi
 git clone https://github.com/yashksaini-coder/Reachable.git /opt/reachable || (cd /opt/reachable && git pull)
 cd /opt/reachable/deploy
 mkdir -p data/store data/cache && chown -R 1000:1000 data

@@ -31,6 +31,13 @@ services:
       dockerfile: worker/Dockerfile
     restart: unless-stopped
     depends_on: [hydradb]
+    # Bound the worker, not the node. Ingest memory is not measured and the packument LRU
+    # (npm.py, maxsize=4096) has no byte ceiling, so on a small host the kernel's OOM killer
+    # would otherwise pick whichever process is fattest — often the graph node, which takes the
+    # whole console down. Capped here, a runaway ingest kills only the worker: the job lands as
+    # failed with a retry button, the node keeps serving, and restart brings the API straight back.
+    mem_limit: 1g
+    memswap_limit: 3g
     environment:
       HYDRA_URI: bolt://hydradb:7687
       HYDRA_HTTP_URL: http://hydradb:8443
