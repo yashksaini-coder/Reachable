@@ -2,7 +2,9 @@
 
 # Reachable
 
-**Live console:** <https://reachable-lac.vercel.app> · report: <https://reachable-lac.vercel.app/incident/MAL-2025-46974> · guide: <https://reachable-lac.vercel.app/docs/why>
+**Live console:** <https://reachable-lac.vercel.app>
+- report: <https://reachable-lac.vercel.app/incident/MAL-2025-46974> 
+- guide: <https://reachable-lac.vercel.app/docs/why>
 
 **Supply-chain incident response on a graph.** When an npm package is compromised,
 answer in milliseconds — from HydraDB, not from Python — which services are transitively
