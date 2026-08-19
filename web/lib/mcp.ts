@@ -25,7 +25,6 @@ export const CLIENTS: Client[] = [
   { id: "codex", name: "Codex", how: "add it as an HTTP MCP server", where: "wherever your client keeps its MCP servers" },
   { id: "opencode", name: "OpenCode", how: "add it as an HTTP MCP server", where: "wherever your client keeps its MCP servers" },
   { id: "cursor", name: "Cursor", how: "add it as an HTTP MCP server", where: "wherever your client keeps its MCP servers" },
-  { id: "copilot", name: "Copilot", how: "add it as an HTTP MCP server", where: "wherever your client keeps its MCP servers" },
 ];
 
 /** Where clients connect. Caddy merges /mcp onto the API host in production; a local worker runs it

@@ -28,7 +28,7 @@ export function Agents() {
       </div>
 
       <div className={styles.foot}>
-        <span>Claude Code · Codex · Cursor · OpenCode · Copilot — same command and arguments.</span>
+        <span>Claude Code · Codex · Cursor · OpenCode — same command and arguments.</span>
         <Link className={styles.link} href="/docs/reference/run">
           How to point it at a worker
         </Link>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Bot, Braces, Check, GitBranch, type LucideIcon, MousePointerClick, Terminal } from "lucide-react";
+import { Bot, Braces, Check, type LucideIcon, MousePointerClick, Terminal } from "lucide-react";
 import { CARD, HEAD, PRE } from "@/app/(console)/keys/key-minter";
 import { Copy } from "@/components/console/copy";
 import { CLIENTS, claudeAdd, mcpConfig } from "@/lib/mcp";
@@ -13,7 +13,6 @@ const MARK: Record<string, { Icon: LucideIcon; plate: string }> = {
   codex: { Icon: Bot, plate: "rounded-full border-border bg-card2 text-fg" },
   opencode: { Icon: Braces, plate: "rounded-md border-dashed border-input bg-code text-mut" },
   cursor: { Icon: MousePointerClick, plate: "rounded-[14px_4px_14px_4px] border-border bg-card2 text-fg" },
-  copilot: { Icon: GitBranch, plate: "rounded-full border-dashed border-input bg-code text-mut" },
 };
 
 export function Connectors({ endpoint, token }: { endpoint: string; token?: string }) {
@@ -28,8 +27,8 @@ export function Connectors({ endpoint, token }: { endpoint: string; token?: stri
         <span className="font-mono text-[12px] text-dim">{token ? "config includes your key" : "generate a key first"}</span>
       </div>
 
-      {/* a row, not a grid: five tiles is prime, so any column count leaves a painted gap.
-          the tiles keep a min width so the last one peeks — that peek is the scroll affordance */}
+      {/* a row, not a grid: the tiles keep a min width so a narrow viewport lets the last one peek,
+          and that peek is the scroll affordance */}
       <div className="flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain [scrollbar-width:thin] max-[600px]:flex-col">
         {CLIENTS.map((c) => {
           const { Icon, plate } = MARK[c.id] ?? { Icon: Terminal, plate: "rounded-lg border-border bg-card2 text-mut" };
