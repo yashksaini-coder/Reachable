@@ -96,15 +96,15 @@ list_services, maintainer_fanout, resolved_while_live, typosquats, watch_reposit
 who_depends_on, why_pulled_in
 
  ok   list_services          16 rows
- ok   exposed_services       6 rows · 8310.6 ms · cypher[9] · limitations[1]
- ok   affected_versions      1 rows · 119.8 ms · cypher[2] · limitations[1]
- ok   resolved_while_live    6 rows · 178.6 ms · cypher[2] · limitations[1]
- ok   maintainer_fanout      32 rows · 4360.1 ms · cypher[11] · limitations[3]
- ok   typosquats             2 rows · 117.6 ms · cypher[1] · limitations[1]
- ok   who_depends_on         6 rows · 97.0 ms · cypher[1] · limitations[1]
- ok   why_pulled_in          53 rows · 14765.0 ms · cypher[7] · limitations[1]
- ok   find_public_victims    30 rows · limitations[1]
- ok   cypher                 3 rows · 83.0 ms · cypher[1] · limitations[1]
+ ok   exposed_services       6 rows · 6028.8 ms · cypher[9] · limitations[1]
+ ok   affected_versions      1 rows · 14.0 ms · cypher[2] · limitations[1]
+ ok   resolved_while_live    6 rows · 41.1 ms · cypher[2] · limitations[1]
+ ok   maintainer_fanout      32 rows · 5040.3 ms · cypher[11] · limitations[3]
+ ok   typosquats             2 rows · 27.5 ms · cypher[1] · limitations[1]
+ ok   who_depends_on         6 rows · 16.1 ms · cypher[1] · limitations[1]
+ ok   why_pulled_in          53 rows · 16306.5 ms · cypher[7] · limitations[1]
+ ok   find_public_victims    30 rows · cypher[2] · limitations[1]
+ ok   cypher                 3 rows · 7.3 ms · cypher[1] · limitations[1]
  ok   job_status             error: no such job
 all read-only tools answered (0 unexpected)
 ```
