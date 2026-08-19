@@ -42,24 +42,6 @@ def _run(s, res: Result, q: str, **params) -> list[dict]:
     return rows
 
 
-def _by_length(terms: list[str], fixed: int) -> list[list[str]]:
-    """Group OR terms so no statement exceeds the engine's length limit."""
-    out: list[list[str]] = []
-    cur: list[str] = []
-    used = fixed
-    for t in terms:
-        cost = len(t) + (4 if cur else 0)  # " OR "
-        if cur and used + cost > STATEMENT_BUDGET:
-            out.append(cur)
-            cur, used = [], fixed
-            cost = len(t)
-        cur.append(t)
-        used += cost
-    if cur:
-        out.append(cur)
-    return out
-
-
 def _pathkeys(path) -> list[str]:
     """HydraDB yields a path as a flat list [node_props, REL_TYPE, node_props, ...] with no labels;
     the key prefix (pkg:/lock:/svc:) is the label. Returns the alternating keys and rel types."""
@@ -99,11 +81,6 @@ def q2_affected_versions(s, advisory_key: str) -> Result:
 
 # ---------------------------------------------------------------- Q1 · who is exposed
 
-# The engine refuses a statement past ~1026 characters, whatever it contains (probed, AGENTS.md §8).
-# Chunking on a term count would be wrong: ids vary in length, so the same count is a different
-# statement size. Budget the characters instead.
-STATEMENT_BUDGET = 950
-
 # SPpaths calls one Q1 answer may spend on explanations. Membership is never capped.
 EXPLAIN_PATH_BUDGET = 60
 
@@ -118,22 +95,20 @@ def q1_exposed_services(s, bad_version_keys: list[str], *, explain: bool = True)
     """
     res = Result([], 0.0)
     hits: dict[tuple[str, str], dict] = {}
-    # Membership in chunks rather than one statement per version — a wide advisory has ~118 of them.
-    # The engine takes neither a leading UNWIND nor `IN [...]`, so an OR chain is the only batch,
-    # and it is bounded by statement length rather than term count (AGENTS.md §8).
-    head = "MATCH (bad:Version)<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) WHERE "
-    tail = (
-        " RETURN bad.key AS bad_key, sv.key AS service, l.key AS lockfile, l.id AS lid, "
-        "l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at "
-        "ORDER BY l.committed_at DESC"
-    )
-    for chunk in _by_length(
-        [f"bad.id = {_int(gid(k))}" for k in bad_version_keys], len(head) + len(tail)
-    ):
-        for r in _run(s, res, head + " OR ".join(chunk) + tail):
-            bad = r.pop("bad_key")
+    # One anchored seek per affected version. Batching these into an OR chain removes the node
+    # anchor and makes the engine scan every RESOLVED edge — measured: a 30 s timeout even for a
+    # single-version advisory. AGENTS.md §8.
+    for key in bad_version_keys:
+        vid = _int(gid(key))
+        for r in _run(
+            s,
+            res,
+            f"MATCH (bad:Version {{id: {vid}}})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) "
+            "RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, "
+            "l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+        ):
             k = (r["service"], r["lockfile"])
-            hits.setdefault(k, {**r, "bad_versions": []})["bad_versions"].append(bad)
+            hits.setdefault(k, {**r, "bad_versions": []})["bad_versions"].append(key)
     if explain and hits:
         # One SPpaths call per (bad, lockfile), pathCount 3. That product is the whole cost of Q1
         # and it explodes on a wide advisory — nanoid <3.3.18 matches 118 versions, so the pairs
@@ -168,9 +143,6 @@ def q1_exposed_services(s, bad_version_keys: list[str], *, explain: bool = True)
                 f"{len(hits)} exposed lockfiles; the rest read “— not computed”. "
                 "Membership is exact for all of them."
             )
-    order = {k: i for i, k in enumerate(bad_version_keys)}
-    for h in hits.values():
-        h["bad_versions"].sort(key=lambda k: order.get(k, 0))
     for h in hits.values():
         h.pop("lid", None)
         h.setdefault("hops", 0)  # explain=False: caller asked for membership only

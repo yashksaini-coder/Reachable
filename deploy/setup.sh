@@ -22,11 +22,13 @@ if [ ! -f .env ]; then
   KEY=$(openssl rand -hex 24); TOK=$(openssl rand -hex 24); IP=$(curl -s https://api.ipify.org)
   sed -i "s/^HYDRA_TOKEN=.*/HYDRA_TOKEN=$TOK/; s/^REACHABLE_API_KEY=.*/REACHABLE_API_KEY=$KEY/; s/^API_HOST=.*/API_HOST=api.$IP.sslip.io/" .env
   chmod 600 .env   # three secrets live here; keep it out of reach of other local accounts
-  echo ">>> edit /opt/reachable/deploy/.env and set GITHUB_TOKEN, then re-run this script (or: docker compose up -d --build)"
+  echo ">>> edit /opt/reachable/deploy/.env and set GITHUB_TOKEN, then re-run this script"
   exit 0
 fi
 printf '%s\n' "$(grep ^HYDRA_TOKEN= .env | cut -d= -f2-)" > data/auth-token && chown 1000:1000 data/auth-token
-docker compose up -d --build
+# --force-recreate: single-file bind mounts are bound by inode, and git pull replaces the
+# file rather than editing it, so a changed Caddyfile is invisible until the container is new.
+docker compose up -d --build --force-recreate
 echo ">>> API: https://$(grep ^API_HOST= .env | cut -d= -f2-)/health"
 # Never echo the key: this output lands in terminal scrollback, CI logs and transcripts. Print the
 # command that reads it instead, so the value is disclosed only when someone deliberately asks.

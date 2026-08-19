@@ -147,6 +147,11 @@ sudo docker compose up -d worker            # after editing .env — see below
 cd /opt/reachable && git pull && cd deploy && sudo docker compose up -d --build   # update
 ```
 
+**A changed `Caddyfile` needs the container recreated, not restarted.** Docker binds a single-file
+mount by inode; `git pull` writes a new file and renames over it, so the container keeps the old,
+deleted one. It looks like Caddy ignoring its config, and no reload fixes it —
+`docker compose up -d --force-recreate caddy`. `setup.sh` passes `--force-recreate` for this reason.
+
 **After editing `.env`, `docker restart` is not enough.** Compose resolves environment variables at
 container *creation* and bakes them in; a restart reuses the same container with the same values.
 `docker compose up -d` sees the changed config hash and recreates the container, which is what

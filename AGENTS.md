@@ -232,13 +232,13 @@ syntax live in `.claude/skills/hydradb-cypher/SKILL.md`.
 - [x] Relationship properties in `MERGE` — works, in the `UNWIND` form.
 - [x] Practical `UNWIND` batch size — **hard cap 1024 rows**; 1025 is refused
       by admission control. Measured 1000 rows in 9–17 ms (~60k–113k rows/s).
-- [x] Batching a read by id — **`UNWIND` may not lead a statement** and
-      `WHERE x.id IN [...]` is refused; the only accepted batch is an `OR`
-      chain. The ceiling is **statement length, ~1026 characters**, not term
-      count: 68 one-digit terms and 33 fifteen-digit terms both parse at 1026
-      chars and both fail just past it. Q1 budgets characters
-      (`queries.STATEMENT_BUDGET`) — a term count would silently break on
-      longer ids.
+- [x] Batching a read by id — **do not.** `UNWIND` may not lead a statement and
+      `WHERE x.id IN [...]` is refused, so an `OR` chain is the only batch — and it
+      **removes the anchored node seek**, making the engine scan every relationship
+      record. Measured in production: a single-version advisory went from 0.47 s to a
+      30 s `cypher_relationship_edge_records` timeout. N anchored seeks beat one
+      unanchored scan. (Separately, statements cap at ~1026 characters whatever they
+      contain — 68 one-digit terms and 33 fifteen-digit terms both parse at 1026.)
 - [x] `consistency: "strong"` via Bolt — **not reachable from the Python
       driver.** HydraDB refuses explicit transactions, which is the only place
       the driver exposes metadata. Use the HTTP API for that one query.
