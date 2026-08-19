@@ -55,7 +55,7 @@ app.add_middleware(Auth)
 def main() -> None:
     import uvicorn
 
-    uvicorn.run(app, host=HOST, port=PORT, log_level="warning")
+    uvicorn.run(app, host=HOST, port=PORT, log_level="info")  # access logs: the operator needs them
 
 
 if __name__ == "__main__":
