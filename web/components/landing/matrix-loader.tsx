@@ -2,19 +2,13 @@
 
 import { useEffect, useRef } from "react";
 
-// A radial wavefront across a pixel grid, reimplemented from the design piece's own maths so the
-// motion is the same: a cell lights when the sweep reaches its distance from the centre, flashes to
-// the warm tone, then settles hot.
-//
-// The palette is the one deliberate change. The design's amber→red sits on top of --l1 and --l2,
-// which mean "imported" and "act now" everywhere else here, so a loading animation painted in them
-// would read as a verdict. The brand ramp is the same cool→warm→hot movement without the meaning.
+// Radial wavefront across a pixel grid, from the design piece's maths. Palette moved to the brand
+// ramp: the original's amber→red is --l1/--l2, which mean "imported" and "act now" elsewhere.
 
 const N = 11; // grid is N×N
-// The design sizes cells off the block with a 0.72/0.28 split. Same proportion, smaller block: 418px
-// suited a 1920×1080 canvas stage, but a page loader wants to read as a mark, not fill the viewport.
-const BLOCK = 176;
-const CELL = Math.round((BLOCK / N) * 0.72); // 12
+// Cells come off the block with the design's 0.72/0.28 split; 418px suited a canvas stage, not a page.
+const BLOCK = 152;
+const CELL = Math.round((BLOCK / N) * 0.72); // 10
 const GAP = Math.round((BLOCK / N) * 0.28); // 4
 const RAMP = 0.34; // width, in sweep units, of one cell's own fade-up
 const LEAD = 1 - RAMP; // a cell starts at LEAD × its normalised distance
@@ -32,7 +26,7 @@ const mix = (a: number[], b: number[], t: number) => {
 
 export function MatrixLoader({ ms, onDone }: { ms: number; onDone: () => void }) {
   const host = useRef<HTMLDivElement>(null);
-  // Held in a ref so a new callback identity never restarts the sweep mid-flight.
+  // In a ref so a new callback identity cannot restart the sweep.
   const done = useRef(onDone);
   useEffect(() => {
     done.current = onDone;
@@ -42,8 +36,7 @@ export function MatrixLoader({ ms, onDone }: { ms: number; onDone: () => void })
     const cells = Array.from(host.current?.children ?? []) as HTMLElement[];
     if (!cells.length) return;
 
-    // Normalised distance from centre; the corners are 1, so every cell's ramp is the same width
-    // and only its start offset differs. That is the whole spatial ordering.
+    // Distance from centre, corners = 1: same ramp width for every cell, only the start differs.
     const c = (N - 1) / 2;
     const dmax = Math.hypot(c, c);
     const dist = cells.map((_, i) => Math.hypot((i % N) - c, Math.floor(i / N) - c) / dmax);
@@ -57,8 +50,7 @@ export function MatrixLoader({ ms, onDone }: { ms: number; onDone: () => void })
         const f = clamp((p - LEAD * dist[i]) / RAMP);
         const lit = f > 0.001;
         const el = cells[i];
-        // Snap to WARM the instant it lights — no idle→warm interpolation. That hard flash is the
-        // pixel character; easing it turns the wavefront into a smear.
+        // Snaps to WARM on lighting — easing that step smears the wavefront.
         el.style.background = lit ? mix(WARM, HOT, (f - 0.15) / 0.85) : IDLE;
         el.style.transform = `scale(${lit ? 0.9 + 0.28 * Math.sin(Math.PI * f) + 0.1 * f : 0.78})`;
       }

@@ -45,9 +45,10 @@
   flex: 1;
 }
 
+/* six stats, so the column count must divide six — auto-fit lands five and orphans the sixth */
 .strip {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(152px, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   background: var(--card);
 }
 
@@ -135,6 +136,12 @@
   height: 6px;
   border-radius: 50%;
 }
+@media (max-width: 1020px) {
+  .strip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 900px) {
   .console {
     margin-top: 40px;
