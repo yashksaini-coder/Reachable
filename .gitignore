@@ -20,3 +20,6 @@ web/next-env.d.ts
 .hydradb-test/
 .vercel
 deploy/.env
+
+# npx run from the repo root leaves an empty stub here; the npm root is web/
+/package-lock.json
