@@ -4,7 +4,7 @@ Thin: every tool is one call to the running worker API (reachable.api on 127.0.0
 which is where auth, read-only enforcement and the Cypher live. Nothing is computed here —
 HydraDB answers, this relays. Register with e.g.
 
-    claude mcp add reachable -- /path/to/Reachable/.venv/bin/python -m reachable.mcp_server
+    claude mcp add reachable -e PYTHONPATH=worker -- .venv/bin/python -m reachable.mcp_server
 
 or the equivalent `mcpServers` entry ({"command": ".../.venv/bin/python",
 "args": ["-m", "reachable.mcp_server"], "env": {"PYTHONPATH": ".../worker"}}) in Codex,

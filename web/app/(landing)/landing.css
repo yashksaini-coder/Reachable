@@ -156,13 +156,13 @@
 
 .landing .reveal {
   transition: opacity 0.42s var(--ease), transform 0.42s var(--ease), filter 0.42s var(--ease);
-  will-change: opacity, transform, filter;
 }
 
 .landing .reveal[data-in='0'] {
   opacity: 0;
   transform: translateY(10px);
   filter: blur(6px);
+  will-change: opacity, transform, filter; /* only while hidden, so settled sections drop the layer */
 }
 
 

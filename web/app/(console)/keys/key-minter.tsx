@@ -14,18 +14,24 @@ export const PRE = "m-0 overflow-x-auto rounded-md border border-border bg-code 
 
 export function Copy({ text, label = "copy" }: { text: string; label?: string }) {
   const [done, setDone] = useState(false);
+  const [failed, setFailed] = useState(false);
   return (
     <button
       type="button"
       onClick={async () => {
-        await navigator.clipboard.writeText(text);
-        setDone(true);
-        setTimeout(() => setDone(false), 1500);
+        try {
+          await navigator.clipboard?.writeText(text);
+          setDone(true);
+          setTimeout(() => setDone(false), 1500);
+        } catch {
+          setFailed(true);
+          setTimeout(() => setFailed(false), 2000);
+        }
       }}
       className="inline-flex min-h-10 items-center gap-1.5 rounded-md border border-border px-2.5 text-[12px] font-medium leading-none text-mut transition-[color,background-color,transform] duration-[180ms] ease-[var(--ease)] hover:bg-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50 active:scale-[0.97]"
     >
       {done ? <Check className="size-3.5 text-l0" aria-hidden /> : null}
-      {done ? "copied" : label}
+      {failed ? "press ⌘C" : done ? "copied" : label}
     </button>
   );
 }

@@ -66,9 +66,13 @@ export function CodeBlock({ lang, text }: { lang: string; text: string }) {
         <button
           type="button"
           onClick={async () => {
-            await navigator.clipboard.writeText(text);
-            setDone(true);
-            setTimeout(() => setDone(false), 1500);
+            try {
+              await navigator.clipboard?.writeText(text);
+              setDone(true);
+              setTimeout(() => setDone(false), 1500);
+            } catch {
+              /* no clipboard outside a secure context — leave the label alone */
+            }
           }}
           className="inline-flex min-h-9 items-center gap-1.5 rounded-md px-2 font-mono text-[11.5px] leading-none text-dim transition-[color,background-color,transform] duration-[180ms] ease-[var(--ease)] hover:bg-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50 active:scale-[0.97]"
         >

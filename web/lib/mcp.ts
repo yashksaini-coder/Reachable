@@ -1,5 +1,4 @@
-// One generator for the MCP client config. The same command/args/env is otherwise written in
-// .mcp.json and docs/console/run.md; this keeps the UI from becoming a fourth copy that drifts.
+// One generator for the client config; .mcp.json and docs/console/run.md are the other two copies.
 
 export type Client = {
   id: string;
@@ -10,9 +9,8 @@ export type Client = {
   verified?: boolean;
 };
 
-// The five the repo names, in the order it names them (mcp_server.py, run.md, README.md).
-// No per-client config paths beyond Claude Code's: nothing in this repo documents where Codex,
-// OpenCode, Cursor or Copilot keep their MCP config, and inventing a path is worse than saying so.
+// The five the repo names, in its order. No config paths beyond Claude Code's — nothing documents
+// where the others keep theirs, and inventing one is worse than saying so.
 export const CLIENTS: Client[] = [
   { id: "claude-code", name: "Claude Code", where: "the repo's .mcp.json — picked up automatically", verified: true },
   { id: "codex", name: "Codex", where: "wherever your client keeps its MCP servers" },
@@ -42,5 +40,9 @@ export function mcpConfig({ apiUrl, token }: { apiUrl: string; token?: string })
   );
 }
 
-/** The one CLI registration the repo documents (mcp_server.py:7). */
-export const CLAUDE_ADD = "claude mcp add reachable -- .venv/bin/python -m reachable.mcp_server";
+/** Claude Code's one-liner. The env matters: `reachable` is not an installed package, so without
+ *  PYTHONPATH the server dies with "No module named reachable". */
+export function claudeAdd({ apiUrl, token }: { apiUrl: string; token?: string }): string {
+  const key = token ?? "<generate one above>";
+  return `claude mcp add reachable -e PYTHONPATH=worker -e REACHABLE_API_URL=${apiUrl} -e REACHABLE_API_KEY=${key} -- .venv/bin/python -m reachable.mcp_server`;
+}

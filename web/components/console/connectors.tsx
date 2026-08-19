@@ -2,18 +2,14 @@
 
 import { Check, SquareTerminal } from "lucide-react";
 import { CARD, Copy, HEAD, PRE } from "@/app/(console)/keys/key-minter";
-import { CLAUDE_ADD, CLIENTS, mcpConfig } from "@/lib/mcp";
+import { CLIENTS, claudeAdd, mcpConfig } from "@/lib/mcp";
 
-// The clients that speak this server's stdio contract. Tiles are typographic rather than vendor
-// marks: the repo carries no third-party logos, lucide dropped its brand set, and redrawing
-// trademarked marks is a question this project has no answer for.
-//
-// Only Claude Code is marked verified — the twelve tools were actually driven through it against
-// the deployed worker. The rest take the identical command, args and env, which is a reason to
-// expect them to work and not the same as having run them.
+// Typographic tiles, not vendor marks — the repo has no third-party logos and redrawing them
+// raises trademark questions. Only Claude Code says verified, because it is the one that was.
 
 export function Connectors({ apiUrl, token }: { apiUrl: string; token?: string }) {
   const config = mcpConfig({ apiUrl, token });
+  const oneLiner = claudeAdd({ apiUrl, token });
 
   return (
     <section className={CARD}>
@@ -22,8 +18,7 @@ export function Connectors({ apiUrl, token }: { apiUrl: string; token?: string }
         <span className="font-mono text-[12px] text-dim">{token ? "config includes your key" : "generate a key first"}</span>
       </div>
 
-      {/* cell-lines, not gap-px on a painted container: five cards in a three-up grid leave a gap,
-          and a painted container renders that gap as a phantom sixth card. */}
+      {/* cell-lines, not gap-px on a painted container — that renders the empty slot as a card */}
       <div className="grid grid-cols-[repeat(auto-fit,minmax(168px,1fr))] max-[600px]:grid-cols-1">
         {CLIENTS.map((c) => (
           <div key={c.id} className="cell-lines flex min-w-0 flex-col gap-2 p-[18px]">
@@ -56,9 +51,9 @@ export function Connectors({ apiUrl, token }: { apiUrl: string; token?: string }
         <div>
           <div className="label mb-2 flex items-center justify-between gap-3">
             <span>or, for Claude Code, one command</span>
-            <Copy text={CLAUDE_ADD} label="copy command" />
+            <Copy text={oneLiner} label="copy command" />
           </div>
-          <pre className={PRE}>{CLAUDE_ADD}</pre>
+          <pre className={PRE}>{oneLiner}</pre>
         </div>
         <p className="text-[12.5px] leading-[1.6] text-dim">
           Paths are relative, so start the client from the repository root. The virtualenv is needed only for{" "}

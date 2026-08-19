@@ -67,7 +67,7 @@ export async function renderDoc(slug: string): Promise<Rendered | null> {
 
   // Fenced code goes the same way. marked would emit <pre><code class="language-x"> into
   // dangerouslySetInnerHTML, where a copy button cannot be wired — as a marker it is real React.
-  md = md.replace(/^```([a-zA-Z0-9_-]*)\n([\s\S]*?)^```\s*$/gm, (_m, lang: string, body: string) => {
+  md = md.replace(/^```([a-zA-Z0-9_-]*)[^\n]*\n([\s\S]*?)^```[ \t]*$/gm, (_m, lang: string, body: string) => {
     blocks.push({ kind: "code", lang: (lang || "text").toLowerCase(), text: body.replace(/\n$/, "") });
     return `\n\n<!--MARKER:${blocks.length - 1}-->\n\n`;
   });
