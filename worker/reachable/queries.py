@@ -81,6 +81,10 @@ def q2_affected_versions(s, advisory_key: str) -> Result:
 
 # ---------------------------------------------------------------- Q1 · who is exposed
 
+# Affected versions per membership statement. The engine rejects a WHERE with more than 33 OR
+# terms (probed, AGENTS.md §8); 32 leaves a term of headroom.
+MEMBERSHIP_CHUNK = 32
+
 # SPpaths calls one Q1 answer may spend on explanations. Membership is never capped.
 EXPLAIN_PATH_BUDGET = 60
 
@@ -95,17 +99,25 @@ def q1_exposed_services(s, bad_version_keys: list[str], *, explain: bool = True)
     """
     res = Result([], 0.0)
     hits: dict[tuple[str, str], dict] = {}
-    for key in bad_version_keys:
-        vid = _int(gid(key))
+    # Membership in chunks, not one statement per version: a wide advisory has ~118 affected
+    # versions and 118 round trips is most of the 116 s Q1 used to take. The engine takes neither
+    # a leading UNWIND nor `IN [...]`, and refuses a WHERE past 33 OR terms — all probed, see
+    # AGENTS.md §8 — so an OR chain under that ceiling is the batch it does accept.
+    for i in range(0, len(bad_version_keys), MEMBERSHIP_CHUNK):
+        chunk = bad_version_keys[i : i + MEMBERSHIP_CHUNK]
+        where = " OR ".join(f"bad.id = {_int(gid(k))}" for k in chunk)
         for r in _run(
             s,
             res,
-            f"MATCH (bad:Version {{id: {vid}}})<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) "
-            "RETURN sv.key AS service, l.key AS lockfile, l.id AS lid, l.committed_at AS committed_at, "
-            "l.sha AS sha, r.at AS resolved_at ORDER BY l.committed_at DESC",
+            f"MATCH (bad:Version)<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) "
+            f"WHERE {where} "
+            "RETURN bad.key AS bad, sv.key AS service, l.key AS lockfile, l.id AS lid, "
+            "l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at "
+            "ORDER BY l.committed_at DESC",
         ):
+            bad = r.pop("bad")
             k = (r["service"], r["lockfile"])
-            hits.setdefault(k, {**r, "bad_versions": []})["bad_versions"].append(key)
+            hits.setdefault(k, {**r, "bad_versions": []})["bad_versions"].append(bad)
     if explain and hits:
         # One SPpaths call per (bad, lockfile), pathCount 3. That product is the whole cost of Q1
         # and it explodes on a wide advisory — nanoid <3.3.18 matches 118 versions, so the pairs

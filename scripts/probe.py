@@ -315,5 +315,25 @@ def main():
     print(f"\n{ok} as expected, {bad} surprising")
 
 
+@case("WHERE OR-chain ceiling — 33 terms")
+def or_chain_33(s):
+    """Q1 batches membership as an OR chain because the engine takes no leading UNWIND and no
+    `IN [...]`. 33 terms parse; MEMBERSHIP_CHUNK sits at 32 for headroom."""
+    ors = " OR ".join(f"n.id = {i}" for i in range(33))
+    s.run(f"MATCH (n:Version) WHERE {ors} RETURN n.key AS k LIMIT 1").data()
+
+
+@case("WHERE OR-chain ceiling — 34 terms", expect="reject")
+def or_chain_34(s):
+    """One past the ceiling: raise MEMBERSHIP_CHUNK only if this starts passing."""
+    ors = " OR ".join(f"n.id = {i}" for i in range(34))
+    s.run(f"MATCH (n:Version) WHERE {ors} RETURN n.key AS k LIMIT 1").data()
+
+
+@case("leading UNWIND for a read", expect="reject")
+def unwind_leads(s):
+    s.run("UNWIND [1, 2] AS vid MATCH (n:Version {id: vid}) RETURN n.key AS k").data()
+
+
 if __name__ == "__main__":
     main()

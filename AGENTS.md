@@ -232,6 +232,10 @@ syntax live in `.claude/skills/hydradb-cypher/SKILL.md`.
 - [x] Relationship properties in `MERGE` — works, in the `UNWIND` form.
 - [x] Practical `UNWIND` batch size — **hard cap 1024 rows**; 1025 is refused
       by admission control. Measured 1000 rows in 9–17 ms (~60k–113k rows/s).
+- [x] Batching a read by id — **`UNWIND` may not lead a statement** and
+      `WHERE x.id IN [...]` is refused; the only accepted batch is an `OR`
+      chain, and `WHERE` takes **at most 33 `OR` terms** (34 is a parse error).
+      Q1 membership chunks at 32, turning ~118 statements into 4.
 - [x] `consistency: "strong"` via Bolt — **not reachable from the Python
       driver.** HydraDB refuses explicit transactions, which is the only place
       the driver exposes metadata. Use the HTTP API for that one query.
