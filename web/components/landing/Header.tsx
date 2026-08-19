@@ -1,3 +1,4 @@
+import { GithubLink } from '@/components/github-link';
 import { LINKS } from '@/lib/landing-data';
 import { Mark } from './Mark';
 import styles from './Header.module.css';
@@ -30,6 +31,7 @@ export function Header() {
           <a className={styles.docs} href={LINKS.docs}>
             Docs
           </a>
+          <GithubLink className={styles.repo} />
         </div>
       </div>
     </header>

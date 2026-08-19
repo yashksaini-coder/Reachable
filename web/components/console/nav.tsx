@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { BookOpen, Menu, X } from "lucide-react";
+
+import { GithubLink } from "@/components/github-link";
 import { cn } from "@/lib/utils";
 import { ToastProvider } from "@/components/console/toast";
 
@@ -140,6 +142,7 @@ export function Shell({ children }: { children: ReactNode }) {
             >
               <BookOpen className="size-4" />
             </Link>
+            <GithubLink className="grid size-10 place-items-center rounded-lg text-mut transition-colors duration-[180ms] ease-[var(--ease)] hover:bg-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50" />
             <button
               type="button"
               onClick={() => setOpen(false)}
@@ -216,6 +219,7 @@ export function Shell({ children }: { children: ReactNode }) {
             >
               <BookOpen className="size-4" />
             </Link>
+            <GithubLink className="grid size-10 place-items-center rounded-lg text-mut transition-colors duration-[180ms] ease-[var(--ease)] hover:bg-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50" />
           </div>
           {children}
         </main>
