@@ -26,6 +26,7 @@ unavailable when this is not reachable. Every ask response carries the executed
 statements and measured ms.
 """
 
+import hmac
 import json
 import os
 import re
@@ -36,7 +37,7 @@ from datetime import UTC, datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, quote, urlparse
 
-from reachable import jobs, queries
+from reachable import jobs, keys, queries
 from reachable.db import run, session, timed
 from reachable.http import get_json
 from reachable.ids import gid, safe_name
@@ -487,14 +488,42 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
 
-    def _authed(self) -> bool:
+    def _bearer(self) -> str:
+        h = self.headers.get("Authorization", "")
+        return h[7:] if h.startswith("Bearer ") else ""
+
+    def _scope(self) -> str | None:
+        """ "admin" (operator key, or no key configured), "read" (minted key), or None."""
         if not API_KEY:
-            return True
-        return self.headers.get("Authorization", "") == f"Bearer {API_KEY}"
+            return "admin"
+        tok = self._bearer()
+        if tok and hmac.compare_digest(tok, API_KEY):
+            return "admin"
+        if tok and keys.check(tok):
+            keys.touch(tok)
+            return "read"
+        return None
+
+    def _client(self) -> str:
+        """Caddy sets X-Forwarded-For; fall back to the socket for a direct call."""
+        fwd = self.headers.get("X-Forwarded-For", "")
+        return (fwd.split(",")[0].strip() if fwd else self.client_address[0]) or "unknown"
 
     def do_POST(self):
         u = urlparse(self.path)
-        if not self._authed():
+        if u.path == "/keys":
+            # Deliberately open: a minted key is read-only, expiring and rate-limited, so it grants
+            # no more than reading a graph of public repositories and public advisories.
+            try:
+                n = int(self.headers.get("Content-Length") or 0)
+                body = json.loads(self.rfile.read(n) or b"{}")
+                rec = keys.mint(str(body.get("name", "")), self._client())
+            except (ValueError, AttributeError) as e:
+                return self._json(400, {"error": f"bad JSON body: {e}"})
+            except keys.Refused as e:
+                return self._json(429, {"error": str(e)})
+            return self._json(201, rec)
+        if self._scope() != "admin":
             return self._json(401, {"error": "missing or invalid API key"})
         if u.path.startswith("/jobs/") and u.path.endswith("/retry"):
             try:
@@ -530,8 +559,10 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         u = urlparse(self.path)
         q = parse_qs(u.query)
-        if u.path != "/health" and not self._authed():
+        if u.path != "/health" and self._scope() is None:
             return self._json(401, {"error": "missing or invalid API key"})
+        if u.path == "/keys":
+            return self._json(200, keys.stats())
         if u.path == "/health":
             with session() as s:
                 n, ms = timed(s, "MATCH (sv:Service) RETURN count(*) AS c")

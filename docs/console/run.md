@@ -61,26 +61,28 @@ auth, read-only enforcement and the Cypher live.
 Claude Code picks this up from the repo's `.mcp.json`; Codex, OpenCode, Cursor and Copilot take the
 same command, args and env.
 
-**Against a local worker** — `make up` first, then nothing else: the default URL is loopback and a
-local worker needs no key.
+**Nothing else to set up.** `make up` and the twelve tools work: the default URL is loopback, and a
+local worker sets no key, so none is asked for. The tools answer against *your* graph — the
+repositories you watched — which is the point of running them next to the code you are fixing.
 
-**Against a deployed worker** — set both variables before launching the client:
+Two things that are easy to get wrong:
+
+- Paths in `.mcp.json` are relative, so the client must start from the repository root.
+- The virtualenv is needed only for `mcp` and `httpx` — no graph driver, no HydraDB in the client.
+  All the computation happens in the worker, and all the traversal inside HydraDB.
+
+**Against a worker that is not yours** — a deployed one, or a colleague's — set the URL and the key
+its operator gave you. Everything else is identical:
 
 ```bash
 export REACHABLE_API_URL=https://api.<ip>.sslip.io
-export REACHABLE_API_KEY=…        # from deploy/.env on the VM
+export REACHABLE_API_KEY=…        # from deploy/.env on that VM
 ```
 
-Four things that are easy to get wrong:
-
-- The key may live in `.env` (the server reads it from there) **or** in the client's `env` block.
-  What does not work is relying on a shell export when the client is launched from a desktop app
-  that inherits no shell environment.
-- Paths in `.mcp.json` are relative, so the client must start from the repository root.
-- The local virtualenv is needed only for `mcp` and `httpx` — no graph driver, no HydraDB. All the
-  computation happens on the worker.
-- Without a key against a worker that wants one, every tool returns
-  `missing or invalid API key` as a normal result rather than failing the call.
+The key may live in `.env` or in the client's `env` block; what does not work is a shell export when
+the client is launched from a desktop app that inherits no shell. Without a key against a worker
+that wants one, every tool returns `missing or invalid API key` as a readable result rather than
+failing the call.
 
 ### Verifying it
 

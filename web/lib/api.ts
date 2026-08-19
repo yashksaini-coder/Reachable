@@ -118,6 +118,17 @@ export async function retryJob(id: string): Promise<{ status: number; body: { jo
   return json(`/jobs/${encodeURIComponent(id)}/retry`, { method: "POST" });
 }
 
+export type MintedKey = { token?: string; name?: string; scope?: string; ttl_days?: number; expires_at?: number; error?: string };
+
+// Mints a read-only, expiring key at the worker. The token comes back once and is never stored here.
+export async function mintKey(name: string): Promise<{ status: number; body: MintedKey }> {
+  try {
+    return await json<MintedKey>("/keys", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name }) });
+  } catch {
+    return { status: 503, body: { error: "the worker did not answer" } };
+  }
+}
+
 export async function graphStats(): Promise<GraphStats | null> {
   try {
     const { status, body } = await json<GraphStats>("/graph/stats");
