@@ -543,12 +543,19 @@ Redeploy: `npx vercel@latest deploy --prod --yes` from the repo root.
 Caddy TLS on `api.<ip>.sslip.io`), `deploy/setup.sh` for a fresh Ubuntu droplet (2 vCPU / 4 GB), guide in
 `deploy/README.md`. The API takes an optional bearer key (`REACHABLE_API_KEY`; `/health` stays open) — the
 console proxy, the MCP server and `python -m reachable.jobs --api` send it. Vercel gets
-`REACHABLE_API_URL` + `REACHABLE_API_KEY`. Not deployed yet (status TBD).
+`REACHABLE_API_URL` + `REACHABLE_API_KEY`.
 
-**Known open items:** push the latest local commits (owner) · Vercel
-read-only deploy from committed JSON · video ≤ 3:00 in the prescribed order ·
-form · final disqualifier pass (private-window links, no pre-Aug-12 commits,
-licence, `.env` never committed).
+**Live (2026-08-19 ~18:00 IST):** worker + node on one t4g.small in ap-south-1 behind Caddy at
+`https://api.3.7.79.220.sslip.io`, console on Vercel. Self-serve read-only keys (`POST /keys`,
+`worker/reachable/keys.py`: 7-day TTL, 5/hour/client, sha256 at rest) and the hosted MCP transport
+(`worker/reachable/mcp_http.py`, `/mcp` via Caddy) both verified in production: all twelve tools
+answer, and a minted key is refused 401 on `watch_repository` *through the hosted hop*, so the relay
+carries the caller's authority rather than the operator's. Q1 measured on the deployed node:
+`MAL-2025-46974` 27 ms, `GHSA-2v37-7h3g-55p8` (118 affected versions, 200 exposed lockfiles across
+11 services) 0.72–1.0 s.
+
+**Known open items:** video ≤ 3:00 in the prescribed order · form · final disqualifier pass
+(private-window links, no pre-Aug-12 commits, licence, `.env` never committed).
 
 **Decisions:** RESOLVED is the closure (no var-length anywhere); Q3 evidence
 classes in_window + pinned_removed; `unscanned` is a first-class verdict; CLI

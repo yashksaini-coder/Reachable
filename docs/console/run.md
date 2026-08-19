@@ -120,16 +120,16 @@ $ REACHABLE_API_URL=https://api.<ip>.sslip.io REACHABLE_API_KEY=… .venv/bin/py
 list_services, maintainer_fanout, resolved_while_live, typosquats, watch_repository,
 who_depends_on, why_pulled_in
 
- ok   list_services          16 rows
- ok   exposed_services       6 rows · 6028.8 ms · cypher[9] · limitations[1]
- ok   affected_versions      1 rows · 14.0 ms · cypher[2] · limitations[1]
- ok   resolved_while_live    6 rows · 41.1 ms · cypher[2] · limitations[1]
- ok   maintainer_fanout      32 rows · 5040.3 ms · cypher[11] · limitations[3]
- ok   typosquats             2 rows · 27.5 ms · cypher[1] · limitations[1]
- ok   who_depends_on         6 rows · 16.1 ms · cypher[1] · limitations[1]
- ok   why_pulled_in          53 rows · 16306.5 ms · cypher[7] · limitations[1]
+ ok   list_services          17 rows
+ ok   exposed_services       6 rows · 28.0 ms · cypher[9] · limitations[1]
+ ok   affected_versions      1 rows · 8.7 ms · cypher[2] · limitations[1]
+ ok   resolved_while_live    6 rows · 21.7 ms · cypher[2] · limitations[1]
+ ok   maintainer_fanout      32 rows · 2770.4 ms · cypher[11] · limitations[3]
+ ok   typosquats             2 rows · 9.5 ms · cypher[1] · limitations[1]
+ ok   who_depends_on         6 rows · 13.8 ms · cypher[1] · limitations[1]
+ ok   why_pulled_in          53 rows · 7964.4 ms · cypher[7] · limitations[1]
  ok   find_public_victims    30 rows · cypher[2] · limitations[1]
- ok   cypher                 3 rows · 7.3 ms · cypher[1] · limitations[1]
+ ok   cypher                 3 rows · 5.5 ms · cypher[1] · limitations[1]
  ok   job_status             error: no such job
 all read-only tools answered (0 unexpected)
 ```
@@ -137,3 +137,19 @@ all read-only tools answered (0 unexpected)
 `watch_repository` is listed but never called by the smoke run — it would write to the graph. The
 `job_status` line is an expected failure: the script asks for a job id that does not exist to prove
 errors come back as readable results rather than as a crashed tool.
+
+`scripts/mcp_http_smoke.py` does the same over the hosted transport, as a client with no clone would:
+it drives `https://<host>/mcp` with a minted key and then calls `watch_repository`, which must come
+back 401 — the relay carries the caller's key, so a read-only key stays read-only across the hop.
+
+```
+$ REACHABLE_MCP_URL=https://api.<ip>.sslip.io/mcp REACHABLE_API_KEY=rk_… .venv/bin/python scripts/mcp_http_smoke.py
+12 tools advertised: affected_versions, cypher, exposed_services, find_public_victims, job_status,
+list_services, maintainer_fanout, resolved_while_live, typosquats, watch_repository,
+who_depends_on, why_pulled_in
+
+  ok   exposed_services  6 rows · cypher[9]
+  ok   watch_repository  missing or invalid API key
+
+scope survived the hop
+```
