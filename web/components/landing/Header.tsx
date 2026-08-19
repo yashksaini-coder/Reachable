@@ -30,9 +30,6 @@ export function Header() {
           <a className={styles.docs} href={LINKS.docs}>
             Docs
           </a>
-          <a className={`btn btnOutline ${styles.cta}`} href="#cta">
-            Connect a repository
-          </a>
         </div>
       </div>
     </header>

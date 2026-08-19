@@ -69,14 +69,6 @@
   color: var(--fg);
 }
 
-/* the header's own primary action is a shorter 40px chip, not the 44px hero button */
-.cta {
-  height: 40px;
-  padding: 0 14px;
-  border-radius: 8px;
-  font: 500 12.5px/1 var(--ui);
-}
-
 @media (max-width: 900px) {
   .nav {
     min-width: 0;
@@ -95,11 +87,5 @@
   .inner {
     gap: 14px;
   }
-  .docs {
-    display: none;
-  }
-  .cta {
-    flex-shrink: 0;
-    padding: 0 12px;
-  }
+  /* .docs is no longer hidden here — it was only yielding width to the CTA, which is gone */
 }

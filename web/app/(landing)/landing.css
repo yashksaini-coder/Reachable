@@ -112,12 +112,17 @@
 .landing .btnOutline {
   color: var(--mut);
   border: 1px solid var(--border);
-  transition: background 0.18s var(--ease), color 0.18s var(--ease);
+  transition: background 0.18s var(--ease), color 0.18s var(--ease), border-color 0.18s var(--ease),
+    transform 0.12s var(--ease);
+}
+.landing .btnOutline:active {
+  transform: scale(0.97);
 }
 
 .landing .btnOutline:hover {
   color: var(--fg);
   background: var(--hover);
+  border-color: var(--input);
 }
 
 /* ------------------------------------------------------------- card grids */
@@ -150,12 +155,14 @@
    callback that actually fired, so with no JS the page reads as static. */
 
 .landing .reveal {
-  transition: opacity 0.42s var(--ease), transform 0.42s var(--ease);
+  transition: opacity 0.42s var(--ease), transform 0.42s var(--ease), filter 0.42s var(--ease);
+  will-change: opacity, transform, filter;
 }
 
 .landing .reveal[data-in='0'] {
   opacity: 0;
   transform: translateY(10px);
+  filter: blur(6px);
 }
 
 
@@ -174,7 +181,7 @@
   .landing { --gutter: 22px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .landing .reveal[data-in='0'] { opacity: 1; transform: none; }
+  .landing .reveal[data-in='0'] { opacity: 1; transform: none; filter: none; }
 }
 /* Staggered page enter. The delay rides on a custom property so a component can set it. */
 .landing .enter {
