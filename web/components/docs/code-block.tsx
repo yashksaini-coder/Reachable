@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
-import { Check, Copy } from "lucide-react";
+import { type ReactNode } from "react";
+import { Copy } from "@/components/console/copy";
 
 // Fenced code in the guide. Same chrome as the console's "How HydraDB answered this" card so a
 // snippet and an executed statement read as one system: labelled header, copy, --border (not
@@ -56,29 +56,13 @@ function tokenise(text: string, lang: string): Piece[] {
 const TONE: Record<string, string> = { string: "text-l0", comment: "text-dim", number: "text-signal-2" };
 
 export function CodeBlock({ lang, text }: { lang: string; text: string }) {
-  const [done, setDone] = useState(false);
   const pieces = tokenise(text, lang);
 
   return (
     <figure className="my-5 overflow-hidden rounded-lg border border-border bg-card2">
       <figcaption className="flex min-h-11 items-center justify-between gap-3 border-b border-line px-3">
         <span className="font-mono text-[11px] uppercase leading-none tracking-[0.1em] text-dim">{lang === "text" ? "snippet" : lang}</span>
-        <button
-          type="button"
-          onClick={async () => {
-            try {
-              await navigator.clipboard?.writeText(text);
-              setDone(true);
-              setTimeout(() => setDone(false), 1500);
-            } catch {
-              /* no clipboard outside a secure context — leave the label alone */
-            }
-          }}
-          className="inline-flex min-h-10 items-center gap-1.5 rounded-md px-2 font-mono text-[11.5px] leading-none text-dim transition-[color,background-color,transform] duration-[180ms] ease-[var(--ease)] hover:bg-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50 active:scale-[0.97]"
-        >
-          {done ? <Check className="size-3.5 text-l0" aria-hidden /> : <Copy className="size-3.5" aria-hidden />}
-          {done ? "copied" : "copy"}
-        </button>
+        <Copy text={text} label={`copy ${lang === "text" ? "snippet" : lang}`} />
       </figcaption>
       {/* pb-4 keeps the 10px scrollbar off the last line; the thumb inset matches --code here */}
       <pre className="doc-code m-0 overflow-x-auto overscroll-x-contain bg-code px-3.5 pb-4 pt-3 font-mono text-[12.5px] leading-[1.7] text-mut [scrollbar-width:thin]">

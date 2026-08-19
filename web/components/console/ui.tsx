@@ -7,6 +7,7 @@ import { fmtMs } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { LEVEL } from "@/lib/level";
 import { CountUp } from "@/components/console/count-up";
+import { Copy } from "@/components/console/copy";
 
 // Elevation utility (shadow + tint, never a thicker border) — see globals.css `.elev`.
 export const ELEV = "elev";
@@ -72,7 +73,7 @@ export function HydraCard({
         </pre>
       )}
       <div className="mt-[9px] flex items-center gap-2">
-        {statements.length > 0 && <CopyStatement text={statements.map(([q]) => q).join("\n\n")} />}
+        {statements.length > 0 && <Copy text={statements.map(([q]) => q).join("\n\n")} label="copy statement" />}
         <span className="font-mono text-[11.5px] leading-[1.6] text-dim">
           as sent over Bolt · integer literals are 52-bit ids · timings are wall-clock from the driver over loopback
         </span>
@@ -123,31 +124,6 @@ export function HydraCard({
         </AnimatePresence>
       )}
     </div>
-  );
-}
-
-// "copy statement" → "copied": the label swaps with the opacity/scale/blur pop, no icon toggling.
-function CopyStatement({ text }: { text: string }) {
-  const [done, setDone] = useState(false);
-  const reduce = useReducedMotion();
-  const t = reduce ? { duration: 0 } : { duration: 0.25, ease: EASE };
-  return (
-    <button
-      type="button"
-      onClick={async () => {
-        await navigator.clipboard.writeText(text);
-        setDone(true);
-        setTimeout(() => setDone(false), 1500);
-      }}
-      className="grid min-h-10 shrink-0 rounded-md border border-border px-[11px] text-[12px] font-medium leading-none text-mut transition-[color,background-color,transform] duration-[180ms] ease-[var(--ease)] hover:bg-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50 active:scale-[0.97] print:hidden [&>*]:[grid-area:1/1]"
-    >
-      <motion.span initial={false} animate={done ? { opacity: 0, scale: 0.25, filter: "blur(4px)" } : { opacity: 1, scale: 1, filter: "blur(0px)" }} transition={t} className="inline-flex items-center">
-        copy statement
-      </motion.span>
-      <motion.span initial={false} animate={done ? { opacity: 1, scale: 1, filter: "blur(0px)" } : { opacity: 0, scale: 0.25, filter: "blur(4px)" }} transition={t} className="inline-flex items-center justify-center text-l0" aria-live="polite">
-        copied
-      </motion.span>
-    </button>
   );
 }
 

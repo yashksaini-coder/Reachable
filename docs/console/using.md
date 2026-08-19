@@ -127,13 +127,14 @@ watching one runs the four steps above, and only then does the service get a ver
 
 ## Coding agents
 
-`worker/reachable/mcp_server.py` exposes twelve tools over stdio; it relays to the worker API, so
-`make up` first — or point `REACHABLE_API_URL` at a deployed one. Claude Code picks it up from the
-repo's `.mcp.json`; Codex, OpenCode, Cursor and Copilot take the same command and arguments (see
-[Running it](/docs/reference/run)). Every tool that answers a question about the graph carries the
-Cypher that produced it under `cypher` and its caveats under `limitations`; `list_services` and the
-two job tools return registry and job state, so they carry neither. Only `watch_repository` writes
-anything, and it is annotated as such so a client can tell it from the other eleven.
+Twelve tools over MCP. The quickest route needs nothing installed: [generate a key](/keys) and
+add the deployed worker as an HTTP MCP server — `claude mcp add --transport http reachable
+<url>/mcp --header "Authorization: Bearer …"`, or the same URL and header in any client that
+speaks MCP (see [Running it](/docs/reference/run)). If you have the repo, the stdio server works
+against your own worker with no key at all. Every tool that answers a question about the graph
+carries the Cypher that produced it under `cypher` and its caveats under `limitations`;
+`list_services` and the two job tools return registry and job state, so they carry neither. Only
+`watch_repository` writes, and a read-only key is refused on it.
 
 | tool | what it answers |
 |---|---|

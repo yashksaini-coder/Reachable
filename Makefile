@@ -115,10 +115,13 @@ test: lint ## lint + 14 golden tests on the TEST node + NEXT_PUBLIC leak check
 api: ## run the worker API on :8787 in the foreground
 	$(PY) -m reachable.api
 
-# MCP (stdio) server for coding agents; needs `make api` running. Registered for Claude Code
-# via .mcp.json; other agents: command .venv/bin/python, args -m reachable.mcp_server, PYTHONPATH=worker
-mcp: ## run the MCP stdio server for coding agents (needs make api)
+# MCP for coding agents; both need `make api`. stdio is for your own worker; http is what the
+# deployment serves at /mcp, where a client needs only a URL and a key.
+mcp: ## run the MCP stdio server (needs make api)
 	$(PY) -m reachable.mcp_server
+
+mcp-http: ## run the MCP HTTP server on :8788 (needs make api)
+	$(PY) -m reachable.mcp_http
 
 web: ## run the console dev server on :3000
 	cd web && npm run dev

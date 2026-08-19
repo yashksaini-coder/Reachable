@@ -1,15 +1,25 @@
 "use client";
 
-import { Check, SquareTerminal } from "lucide-react";
-import { CARD, Copy, HEAD, PRE } from "@/app/(console)/keys/key-minter";
+import { Bot, Braces, Check, GitBranch, type LucideIcon, MousePointerClick, Terminal } from "lucide-react";
+import { CARD, HEAD, PRE } from "@/app/(console)/keys/key-minter";
+import { Copy } from "@/components/console/copy";
 import { CLIENTS, claudeAdd, mcpConfig } from "@/lib/mcp";
+import { cn } from "@/lib/utils";
 
-// Typographic tiles, not vendor marks — the repo has no third-party logos and redrawing them
-// raises trademark questions. Only Claude Code says verified, because it is the one that was.
+// Original marks, not vendor logos — the repo carries no third-party trademarks and redrawing them
+// raises questions it does not need. Only Claude Code says verified, because it is the one that was.
+const MARK: Record<string, { Icon: LucideIcon; plate: string }> = {
+  "claude-code": { Icon: Terminal, plate: "rounded-lg border-signal/30 bg-sigfill text-signal-2" },
+  codex: { Icon: Bot, plate: "rounded-full border-border bg-card2 text-fg" },
+  opencode: { Icon: Braces, plate: "rounded-md border-dashed border-input bg-code text-mut" },
+  cursor: { Icon: MousePointerClick, plate: "rounded-[14px_4px_14px_4px] border-border bg-card2 text-fg" },
+  copilot: { Icon: GitBranch, plate: "rounded-full border-dashed border-input bg-code text-mut" },
+};
 
-export function Connectors({ apiUrl, token }: { apiUrl: string; token?: string }) {
-  const config = mcpConfig({ apiUrl, token });
-  const oneLiner = claudeAdd({ apiUrl, token });
+export function Connectors({ endpoint, token }: { endpoint: string; token?: string }) {
+  const config = mcpConfig({ endpoint, token });
+  const oneLiner = claudeAdd({ endpoint, token });
+  const url = endpoint;
 
   return (
     <section className={CARD}>
@@ -18,26 +28,44 @@ export function Connectors({ apiUrl, token }: { apiUrl: string; token?: string }
         <span className="font-mono text-[12px] text-dim">{token ? "config includes your key" : "generate a key first"}</span>
       </div>
 
-      {/* a row, not a grid: five tiles is prime, so any column count leaves a painted gap */}
-      <div className="flex overflow-x-auto overscroll-x-contain [scrollbar-width:thin] max-[600px]:flex-col">
-        {CLIENTS.map((c) => (
-          <div key={c.id} className="cell-lines flex min-w-[164px] flex-1 shrink-0 flex-col gap-2 p-[18px]">
-            <span className="grid size-9 place-items-center rounded-lg border border-border bg-card2 text-mut">
-              <SquareTerminal className="size-[17px]" aria-hidden />
-            </span>
-            <span className="truncate font-mono text-[13px] leading-none text-fg" title={c.name}>
-              {c.name}
-            </span>
-            {c.verified ? (
-              <span className="inline-flex items-center gap-1 text-[11.5px] leading-none text-l0">
-                <Check className="size-3" aria-hidden /> verified here
+      {/* a row, not a grid: five tiles is prime, so any column count leaves a painted gap.
+          the tiles keep a min width so the last one peeks — that peek is the scroll affordance */}
+      <div className="flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain [scrollbar-width:thin] max-[600px]:flex-col">
+        {CLIENTS.map((c) => {
+          const { Icon, plate } = MARK[c.id] ?? { Icon: Terminal, plate: "rounded-lg border-border bg-card2 text-mut" };
+          return (
+            <div
+              key={c.id}
+              className="cell-lines group flex min-w-[178px] flex-1 shrink-0 snap-start flex-col gap-3 p-[18px] transition-colors duration-[180ms] ease-[var(--ease)] hover:bg-hover max-[600px]:flex-row max-[600px]:items-center max-[600px]:gap-3.5"
+            >
+              <span
+                className={cn(
+                  "grid size-9 shrink-0 place-items-center border transition-transform duration-[180ms] ease-[var(--ease)] group-hover:-translate-y-px",
+                  plate,
+                )}
+              >
+                <Icon className="size-[17px]" aria-hidden />
               </span>
-            ) : (
-              <span className="text-[11.5px] leading-none text-dim">same command and args</span>
-            )}
-            <span className="text-[12px] leading-[1.5] text-dim [overflow-wrap:anywhere]">{c.where}</span>
-          </div>
-        ))}
+              <div className="flex min-w-0 flex-col gap-2">
+                <span className="flex min-w-0 items-center gap-2">
+                  <span className="truncate font-mono text-[13px] leading-none text-fg" title={c.name}>
+                    {c.name}
+                  </span>
+                  {c.verified ? (
+                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border bg-card2 px-2 py-1 text-[10.5px] leading-none text-mut">
+                      <Check className="size-3" aria-hidden /> verified
+                    </span>
+                  ) : null}
+                </span>
+                <span className="text-[12px] leading-[1.45] text-mut [overflow-wrap:anywhere]">{c.how}</span>
+                <span className="truncate font-mono text-[11.5px] leading-none text-dim" title={url}>
+                  {url.replace(/^https?:\/\//, "")}
+                </span>
+                <span className="text-[11.5px] leading-[1.45] text-dim">{c.where}</span>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       <div className="flex flex-col gap-4 border-t border-line p-[18px]">
@@ -56,11 +84,11 @@ export function Connectors({ apiUrl, token }: { apiUrl: string; token?: string }
           <pre className={PRE}>{oneLiner}</pre>
         </div>
         <p className="text-[12.5px] leading-[1.6] text-dim">
-          Paths are relative, so start the client from the repository root. The virtualenv is needed only for{" "}
-          <span className="font-mono text-[12px] text-signal-2">mcp</span> and{" "}
-          <span className="font-mono text-[12px] text-signal-2">httpx</span> — no graph driver, no HydraDB in the client.
-          All twelve tools answer; eleven read and only <span className="font-mono text-[12px] text-signal-2">watch_repository</span>{" "}
-          writes, which a read-only key cannot call.
+          Nothing to clone and nothing to install — the client opens an HTTP connection to{" "}
+          <span className="font-mono text-[12px] text-signal-2">/mcp</span> and sends your key on every call, so the graph,
+          the driver and HydraDB all stay on this side. All twelve tools answer; eleven read and only{" "}
+          <span className="font-mono text-[12px] text-signal-2">watch_repository</span> writes, which a read-only key cannot
+          call.
         </p>
       </div>
     </section>

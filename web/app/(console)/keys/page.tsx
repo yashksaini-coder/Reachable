@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { apiHealthy } from "@/lib/api";
 import { StateView } from "@/components/console/states";
+import { mcpUrl } from "@/lib/mcp";
 import { Dashboard } from "./dashboard";
 
 export const dynamic = "force-dynamic";
@@ -8,8 +9,9 @@ export const metadata = { title: "MCP — keys and connectors" };
 
 export default async function KeysPage() {
   const healthy = await apiHealthy();
-  // The browser needs the public API URL to write a usable .mcp.json; it is not a secret — the key is.
+  // The browser needs the public API URL to write a usable MCP config; it is not a secret — the key is.
   const apiUrl = process.env.REACHABLE_API_URL ?? "http://127.0.0.1:8787";
+  const endpoint = mcpUrl(apiUrl, process.env.REACHABLE_MCP_URL);
 
   return (
     <div className="mx-auto max-w-[880px] px-10 py-[52px] max-[900px]:px-5">
@@ -25,7 +27,7 @@ export default async function KeysPage() {
 
       <div className="mt-7">
         {healthy ? (
-          <Dashboard apiUrl={apiUrl} />
+          <Dashboard endpoint={endpoint} />
         ) : (
           <StateView
             sentence="Key generation needs the live graph, which is not reachable right now."

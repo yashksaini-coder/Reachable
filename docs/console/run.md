@@ -43,54 +43,69 @@ incident (never green — absence of a record is not a clean bill).
 
 ## MCP for coding agents
 
-`worker/reachable/mcp_server.py` exposes twelve tools over stdio (the six questions, proof paths,
-who-depends-on, list/watch services, job status, public-victim search, read-only Cypher) using the
-official Python SDK. It computes nothing: each tool is one call to the worker API, which is where
-auth, read-only enforcement and the Cypher live.
+Twelve tools — the six questions, proof paths, who-depends-on, list/watch services, job status,
+public-victim search, read-only Cypher — over the Model Context Protocol. Nothing is computed in the
+server: each tool is one call to the worker API, which is where auth, read-only enforcement and the
+Cypher live.
 
-```json
-{ "mcpServers": { "reachable": {
-  "command": ".venv/bin/python",
-  "args": ["-m", "reachable.mcp_server"],
-  "env": { "PYTHONPATH": "worker",
-           "REACHABLE_API_URL": "${REACHABLE_API_URL:-http://127.0.0.1:8787}",
-           "REACHABLE_API_KEY": "${REACHABLE_API_KEY:-}" }
-} } }
+### Connecting to the deployed worker
+
+Nothing to clone, nothing to install. [Generate a key](/keys), then point your client at the
+endpoint. Claude Code:
+
+```bash
+claude mcp add --transport http reachable https://api.<ip>.sslip.io/mcp \
+  --header "Authorization: Bearer rk_your_key"
 ```
 
-Claude Code picks this up from the repo's `.mcp.json`; Codex, OpenCode, Cursor and Copilot take the
-same command, args and env.
+Any client that speaks HTTP MCP takes the same two facts — a URL and a header:
 
-**Nothing else to set up.** `make up` and the twelve tools work: the default URL is loopback, and a
-local worker sets no key, so none is asked for. The tools answer against *your* graph — the
-repositories you watched — which is the point of running them next to the code you are fixing.
+```json
+{
+  "mcpServers": {
+    "reachable": {
+      "type": "http",
+      "url": "https://api.<ip>.sslip.io/mcp",
+      "headers": {
+        "Authorization": "Bearer rk_your_key"
+      }
+    }
+  }
+}
+```
 
-Two things that are easy to get wrong:
+The key you generate is read-only, expires after 7 days, is rate-limited to 5 an hour per client and
+is stored only as a sha256 digest. It reads the graph and cannot write: `watch_repository` is the one
+tool that writes, and a read-only key is refused on it. The hosted server holds no authority of its
+own — it relays each call with *your* key, so the same guard that protects the API decides.
 
-- Paths in `.mcp.json` are relative, so the client must start from the repository root.
-- The virtualenv is needed only for `mcp` and `httpx` — no graph driver, no HydraDB in the client.
-  All the computation happens in the worker, and all the traversal inside HydraDB.
+Only Claude Code has been driven end to end this way. The others take the identical HTTP contract,
+which is a reason to expect them to work and not the same as having run them.
 
-**Against a worker that is not yours** — a deployed one, or a colleague's — you need a key, and you
-can issue yourself one: **[generate a key](/keys)** in the console, name it, and copy the
-`.mcp.json` it hands back with the URL and key already filled in.
+### Running it against your own worker
 
-What you get is deliberately weaker than the operator's own key:
+If you have the repo, `make up` and the stdio server needs no key at all — the default URL is
+loopback and a local worker asks for none. The tools then answer against *your* graph, the
+repositories you watched:
 
-| | |
-|---|---|
-| scope | read-only — the graph answers, but the key cannot add a repository or start an ingest |
-| lifetime | 7 days, then it stops working on its own |
-| rate | 5 keys an hour per client, 200 active on a worker |
-| at rest | stored as a sha256 digest, so a leaked key file yields nothing usable |
+```json
+{
+  "mcpServers": {
+    "reachable": {
+      "command": ".venv/bin/python",
+      "args": ["-m", "reachable.mcp_server"],
+      "env": {
+        "PYTHONPATH": "worker",
+        "REACHABLE_API_URL": "http://127.0.0.1:8787"
+      }
+    }
+  }
+}
+```
 
-That is why issuing them can be self-serve: a minted key reads a graph built from public
-repositories and public advisories, and can spend nothing.
-
-The key may live in `.env` or in the client's `env` block; what does not work is a shell export when
-the client is launched from a desktop app that inherits no shell. Without a key against a worker
-that wants one, every tool returns `missing or invalid API key` as a readable result rather than
-failing the call — and a read-only key used on a write returns the same, rather than a crash.
+Claude Code picks that up from the repo's own `.mcp.json`. Paths in it are relative, so the client
+must start from the repository root, and the virtualenv is needed only for `mcp` and `httpx` — no
+graph driver, no HydraDB in the client.
 
 ### Verifying it
 

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Check, KeyRound } from "lucide-react";
+import { KeyRound } from "lucide-react";
+import { Copy } from "@/components/console/copy";
 import { useToast } from "@/components/console/toast";
 import { mcpConfig } from "@/lib/mcp";
 import { cn } from "@/lib/utils";
@@ -12,37 +13,13 @@ export const CARD = "elev overflow-hidden rounded-xl border border-border bg-car
 export const HEAD = "flex h-12 shrink-0 items-center justify-between border-b border-line px-[18px]";
 export const PRE = "m-0 overflow-x-auto rounded-md border border-border bg-code p-3 font-mono text-[12.5px] leading-[1.65] text-signal-2";
 
-export function Copy({ text, label = "copy" }: { text: string; label?: string }) {
-  const [done, setDone] = useState(false);
-  const [failed, setFailed] = useState(false);
-  return (
-    <button
-      type="button"
-      onClick={async () => {
-        try {
-          await navigator.clipboard?.writeText(text);
-          setDone(true);
-          setTimeout(() => setDone(false), 1500);
-        } catch {
-          setFailed(true);
-          setTimeout(() => setFailed(false), 2000);
-        }
-      }}
-      className="inline-flex min-h-10 items-center gap-1.5 rounded-md border border-border px-2.5 text-[12px] font-medium leading-none text-mut transition-[color,background-color,transform] duration-[180ms] ease-[var(--ease)] hover:bg-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50 active:scale-[0.97]"
-    >
-      {done ? <Check className="size-3.5 text-l0" aria-hidden /> : null}
-      {failed ? "press ⌘C" : done ? "copied" : label}
-    </button>
-  );
-}
-
-export function KeyMinter({ apiUrl, onMinted }: { apiUrl: string; onMinted?: (token: string) => void }) {
+export function KeyMinter({ endpoint, onMinted }: { endpoint: string; onMinted?: (token: string) => void }) {
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [key, setKey] = useState<Minted | null>(null);
   const toast = useToast();
 
-  const mcpJson = key ? mcpConfig({ apiUrl, token: key.token }) : "";
+  const mcpJson = key ? mcpConfig({ endpoint, token: key.token }) : "";
 
   async function mint(e: React.FormEvent) {
     e.preventDefault();
@@ -109,7 +86,7 @@ export function KeyMinter({ apiUrl, onMinted }: { apiUrl: string; onMinted?: (to
             <pre className={PRE}>{key.token}</pre>
             <div>
               <div className="label mb-2 flex items-center justify-between">
-                <span>drop this into .mcp.json</span>
+                <span>drop this wherever your client keeps its MCP servers</span>
                 <Copy text={mcpJson} label="copy config" />
               </div>
               <pre className={PRE}>{mcpJson}</pre>

@@ -61,13 +61,11 @@ real and lets HydraDB do the walking.
   `docs/schema.md`). Design: dark operations console, one accent, semantic verdict colours,
   every number server-rendered true and never estimated; live pages degrade to designed
   states, API errors surface as toasts, unknown routes get a designed 404.
-- **An MCP server** (`worker/reachable/mcp_server.py`) exposing twelve tools so Claude Code,
-  Codex, OpenCode, Cursor or Copilot can ask the graph the same questions — every graph answer
-  carrying the statement that produced it, and the one tool that writes annotated as such.
-  `scripts/mcp_smoke.py` drives all eleven read-only tools against a running worker.
-- **A badge** (`/badge/{owner}/{repo}.svg`) for READMEs, and **Export PDF** on every report
-  (`?print=1` expands every statement; the browser's print dialog saves the page as PDF — see
-  `docs/console/using.md`).
+- **An MCP server**, hosted — a coding agent connects with a URL and a key generated in the
+  console, nothing to clone or install, and gets the same twelve tools. Every graph answer
+  carries the statement that produced it, and the one tool that writes is annotated as such;
+  the hosted server relays with the caller's own key, so a read-only key stays read-only.
+  `scripts/mcp_http_smoke.py` drives it over HTTP, `scripts/mcp_smoke.py` over stdio.
 
 ## The six questions → how HydraDB answers them
 
@@ -125,7 +123,7 @@ make up                         # worker API :8787 (background) + web build + co
 make add REPO=owner/repo        # ingest one repo (or use the console: Services → add repository)
 make demo                       # replays demo/services.txt then demo/incidents.txt (the three committed incidents)
 make incident ID=MAL-2025-46974 ARGS="--out --runs 5"   # (re)compose one incident → worker/out + benchmarks/results
-make mcp                        # MCP stdio server (also registered for Claude Code via .mcp.json)
+make mcp                        # MCP over stdio, for your own worker (hosted MCP is served at /mcp)
 make down                       # stop the worker API
 ```
 
@@ -172,7 +170,7 @@ Watched cohorts are in [`demo/services.txt`](demo/services.txt): 8 well-maintain
 ## Layout
 
 ```
-worker/reachable/   db · ids · load · pipeline · sources/{github,npm,osv,reach} · queries · incident · api · jobs · mcp_server
+worker/reachable/   db · ids · load · pipeline · sources/{github,npm,osv,reach} · queries · incident · api · jobs · keys · mcp_server · mcp_http
 worker/tests/       14 golden tests (isolated node on :17687)
 web/                Next 16 console (app/, lib/, api routes are server-only proxies)
 worker/out/         composed incidents (the web contract)      benchmarks/results/  stamped timings

@@ -1,37 +1,48 @@
-// One generator for the client config; .mcp.json and docs/console/run.md are the other two copies.
+// One generator for the hosted client config. The repo's .mcp.json is a different thing — the
+// stdio server, for contributors running their own worker — so the two are not copies of each other.
 
 export type Client = {
   id: string;
   name: string;
+  /** One short line on how this client takes it. */
+  how: string;
   /** Where the reader puts it, only where the repo actually documents it. */
   where: string;
   /** True only for a client the twelve tools have actually been driven through. */
   verified?: boolean;
 };
 
-// The five the repo names, in its order. No config paths beyond Claude Code's — nothing documents
-// where the others keep theirs, and inventing one is worse than saying so.
+// The five the repo names, in its order. Nothing documents where a client keeps its MCP servers
+// beyond Claude Code's one command, and inventing a path is worse than saying so.
 export const CLIENTS: Client[] = [
-  { id: "claude-code", name: "Claude Code", where: "the repo's .mcp.json — picked up automatically", verified: true },
-  { id: "codex", name: "Codex", where: "wherever your client keeps its MCP servers" },
-  { id: "opencode", name: "OpenCode", where: "wherever your client keeps its MCP servers" },
-  { id: "cursor", name: "Cursor", where: "wherever your client keeps its MCP servers" },
-  { id: "copilot", name: "Copilot", where: "wherever your client keeps its MCP servers" },
+  {
+    id: "claude-code",
+    name: "Claude Code",
+    how: "claude mcp add --transport http",
+    where: "one command — nothing to clone",
+    verified: true,
+  },
+  { id: "codex", name: "Codex", how: "add it as an HTTP MCP server", where: "wherever your client keeps its MCP servers" },
+  { id: "opencode", name: "OpenCode", how: "add it as an HTTP MCP server", where: "wherever your client keeps its MCP servers" },
+  { id: "cursor", name: "Cursor", how: "add it as an HTTP MCP server", where: "wherever your client keeps its MCP servers" },
+  { id: "copilot", name: "Copilot", how: "add it as an HTTP MCP server", where: "wherever your client keeps its MCP servers" },
 ];
 
+/** Where clients connect. Caddy merges /mcp onto the API host in production; a local worker runs it
+ *  on its own port, so REACHABLE_MCP_URL overrides. */
+export function mcpUrl(apiUrl: string, override?: string): string {
+  return (override ?? `${apiUrl.replace(/\/+$/, "")}/mcp`).replace(/\/+$/, "");
+}
+
 /** The config block, with a real token when one has just been minted and a placeholder otherwise. */
-export function mcpConfig({ apiUrl, token }: { apiUrl: string; token?: string }): string {
+export function mcpConfig({ endpoint, token }: { endpoint: string; token?: string }): string {
   return JSON.stringify(
     {
       mcpServers: {
         reachable: {
-          command: ".venv/bin/python",
-          args: ["-m", "reachable.mcp_server"],
-          env: {
-            PYTHONPATH: "worker",
-            REACHABLE_API_URL: apiUrl,
-            REACHABLE_API_KEY: token ?? "<generate one above>",
-          },
+          type: "http",
+          url: endpoint,
+          headers: { Authorization: `Bearer ${token ?? "<generate one above>"}` },
         },
       },
     },
@@ -40,9 +51,8 @@ export function mcpConfig({ apiUrl, token }: { apiUrl: string; token?: string })
   );
 }
 
-/** Claude Code's one-liner. The env matters: `reachable` is not an installed package, so without
- *  PYTHONPATH the server dies with "No module named reachable". */
-export function claudeAdd({ apiUrl, token }: { apiUrl: string; token?: string }): string {
+/** Claude Code's one-liner — the same URL and key, no repository and no interpreter. */
+export function claudeAdd({ endpoint, token }: { endpoint: string; token?: string }): string {
   const key = token ?? "<generate one above>";
-  return `claude mcp add reachable -e PYTHONPATH=worker -e REACHABLE_API_URL=${apiUrl} -e REACHABLE_API_KEY=${key} -- .venv/bin/python -m reachable.mcp_server`;
+  return `claude mcp add --transport http reachable ${endpoint} --header "Authorization: Bearer ${key}"`;
 }
