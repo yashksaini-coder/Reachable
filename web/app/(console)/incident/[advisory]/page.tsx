@@ -159,7 +159,7 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
             <h1 className="m-0 min-w-0 font-mono text-[32px] font-medium leading-[1.15] tracking-[-0.025em] text-fg [overflow-wrap:anywhere] max-[600px]:basis-full">{inc.advisory.key}</h1>
             {worst && <Level level={worst} className="rounded-md px-2 py-1.5" />}
             <Kind kind={inc.advisory.kind} className="rounded-md px-2 py-1.5" />
-            <Kind kind={inc.advisory.severity} className="rounded-md px-2 py-1.5" />
+            <Kind kind={inc.advisory.severity} className="rounded-md px-2" />
             <ExportButton advisory={inc.advisory.key} />
             <ShareMenu advisory={inc.advisory.key} />
           </div>
@@ -508,7 +508,7 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
               </div>
             }
           >
-            <div className="grid grid-cols-[repeat(auto-fit,minmax(196px,1fr))] gap-px overflow-hidden rounded-lg border border-border bg-border max-[760px]:grid-cols-1">
+            <div className="grid grid-cols-6 gap-px overflow-hidden rounded-lg border border-border bg-border max-[1180px]:grid-cols-3 max-[760px]:grid-cols-2 max-[520px]:grid-cols-1">
               <Column dot="bg-l2" title="act now" n={l2.length}>
                 {l2.map((s) => (
                   <SvcLink key={s} inc={inc} svc={s} className="font-mono text-[13px] leading-[1.3] !text-mut hover:!text-signal-2" />

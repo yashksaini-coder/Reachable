@@ -78,7 +78,7 @@ export function KeyMinter({ apiUrl, onMinted }: { apiUrl: string; onMinted?: (to
               onChange={(e) => setName(e.target.value)}
               placeholder="what is it for — e.g. my laptop"
               maxLength={60}
-              className="h-11 min-w-0 flex-1 rounded-md border border-input bg-code px-3 font-mono text-[13px] text-fg placeholder:text-dim focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50"
+              className="h-11 min-h-11 min-w-0 flex-1 rounded-md border border-input bg-code px-3 font-mono text-[13px] text-fg placeholder:text-dim focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50"
             />
             <button
               type="submit"

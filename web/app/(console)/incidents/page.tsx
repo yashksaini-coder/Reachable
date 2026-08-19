@@ -54,7 +54,7 @@ export default async function Home() {
           <h1 className="max-w-[15ch] text-balance text-[32px] font-medium leading-[1.22] tracking-[-0.02em] text-fg">Compromised packages, and who they reached.</h1>
           <p className="mt-4 max-w-[52ch] text-[14px] text-mut">Six answers per incident, each carrying the statement that produced it. Verdicts are computed, never inferred.</p>
         </div>
-        <StatStrip min={132}>
+        <StatStrip min={132} cols={3}>
           <Stat n={totals.l2} label="act now" rule="bg-l2" tone="text-l2" size="lg" />
           <Stat n={totals.exposed} label="services exposed" rule="bg-signal" size="lg" delay={90} />
           <Stat n={totals.unscanned} label="unscanned" rule="bg-unknown" tone="text-unknown" size="lg" delay={180} />

@@ -89,7 +89,7 @@ export function HydraCard({
       >
         <span className="shrink-0 rounded-xs bg-sigfill px-1.5 py-[5px] font-mono text-[11.5px] font-medium uppercase leading-none tracking-[0.1em] text-signal">hydradb</span>
         <span className="min-w-0 flex-1 truncate text-[13.5px] text-mut max-[760px]:order-2 max-[760px]:basis-full max-[760px]:whitespace-normal">{title}</span>
-        <span className="num shrink-0 text-[11.5px] leading-none text-dim">
+        <span className="num min-w-0 truncate text-[11.5px] leading-none text-dim">
           {rows} rows · {fmtMs(ms)}
           {warm && (
             <>
@@ -304,9 +304,14 @@ export function Stat({
 
 // StatStrip — auto-fit minmax(158px,1fr) grid, 1px --border container, 12px radius, --elev; cells
 // draw hairlines per cell (see .cell-lines) so a wrapped row leaves no phantom cells.
-export function StatStrip({ children, min = 158, className }: { children: ReactNode; min?: number; className?: string }) {
+export function StatStrip({ children, min = 158, cols, className }: { children: ReactNode; min?: number; cols?: number; className?: string }) {
+  // `cols` when the count is known: auto-fit optimises for width, not balance, and leaves a short
+  // last row against a painted card.
   return (
-    <div className={cn("grid overflow-hidden rounded-xl border border-border bg-card elev print:rounded-none print:shadow-none", className)} style={{ gridTemplateColumns: `repeat(auto-fit, minmax(${min}px, 1fr))` }}>
+    <div
+      className={cn("grid overflow-hidden rounded-xl border border-border bg-card elev print:rounded-none print:shadow-none", className)}
+      style={{ gridTemplateColumns: cols ? `repeat(${cols}, minmax(0, 1fr))` : `repeat(auto-fit, minmax(${min}px, 1fr))` }}
+    >
       {children}
     </div>
   );

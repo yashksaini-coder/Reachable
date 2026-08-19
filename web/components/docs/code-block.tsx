@@ -74,7 +74,7 @@ export function CodeBlock({ lang, text }: { lang: string; text: string }) {
               /* no clipboard outside a secure context — leave the label alone */
             }
           }}
-          className="inline-flex min-h-9 items-center gap-1.5 rounded-md px-2 font-mono text-[11.5px] leading-none text-dim transition-[color,background-color,transform] duration-[180ms] ease-[var(--ease)] hover:bg-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50 active:scale-[0.97]"
+          className="inline-flex min-h-10 items-center gap-1.5 rounded-md px-2 font-mono text-[11.5px] leading-none text-dim transition-[color,background-color,transform] duration-[180ms] ease-[var(--ease)] hover:bg-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50 active:scale-[0.97]"
         >
           {done ? <Check className="size-3.5 text-l0" aria-hidden /> : <Copy className="size-3.5" aria-hidden />}
           {done ? "copied" : "copy"}

@@ -18,10 +18,10 @@ export function Connectors({ apiUrl, token }: { apiUrl: string; token?: string }
         <span className="font-mono text-[12px] text-dim">{token ? "config includes your key" : "generate a key first"}</span>
       </div>
 
-      {/* cell-lines, not gap-px on a painted container — that renders the empty slot as a card */}
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(168px,1fr))] max-[600px]:grid-cols-1">
+      {/* a row, not a grid: five tiles is prime, so any column count leaves a painted gap */}
+      <div className="flex overflow-x-auto overscroll-x-contain [scrollbar-width:thin] max-[600px]:flex-col">
         {CLIENTS.map((c) => (
-          <div key={c.id} className="cell-lines flex min-w-0 flex-col gap-2 p-[18px]">
+          <div key={c.id} className="cell-lines flex min-w-[164px] flex-1 shrink-0 flex-col gap-2 p-[18px]">
             <span className="grid size-9 place-items-center rounded-lg border border-border bg-card2 text-mut">
               <SquareTerminal className="size-[17px]" aria-hidden />
             </span>
