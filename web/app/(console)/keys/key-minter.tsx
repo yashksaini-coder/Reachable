@@ -3,15 +3,16 @@
 import { useState } from "react";
 import { Check, KeyRound } from "lucide-react";
 import { useToast } from "@/components/console/toast";
+import { mcpConfig } from "@/lib/mcp";
 import { cn } from "@/lib/utils";
 
 type Minted = { token: string; name: string; ttl_days: number };
 
-const CARD = "elev overflow-hidden rounded-xl border border-border bg-card";
-const HEAD = "flex h-12 shrink-0 items-center justify-between border-b border-line px-[18px]";
-const PRE = "m-0 overflow-x-auto rounded-md border border-border bg-code p-3 font-mono text-[12.5px] leading-[1.65] text-signal-2";
+export const CARD = "elev overflow-hidden rounded-xl border border-border bg-card";
+export const HEAD = "flex h-12 shrink-0 items-center justify-between border-b border-line px-[18px]";
+export const PRE = "m-0 overflow-x-auto rounded-md border border-border bg-code p-3 font-mono text-[12.5px] leading-[1.65] text-signal-2";
 
-function Copy({ text, label = "copy" }: { text: string; label?: string }) {
+export function Copy({ text, label = "copy" }: { text: string; label?: string }) {
   const [done, setDone] = useState(false);
   return (
     <button
@@ -29,27 +30,13 @@ function Copy({ text, label = "copy" }: { text: string; label?: string }) {
   );
 }
 
-export function KeyMinter({ apiUrl }: { apiUrl: string }) {
+export function KeyMinter({ apiUrl, onMinted }: { apiUrl: string; onMinted?: (token: string) => void }) {
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [key, setKey] = useState<Minted | null>(null);
   const toast = useToast();
 
-  const mcpJson = key
-    ? JSON.stringify(
-        {
-          mcpServers: {
-            reachable: {
-              command: ".venv/bin/python",
-              args: ["-m", "reachable.mcp_server"],
-              env: { PYTHONPATH: "worker", REACHABLE_API_URL: apiUrl, REACHABLE_API_KEY: key.token },
-            },
-          },
-        },
-        null,
-        2,
-      )
-    : "";
+  const mcpJson = key ? mcpConfig({ apiUrl, token: key.token }) : "";
 
   async function mint(e: React.FormEvent) {
     e.preventDefault();
@@ -59,6 +46,7 @@ export function KeyMinter({ apiUrl }: { apiUrl: string }) {
       const b = (await r.json().catch(() => ({}))) as Minted & { error?: string };
       if (r.ok && b.token) {
         setKey(b);
+        onMinted?.(b.token);
         toast.done("key generated", `read-only · expires in ${b.ttl_days} days · shown once`);
       } else {
         toast.error("could not generate a key", b.error ?? `HTTP ${r.status}`);

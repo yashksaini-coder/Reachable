@@ -8,7 +8,8 @@ import { cn } from "@/lib/utils";
 import { ToastProvider } from "@/components/console/toast";
 
 // Sidebar spec (design handoff §Shell): fixed 236px, --bg, 1px right border, 100vh sticky.
-// Five two-line items on a 46px pitch (44px item + 2px gap); a 2px × 44px orange indicator slides
+// Six two-line items on a 46px pitch (44px item + 2px gap); the pitch is asserted by the item
+// geometry, not the count, and the indicator is index-derived — adding an item needs nothing else; a 2px × 44px orange indicator slides
 // on the left edge with translateY(index × 46px). Below 900px the sidebar is an off-canvas sheet
 // (translateX(-101%), 300ms) behind a sticky 52px top bar, with a backdrop scrim. <main> — not the
 // document — is the scroll container (100vh, overflow-y auto), so rail listeners target it.
@@ -43,6 +44,12 @@ const NAV = [
     label: "Graph",
     hint: "schema and explorer",
     match: (p: string) => p.startsWith("/graph"),
+  },
+  {
+    href: "/keys",
+    label: "MCP",
+    hint: "keys and connectors",
+    match: (p: string) => p.startsWith("/keys"),
   },
 ];
 const PITCH = 46;
