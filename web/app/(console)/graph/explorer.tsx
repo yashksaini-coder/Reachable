@@ -61,7 +61,7 @@ export function GraphExplorer({ services, initial }: { services: string[]; initi
       } catch {
         setError("live API unavailable");
         setData(null);
-        toast.error("live API unavailable", "the worker on :8787 did not answer — start it with make up");
+        toast.error("live data unavailable", "the graph did not answer — try again in a moment");
       }
     });
   };

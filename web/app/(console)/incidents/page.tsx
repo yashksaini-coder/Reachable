@@ -70,8 +70,8 @@ export default async function Home() {
           <span className="grid size-11 place-items-center rounded-full border border-border text-dim" aria-hidden>
             <Radar className="size-[17px]" />
           </span>
-          <p className="m-0 max-w-[44ch] text-pretty text-[14px] text-mut">No incident composed yet — add a repository, then compose one.</p>
-          <code className="mt-1 max-w-full rounded-md border border-line bg-code px-3 py-2 font-mono text-[13px] text-signal-2 [overflow-wrap:anywhere]">make add REPO=owner/repo &amp;&amp; make incident ID=GHSA-…</code>
+          <p className="m-0 max-w-[44ch] text-pretty text-[14px] text-mut">No incident composed yet. Watch a repository first — its lockfile history becomes the graph these reports read.</p>
+          <Link href="/services" className="mt-1 inline-flex min-h-10 items-center rounded-md border border-border px-3 text-[12.5px] font-medium leading-none text-mut transition-[color,background-color] duration-[180ms] ease-[var(--ease)] hover:bg-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50">Add a repository</Link>
         </div>
       ) : (
         <div className="overflow-hidden rounded-xl border border-border bg-card elev">

@@ -63,7 +63,6 @@ const TABLE =
   "[&_td]:h-10 [&_td]:border-b [&_td]:border-line [&_td]:px-3 [&_td]:py-3 [&_td]:align-middle [&_td]:whitespace-nowrap [&_td]:text-[13.5px] [&_td]:text-mut " +
   "[&_tbody_tr]:transition-colors [&_tbody_tr]:duration-[180ms] [&_tbody_tr:hover]:bg-hover [&_tbody_tr:last-child_td]:border-b-0";
 const CHIP = "inline-flex items-center gap-2 rounded-[7px] border border-border bg-card2 px-2.5 py-[7px] font-mono text-[12.5px] leading-none text-mut";
-const CODE = "inline-block rounded-md border border-border bg-code px-2.5 py-2 font-mono text-[12.5px] leading-[1.5] text-signal-2 [overflow-wrap:anywhere]";
 const LINK = "rounded-sm text-fg transition-colors duration-[180ms] hover:text-signal-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50";
 
 function SvcLink({ inc, svc, className }: { inc: Incident; svc: string; className?: string }) {
@@ -490,8 +489,11 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
             footer={
               <div className="flex flex-wrap items-start justify-between gap-6 px-[18px] py-4 max-[760px]:flex-col">
                 <div className="min-w-0">
-                  <div className="label mb-[9px]">regenerate</div>
-                  <code className={CODE}>make incident ID={inc.advisory.key} ARGS=&quot;--out&quot;</code>
+                  <div className="label mb-[9px]">composed</div>
+                  <div className="text-[13px] leading-[1.6] text-mut">
+                    {fmtUtc(inc.provenance.generated_at)} · every figure above is read from this report&rsquo;s own JSON, and each card
+                    carries the statement that produced it.
+                  </div>
                 </div>
                 {services[0] && (
                   <div className="min-w-0">

@@ -32,7 +32,7 @@ export function FindVictims({ advisory }: { advisory: string }) {
       setRows(r.ok ? (body.rows ?? []) : []);
     } catch {
       setData({ error: "live API unavailable" });
-      toast.error("live API unavailable", "GitHub search runs through the local worker — start it with make up");
+      toast.error("live data unavailable", "the public-repository search did not answer — try again in a moment");
     } finally {
       setState("done");
     }

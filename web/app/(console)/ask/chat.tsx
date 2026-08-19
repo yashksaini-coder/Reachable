@@ -47,7 +47,7 @@ export function Chat({ initialQ, healthy: initialHealthy }: { initialQ: string; 
       next = r.ok && j.data ? { id, q, state: "done", ask: parsed, data: j.data } : { id, q, state: "error", ask: parsed, error: j.error ?? `HTTP ${r.status}` };
     } catch {
       next = { id, q, state: "error", ask: parsed, error: "request failed" };
-      toast.error("the question could not reach the worker", "start it with make up and ask again");
+      toast.error("the question could not reach the graph", "no answer was received — ask again in a moment");
     }
     setMsgs((m) => m.map((x) => (x.id === id ? next : x)));
   }
@@ -212,8 +212,8 @@ function Banner() {
       <span className="grid size-11 shrink-0 place-items-center rounded-full border border-border text-dim" aria-hidden>
         <PlugZap className="size-[17px]" />
       </span>
-      <p className="max-w-[44ch] text-pretty text-[14px] text-mut">Live API unavailable — questions run inside HydraDB through the local worker.</p>
-      <p className="font-mono text-[12px] leading-[1.6] text-dim">start it with make up and reload · nothing here is served from cache</p>
+      <p className="max-w-[44ch] text-pretty text-[14px] text-mut">Questions are answered live by HydraDB, which is not reachable right now.</p>
+      <p className="font-mono text-[12px] leading-[1.6] text-dim">nothing here is served from cache · reload to try again</p>
     </div>
   );
 }

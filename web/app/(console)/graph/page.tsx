@@ -176,7 +176,7 @@ function Unavailable({ what, className }: { what: string; className?: string }) 
         <PlugZap className="size-[17px]" />
       </span>
       <p className="max-w-[44ch] text-pretty text-[14px] text-mut">Live API unavailable — {what} not shown.</p>
-      <p className="font-mono text-[12px] leading-[1.6] text-dim">start it with make up · nothing here is served from cache</p>
+      <p className="font-mono text-[12px] leading-[1.6] text-dim">nothing here is served from cache · reload to try again</p>
     </div>
   );
 }

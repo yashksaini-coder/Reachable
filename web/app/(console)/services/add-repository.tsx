@@ -52,7 +52,7 @@ export function AddRepository({ disabled, recent, prominent = false }: { disable
       toast.error(failTitle, res.error ?? `HTTP ${r.status}`);
     } catch {
       setErr("live API unavailable");
-      toast.error("live API unavailable", "the worker on :8787 did not answer — start it with make up");
+      toast.error("live data unavailable", "the graph did not answer — try again in a moment");
     } finally {
       setBusy(false);
     }
@@ -69,7 +69,7 @@ export function AddRepository({ disabled, recent, prominent = false }: { disable
 
   const invalid = err != null;
   const helper = disabled
-    ? "adding needs the live worker API (make up) · offline: make add REPO=owner/repo"
+    ? "watching a repository needs the live graph, which is not reachable right now"
     : "npm (package-lock v2/v3) and pnpm (v6/v9) lockfile history · versions from npm · advisories from OSV · imports scanned at the latest commit";
   const shown = recent.slice(0, RECENT_MAX);
 
