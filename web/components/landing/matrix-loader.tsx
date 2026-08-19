@@ -11,11 +11,15 @@ import { useEffect, useRef } from "react";
 // would read as a verdict. The brand ramp is the same cool→warm→hot movement without the meaning.
 
 const N = 11; // grid is N×N
-const CELL = 28;
-const GAP = 11;
+// The design sizes cells off the block with a 0.72/0.28 split. Same proportion, smaller block: 418px
+// suited a 1920×1080 canvas stage, but a page loader wants to read as a mark, not fill the viewport.
+const BLOCK = 176;
+const CELL = Math.round((BLOCK / N) * 0.72); // 12
+const GAP = Math.round((BLOCK / N) * 0.28); // 4
 const RAMP = 0.34; // width, in sweep units, of one cell's own fade-up
 const LEAD = 1 - RAMP; // a cell starts at LEAD × its normalised distance
 
+const HALO = Math.round(BLOCK * 2.15); // the design's halo-to-grid ratio
 const IDLE = "#262c3a"; // --color-input
 const WARM = [255, 176, 138]; // --color-signal-2
 const HOT = [255, 106, 26]; // --color-signal
@@ -70,8 +74,8 @@ export function MatrixLoader({ ms, onDone }: { ms: number; onDone: () => void })
       {/* halo: hot at low alpha, well behind the grid */}
       <div
         aria-hidden
-        className="pointer-events-none absolute size-[min(900px,140vw)] rounded-full blur-[6px]"
-        style={{ background: "radial-gradient(circle, rgba(255,106,26,.13) 0%, transparent 62%)" }}
+        className="pointer-events-none absolute rounded-full blur-[6px]"
+        style={{ width: HALO, height: HALO, background: "radial-gradient(circle, rgba(255,106,26,.13) 0%, transparent 62%)" }}
       />
       <div
         ref={host}
