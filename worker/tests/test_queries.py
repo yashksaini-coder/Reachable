@@ -53,6 +53,26 @@ def test_q1_explanation_budget_never_claims_direct(s, monkeypatch):
     assert any("not computed" in lim for lim in r.limitations)
 
 
+def test_membership_chunks_stay_under_the_statement_limit():
+    """The cap is statement length, not term count — the same count is a different size per id."""
+    long_ids = [f"bad.id = {10**15 + i}" for i in range(200)]
+    fixed = 300
+    for chunk in queries._by_length(long_ids, fixed):
+        assert fixed + len(" OR ".join(chunk)) <= queries.STATEMENT_BUDGET
+    assert sum(len(c) for c in queries._by_length(long_ids, fixed)) == len(long_ids)
+    assert queries._by_length([], fixed) == []
+
+
+def test_q1_membership_batches_across_chunks(s):
+    """More keys than MEMBERSHIP_CHUNK: the loop runs twice and the hits must merge, not duplicate."""
+    pad = [f"pkg:fx/absent-{i}@0.0.{i}" for i in range(60)]
+    r = queries.q1_exposed_services(s, [*pad, BAD], explain=False)
+    assert len(r.cypher) > 1, "more than one membership statement should have run"
+    assert r.meta["services"] == ["svc:acme/reachy", "svc:acme/webapp"]
+    lockfiles = [row["lockfile"] for row in r.rows]
+    assert len(lockfiles) == len(set(lockfiles)), "a lockfile must not appear once per chunk"
+
+
 def test_q1_multi_source(s):
     # Both bad and clean version: clean 5.6.0 is resolved by api only.
     r = queries.q1_exposed_services(s, [BAD, "pkg:fx/chalk@5.6.0"], explain=False)

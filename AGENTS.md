@@ -234,8 +234,11 @@ syntax live in `.claude/skills/hydradb-cypher/SKILL.md`.
       by admission control. Measured 1000 rows in 9–17 ms (~60k–113k rows/s).
 - [x] Batching a read by id — **`UNWIND` may not lead a statement** and
       `WHERE x.id IN [...]` is refused; the only accepted batch is an `OR`
-      chain, and `WHERE` takes **at most 33 `OR` terms** (34 is a parse error).
-      Q1 membership chunks at 32, turning ~118 statements into 4.
+      chain. The ceiling is **statement length, ~1026 characters**, not term
+      count: 68 one-digit terms and 33 fifteen-digit terms both parse at 1026
+      chars and both fail just past it. Q1 budgets characters
+      (`queries.STATEMENT_BUDGET`) — a term count would silently break on
+      longer ids.
 - [x] `consistency: "strong"` via Bolt — **not reachable from the Python
       driver.** HydraDB refuses explicit transactions, which is the only place
       the driver exposes metadata. Use the HTTP API for that one query.

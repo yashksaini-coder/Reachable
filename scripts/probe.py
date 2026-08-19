@@ -315,19 +315,24 @@ def main():
     print(f"\n{ok} as expected, {bad} surprising")
 
 
-@case("WHERE OR-chain ceiling — 33 terms")
-def or_chain_33(s):
-    """Q1 batches membership as an OR chain because the engine takes no leading UNWIND and no
-    `IN [...]`. 33 terms parse; MEMBERSHIP_CHUNK sits at 32 for headroom."""
-    ors = " OR ".join(f"n.id = {i}" for i in range(33))
-    s.run(f"MATCH (n:Version) WHERE {ors} RETURN n.key AS k LIMIT 1").data()
+@case("statement length ceiling — 1026 chars")
+def stmt_len_ok(s):
+    """The OR-chain limit is bytes, not terms. Two shapes, same 1026 characters, both parse."""
+    for width in (1, 15):
+        ids = [str(10 ** (width - 1) + i) for i in range(400)]
+        q, terms = "", []
+        while len(q) <= 1026 and ids:
+            terms.append(f"n.id = {ids.pop(0)}")
+            q = "MATCH (n:Version) WHERE " + " OR ".join(terms) + " RETURN n.key AS k LIMIT 1"
+        terms.pop()
+        s.run("MATCH (n:Version) WHERE " + " OR ".join(terms) + " RETURN n.key AS k LIMIT 1").data()
 
 
-@case("WHERE OR-chain ceiling — 34 terms", expect="reject")
-def or_chain_34(s):
-    """One past the ceiling: raise MEMBERSHIP_CHUNK only if this starts passing."""
-    ors = " OR ".join(f"n.id = {i}" for i in range(34))
-    s.run(f"MATCH (n:Version) WHERE {ors} RETURN n.key AS k LIMIT 1").data()
+@case("statement length ceiling — past it", expect="reject")
+def stmt_len_over(s):
+    """Raise queries.STATEMENT_BUDGET only if this starts passing."""
+    terms = [f"n.id = {10**14 + i}" for i in range(40)]
+    s.run("MATCH (n:Version) WHERE " + " OR ".join(terms) + " RETURN n.key AS k LIMIT 1").data()
 
 
 @case("leading UNWIND for a read", expect="reject")

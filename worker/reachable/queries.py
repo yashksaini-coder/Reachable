@@ -42,6 +42,24 @@ def _run(s, res: Result, q: str, **params) -> list[dict]:
     return rows
 
 
+def _by_length(terms: list[str], fixed: int) -> list[list[str]]:
+    """Group OR terms so no statement exceeds the engine's length limit."""
+    out: list[list[str]] = []
+    cur: list[str] = []
+    used = fixed
+    for t in terms:
+        cost = len(t) + (4 if cur else 0)  # " OR "
+        if cur and used + cost > STATEMENT_BUDGET:
+            out.append(cur)
+            cur, used = [], fixed
+            cost = len(t)
+        cur.append(t)
+        used += cost
+    if cur:
+        out.append(cur)
+    return out
+
+
 def _pathkeys(path) -> list[str]:
     """HydraDB yields a path as a flat list [node_props, REL_TYPE, node_props, ...] with no labels;
     the key prefix (pkg:/lock:/svc:) is the label. Returns the alternating keys and rel types."""
@@ -81,9 +99,10 @@ def q2_affected_versions(s, advisory_key: str) -> Result:
 
 # ---------------------------------------------------------------- Q1 · who is exposed
 
-# Affected versions per membership statement. The engine rejects a WHERE with more than 33 OR
-# terms (probed, AGENTS.md §8); 32 leaves a term of headroom.
-MEMBERSHIP_CHUNK = 32
+# The engine refuses a statement past ~1026 characters, whatever it contains (probed, AGENTS.md §8).
+# Chunking on a term count would be wrong: ids vary in length, so the same count is a different
+# statement size. Budget the characters instead.
+STATEMENT_BUDGET = 950
 
 # SPpaths calls one Q1 answer may spend on explanations. Membership is never capped.
 EXPLAIN_PATH_BUDGET = 60
@@ -99,23 +118,20 @@ def q1_exposed_services(s, bad_version_keys: list[str], *, explain: bool = True)
     """
     res = Result([], 0.0)
     hits: dict[tuple[str, str], dict] = {}
-    # Membership in chunks, not one statement per version: a wide advisory has ~118 affected
-    # versions and 118 round trips is most of the 116 s Q1 used to take. The engine takes neither
-    # a leading UNWIND nor `IN [...]`, and refuses a WHERE past 33 OR terms — all probed, see
-    # AGENTS.md §8 — so an OR chain under that ceiling is the batch it does accept.
-    for i in range(0, len(bad_version_keys), MEMBERSHIP_CHUNK):
-        chunk = bad_version_keys[i : i + MEMBERSHIP_CHUNK]
-        where = " OR ".join(f"bad.id = {_int(gid(k))}" for k in chunk)
-        for r in _run(
-            s,
-            res,
-            f"MATCH (bad:Version)<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) "
-            f"WHERE {where} "
-            "RETURN bad.key AS bad, sv.key AS service, l.key AS lockfile, l.id AS lid, "
-            "l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at "
-            "ORDER BY l.committed_at DESC",
-        ):
-            bad = r.pop("bad")
+    # Membership in chunks rather than one statement per version — a wide advisory has ~118 of them.
+    # The engine takes neither a leading UNWIND nor `IN [...]`, so an OR chain is the only batch,
+    # and it is bounded by statement length rather than term count (AGENTS.md §8).
+    head = "MATCH (bad:Version)<-[r:RESOLVED]-(l:Lockfile)<-[:HAS_LOCKFILE]-(sv:Service) WHERE "
+    tail = (
+        " RETURN bad.key AS bad_key, sv.key AS service, l.key AS lockfile, l.id AS lid, "
+        "l.committed_at AS committed_at, l.sha AS sha, r.at AS resolved_at "
+        "ORDER BY l.committed_at DESC"
+    )
+    for chunk in _by_length(
+        [f"bad.id = {_int(gid(k))}" for k in bad_version_keys], len(head) + len(tail)
+    ):
+        for r in _run(s, res, head + " OR ".join(chunk) + tail):
+            bad = r.pop("bad_key")
             k = (r["service"], r["lockfile"])
             hits.setdefault(k, {**r, "bad_versions": []})["bad_versions"].append(bad)
     if explain and hits:
@@ -152,6 +168,9 @@ def q1_exposed_services(s, bad_version_keys: list[str], *, explain: bool = True)
                 f"{len(hits)} exposed lockfiles; the rest read “— not computed”. "
                 "Membership is exact for all of them."
             )
+    order = {k: i for i, k in enumerate(bad_version_keys)}
+    for h in hits.values():
+        h["bad_versions"].sort(key=lambda k: order.get(k, 0))
     for h in hits.values():
         h.pop("lid", None)
         h.setdefault("hops", 0)  # explain=False: caller asked for membership only
