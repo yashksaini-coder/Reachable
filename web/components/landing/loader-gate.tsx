@@ -1,21 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { prefersReducedMotion } from "@/lib/hooks";
 import { MatrixLoader } from "./matrix-loader";
 
-// Shown once per browser session, on the landing only, and nothing else in the app can trigger it.
-//
-// The landing is already painted underneath: this only ever mounts from an effect, so a reader with
-// no JS, a crawler, or anyone who arrives after the first view never sees an overlay at all — the
-// one place on this landing that would otherwise invert Reveal's visible-by-default rule.
+// Once per browser session, landing only. Mounts from an effect, so the page is painted underneath
+// and a reader with no JS never sees an overlay.
 const KEY = "reachable:seen-loader";
-const SWEEP = 1100; // the wavefront
+const SWEEP = 4100; // the wavefront
 const FADE = 450; // and the blur-fade out
-const CEILING = 2600; // never hold the page longer than this, whatever the frame budget
+const CEILING = 5600; // hard stop, must clear SWEEP or it would cut the animation short
 
 export function LoaderGate() {
   const [phase, setPhase] = useState<"idle" | "run" | "out">("idle");
+  const bail = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Also the skip: nobody should be held behind an overlay they cannot dismiss.
+  const finish = useCallback(() => {
+    if (bail.current) clearTimeout(bail.current);
+    setPhase((p) => (p === "run" ? "out" : p));
+  }, []);
 
   useEffect(() => {
     if (prefersReducedMotion()) return;
@@ -25,15 +29,20 @@ export function LoaderGate() {
     } catch {
       return; // storage blocked: treat as already seen rather than replay on every view
     }
-    // Raised on the next frame, not in the effect body: the landing paints first, and the overlay
-    // is only ever added on top of content that is already there.
+    // Next frame, not the effect body: the landing paints first.
     const raf = requestAnimationFrame(() => setPhase("run"));
-    const bail = setTimeout(() => setPhase("out"), CEILING);
+    bail.current = setTimeout(finish, CEILING);
     return () => {
       cancelAnimationFrame(raf);
-      clearTimeout(bail);
+      if (bail.current) clearTimeout(bail.current);
     };
-  }, []);
+  }, [finish]);
+
+  useEffect(() => {
+    if (phase !== "run") return;
+    window.addEventListener("keydown", finish, { once: true });
+    return () => window.removeEventListener("keydown", finish);
+  }, [phase, finish]);
 
   useEffect(() => {
     if (phase !== "out") return;
@@ -46,6 +55,7 @@ export function LoaderGate() {
   return (
     <div
       aria-hidden
+      onClick={finish}
       className="fixed inset-0 z-[100] grid place-items-center bg-bg transition-[opacity,filter] ease-[var(--ease)]"
       style={{
         transitionDuration: `${FADE}ms`,
