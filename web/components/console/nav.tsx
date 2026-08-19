@@ -224,18 +224,12 @@ type Health = {
   incidents: number;
 };
 
-// The status chip is a status light, not a badge: a 7px --l0 dot with a soft ring blipping at 1Hz
-// (the only idle loop permitted), then the state in 11px mono --mut. It polls /api/health (a
-// server-side probe) and never claims "up" from cached data.
-//
-// Liveness comes from whichever route the deployment can actually observe. The worker's /health runs
-// a Cypher count, so a 200 proves the graph answered — that is the only proof available once the
-// node has no public port, which is the normal production shape. A deployment wired to neither is
-// serving committed reports on purpose: it reads `reports only` in --dim, never a verdict colour.
-// L2 red means something is wired up and not answering, and nothing else.
-//
-// Every label is kept under ~24 mono characters: the sidebar is 236px, and the old `HydraDB no
-// token · N incidents` (30) truncated mid-word.
+// A status light, not a badge: 7px dot blipping at 1Hz (the only idle loop permitted) plus the
+// state in 11px mono. Polls /api/health and never claims "up" from cached data.
+// Liveness comes from whichever route this deployment can observe. Wired to neither means it is
+// serving committed reports on purpose — `reports only` in --dim, never a verdict colour; L2 red
+// is reserved for something wired up and silent.
+// Labels stay under ~24 mono chars — the sidebar is 236px and the old 30-char label truncated.
 function Status() {
   const [st, setSt] = useState<Health | null>(null);
   useEffect(() => {

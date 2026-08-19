@@ -107,16 +107,11 @@ def q1_exposed_services(s, bad_version_keys: list[str], *, explain: bool = True)
             k = (r["service"], r["lockfile"])
             hits.setdefault(k, {**r, "bad_versions": []})["bad_versions"].append(key)
     if explain and hits:
-        # One SPpaths call per (bad, lockfile): bounded, integer-id parameters, pathCount 3 keeps
-        # the direct RESOLVED edge plus up to two DEPENDS_ON chains as the human explanation.
-        #
-        # That product is the whole cost of Q1, and it explodes on a wide advisory: nanoid
-        # <3.3.18 (GHSA-2v37-7h3g-55p8) matches 118 published versions, and nanoid is a transitive
-        # dependency of nearly everything, so the pairs run into the hundreds and the query stops
-        # returning at all. Membership stays exact for every lockfile — that is one hop and cheap.
-        # Only the explanation is budgeted, newest commits first, because the most recent lockfile
-        # is the one a responder acts on. Past the budget hops is None, never 0: 0 means "direct
-        # dependency", and claiming that about a path we never walked would be a false statement.
+        # One SPpaths call per (bad, lockfile), pathCount 3. That product is the whole cost of Q1
+        # and it explodes on a wide advisory — nanoid <3.3.18 matches 118 versions, so the pairs
+        # run into the hundreds and the query stops returning. Membership is one cheap hop and
+        # stays exact; only the explanation is budgeted, newest commits first. Past the budget
+        # hops is None, never 0 — 0 renders as "direct dependency", which we would not have proved.
         q = (
             "CALL algo.SPpaths({sourceNode: $src, targetNode: $dst, relTypes: ['DEPENDS_ON', 'RESOLVED'], "
             "relDirection: 'incoming', maxLen: 9, pathCount: 3}) YIELD path RETURN path"

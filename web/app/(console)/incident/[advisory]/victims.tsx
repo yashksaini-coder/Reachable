@@ -122,8 +122,16 @@ function VictimRow({ v, onWatched }: { v: Victim; onWatched: () => void }) {
       const body = (await r.json().catch(() => ({}))) as { job_id?: string; error?: string };
       if (body.job_id && (r.ok || r.status === 409)) {
         setJobId(body.job_id);
+        // Say what watching does — it is not a verdict until the history is ingested.
+        toast.done(
+          r.status === 409 ? `${v.repo} is already being ingested` : `watching ${v.repo}`,
+          "it gets a verdict once its lockfile history is ingested",
+        );
         onWatched();
-      } else setErr(body.error ?? `HTTP ${r.status}`);
+      } else {
+        setErr(body.error ?? `HTTP ${r.status}`);
+        toast.error("could not start watching", body.error ?? `HTTP ${r.status}`);
+      }
     } catch {
       setErr("live API unavailable");
       toast.error("could not start watching", "the worker did not answer");

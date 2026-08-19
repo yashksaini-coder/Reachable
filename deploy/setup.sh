@@ -7,9 +7,8 @@ apt-get update -y && apt-get install -y ca-certificates curl git ufw
 curl -fsSL https://get.docker.com | sh
 ufw allow OpenSSH && ufw allow 80 && ufw allow 443 && ufw --force enable
 
-# Swap. Serving needs ~735 MB (node ~660 + worker ~75, measured); an ingest peak is not measured
-# and once cost 9 GB before packuments were streamed (pipeline.py). On a 2 GB host swap is what
-# turns "the kernel killed the graph node mid-demo" into "that ingest ran slowly".
+# Swap. Serving needs ~735 MB (measured); the ingest peak is not measured and once cost 9 GB.
+# On a 2 GB host this is what keeps a spike from killing the graph node.
 if [ ! -f /swapfile ]; then
   fallocate -l 4G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
   grep -q '^/swapfile' /etc/fstab || echo '/swapfile none swap sw 0 0' >> /etc/fstab

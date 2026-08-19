@@ -31,18 +31,14 @@ services:
       dockerfile: worker/Dockerfile
     restart: unless-stopped
     depends_on: [hydradb]
-    # Bound the worker, not the node. Ingest memory is not measured and the packument LRU
-    # (npm.py, maxsize=4096) has no byte ceiling, so on a small host the kernel's OOM killer
-    # would otherwise pick whichever process is fattest — often the graph node, which takes the
-    # whole console down. Capped here, a runaway ingest kills only the worker: the job lands as
-    # interrupted with a retry button, the node keeps serving, and restart brings the API back.
-    #
-    # memswap_limit MUST equal mem_limit — the two together mean "no swap for this container".
-    # Granting swap on top (it was 3g) does not soften the cap, it defeats it: on 2026-08-19 an
-    # ingest sat at 1013 MiB of the 1 GiB cap and paged against EBS at ~30 MB/s out, 13 MB/s in,
-    # 46% iowait, 4% CPU. The container stayed "healthy" with zero restarts while the API stopped
-    # accepting connections for ~20 minutes and Caddy served 502s. A process that dies is back in
-    # seconds; a process that thrashes holds the API hostage and nothing recovers it automatically.
+    # Bound the worker, not the node: ingest memory is unmeasured and the packument LRU has no
+    # byte ceiling, so the OOM killer would otherwise pick the fattest process — often the node,
+    # which takes the console down. Capped, a runaway ingest kills only the worker: job interrupted,
+    # retry button, API back in seconds.
+    # memswap_limit MUST equal mem_limit — together they mean "no swap". Granting swap defeats the
+    # cap rather than softening it: with 3g an ingest paged against EBS at 46% iowait and stopped
+    # answering for ~20 minutes while reporting healthy. A process that dies recovers; one that
+    # thrashes holds the API hostage.
     mem_limit: 1g
     memswap_limit: 1g
     environment:

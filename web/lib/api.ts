@@ -35,10 +35,9 @@ export async function apiHealthy(): Promise<boolean> {
   }
 }
 
-// Same probe, but keeping the service count. The worker's /health runs a real Cypher count against
-// the node, so a 200 here is transitive proof the graph is answering — the only such proof a
-// deployment has when the node itself has no public port. Deliberately unauthenticated: the worker
-// exempts /health, so the status light keeps working across a key rotation.
+// Same probe, keeping the count. The worker's /health runs a Cypher count, so a 200 is proof the
+// graph answered — the only proof available when the node has no public port. Unauthenticated on
+// purpose: /health is exempt, so the status light survives a key rotation.
 export async function workerHealth(): Promise<{ up: boolean; services: number | null }> {
   try {
     const r = await fetch(`${API}/health`, { cache: "no-store", signal: AbortSignal.timeout(1500) });

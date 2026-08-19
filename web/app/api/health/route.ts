@@ -2,14 +2,11 @@ import { workerHealth } from "@/lib/api";
 import { env } from "@/lib/env";
 import { listIncidents } from "@/lib/incident";
 
-// Health for an uptime monitor and for the sidebar status light. Reports the committed-JSON gallery
-// (always), and liveness of the graph by whichever route this deployment can actually observe:
-//   - the worker's /health, which runs a Cypher count against the node — so a 200 proves the graph
-//     answered. This is the only proof available once the node has no public port.
-//   - HydraDB's own /healthz, reachable only where HYDRA_TOKEN says a node is directly addressable
-//     (local development). Unset is a configuration, not a fault.
-// It never claims "live" it did not observe, and never reports a deliberate configuration as a
-// failure — the caller distinguishes "not wired up" from "wired up and not answering".
+// Health for uptime monitors and the sidebar status light. Always reports the committed-JSON
+// gallery; for liveness it uses whichever route this deployment can observe — the worker's /health
+// (which runs a Cypher count, so a 200 proves the graph answered) and, where HYDRA_TOKEN says a
+// node is directly addressable, its /healthz. Never claims what it did not observe, and keeps
+// "not wired up" distinct from "wired up and silent".
 export const dynamic = "force-dynamic";
 
 export async function GET() {

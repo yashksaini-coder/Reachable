@@ -23,8 +23,8 @@ from mcp.types import ToolAnnotations
 from reachable.dotenv import load_dotenv
 
 logging.getLogger("httpx").setLevel(logging.WARNING)  # stdio transport: keep the pipes quiet
-# The client launches this process directly, so it inherits no shell exports. Without this, a key
-# in .env — where the rest of the project keeps it — is silently ignored and every tool 401s.
+# The client launches this directly and inherits no shell exports; without this a key in .env is
+# silently ignored and every tool 401s.
 load_dotenv()
 API = os.environ.get("REACHABLE_API_URL", "http://127.0.0.1:8787").rstrip("/")
 _KEY = os.environ.get("REACHABLE_API_KEY", "").strip()
@@ -32,8 +32,7 @@ _c = httpx.Client(
     base_url=API, timeout=60, headers={"Authorization": f"Bearer {_KEY}"} if _KEY else {}
 )
 
-# Eleven tools read; watch_repository writes (it enqueues an ingest that spends GitHub API budget
-# and adds a Service to the graph). Declared so a client can tell them apart without reading prose.
+# Declared so a client can tell the one writing tool from the eleven that read.
 _READS = ToolAnnotations(read_only_hint=True, destructive_hint=False, open_world_hint=False)
 _WRITES = ToolAnnotations(
     read_only_hint=False, destructive_hint=False, idempotent_hint=True, open_world_hint=True
@@ -58,8 +57,8 @@ mcp = MCPServer(
 
 
 def _send(method: str, path: str, **kw) -> dict:
-    """One worker call. Every failure comes back as a normal result the model can read and act on:
-    a tool that raises tells it only that something broke."""
+    """One worker call. Failures come back as readable results — a raised tool says only that
+    something broke."""
     try:
         r = _c.request(method, path, **kw)
     except httpx.RequestError as e:
@@ -70,8 +69,8 @@ def _send(method: str, path: str, **kw) -> dict:
             ),
             "status": 0,
         }
-    # Status first: a gateway (Caddy, nginx) answers 502/504 with HTML, and parsing that before
-    # checking the status turns "the worker is down" into a JSON decode error.
+    # Status before parsing: a gateway answers 502/504 with HTML, which would otherwise surface as
+    # a JSON decode error instead of "the worker is down".
     try:
         body = r.json()
     except ValueError:

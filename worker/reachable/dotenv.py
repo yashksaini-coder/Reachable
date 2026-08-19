@@ -1,9 +1,7 @@
 """Read KEY=VALUE lines from the nearest .env into os.environ.
 
-Its own module so that entry points which need the file but not a graph connection can use it.
-Importing reachable.db for this would evaluate `TOKEN = token()`, which raises when HYDRA_TOKEN is
-unset and HYDRA_URI is not loopback — a hard failure for a process (the MCP relay) that never opens
-a Bolt session.
+Its own module because importing reachable.db for it evaluates `TOKEN = token()`, which raises
+without HYDRA_TOKEN — fatal for the MCP relay, which never opens a Bolt session.
 """
 
 from __future__ import annotations

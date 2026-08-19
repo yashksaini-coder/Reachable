@@ -3,9 +3,7 @@ import { MCP_TOOLS } from '@/lib/landing-data';
 import { Reveal } from './Reveal';
 import styles from './Agents.module.css';
 
-// The MCP surface, stated as what it is: the same questions, in the editor. Every claim here is
-// checkable — the tool names are the wire names asserted in worker/tests/test_mcp.py, and the
-// "carries the statement" claim is what scripts/mcp_smoke.py prints for each tool.
+// The same questions, in the editor. Tool names are the wire names asserted in test_mcp.py.
 export function Agents() {
   return (
     <section className="container section">

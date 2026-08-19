@@ -2,16 +2,28 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { X } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Toasts — for API/network errors and short confirmations. Bottom-right (full-width bottom ≤900px),
-// --pop surface, elev, at most three stacked,
-// 5s auto-dismiss, `aria-live="polite"` (never steals focus). Tone: `error` carries the word
-// "error" and a --l1 rule (amber is the app-wide "attention" tone for non-verdict states, chosen
-// once here so l2 stays a verdict); `note` is neutral. Enters y6→0 300ms, exits 200ms.
-type Toast = { id: number; title: string; detail?: string; tone: "error" | "note"; action?: { label: string; onClick: () => void } };
-type Ctx = { push: (t: Omit<Toast, "id">) => void; error: (title: string, detail?: string) => void; note: (title: string, detail?: string) => void };
+// Toasts — confirms and failures for actions that change something. Bottom-right (full-width
+// ≤900px), --pop, at most three, `aria-live="polite"`. Enters y6→0 300ms, exits 200ms.
+// Tones avoid the verdict palette on purpose: green would read as the L0 verdict, so `done` uses
+// --signal with a check. Amber --l1 is the attention tone — `error` with a left rule, `warn`
+// without.
+type Tone = "error" | "warn" | "done" | "note";
+type Toast = { id: number; title: string; detail?: string; tone: Tone; action?: { label: string; onClick: () => void } };
+type Ctx = {
+  push: (t: Omit<Toast, "id">) => void;
+  error: (title: string, detail?: string) => void;
+  warn: (title: string, detail?: string) => void;
+  done: (title: string, detail?: string) => void;
+  note: (title: string, detail?: string) => void;
+};
+
+// Failures linger; confirmations get out of the way.
+const DWELL: Record<Tone, number> = { error: 7000, warn: 6000, done: 4000, note: 5000 };
+const LABEL: Record<Tone, string> = { error: "error", warn: "warning", done: "done", note: "note" };
+const TONE_TEXT: Record<Tone, string> = { error: "text-l1", warn: "text-l1", done: "text-signal", note: "text-signal" };
 
 const ToastCtx = createContext<Ctx | null>(null);
 const EASE = [0.32, 0.72, 0, 1] as const;
@@ -32,7 +44,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       setItems((xs) => [...xs.slice(-2), { ...t, id }]); // at most three on screen
       timers.current.set(
         id,
-        setTimeout(() => dismiss(id), t.tone === "error" ? 7000 : 5000),
+        setTimeout(() => dismiss(id), DWELL[t.tone]),
       );
     },
     [dismiss],
@@ -42,7 +54,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     return () => m.forEach(clearTimeout);
   }, []);
   const ctx = useMemo<Ctx>(
-    () => ({ push, error: (title, detail) => push({ title, detail, tone: "error" }), note: (title, detail) => push({ title, detail, tone: "note" }) }),
+    () => ({
+      push,
+      error: (title, detail) => push({ title, detail, tone: "error" }),
+      warn: (title, detail) => push({ title, detail, tone: "warn" }),
+      done: (title, detail) => push({ title, detail, tone: "done" }),
+      note: (title, detail) => push({ title, detail, tone: "note" }),
+    }),
     [push],
   );
   return (
@@ -56,7 +74,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 export function useToast(): Ctx {
   const c = useContext(ToastCtx);
   // Outside the provider (e.g. the landing) toasts degrade to no-ops rather than throwing.
-  return c ?? { push: () => {}, error: () => {}, note: () => {} };
+  return c ?? { push: () => {}, error: () => {}, warn: () => {}, done: () => {}, note: () => {} };
 }
 
 function Toaster({ items, dismiss }: { items: Toast[]; dismiss: (id: number) => void }) {
@@ -74,8 +92,9 @@ function Toaster({ items, dismiss }: { items: Toast[]; dismiss: (id: number) => 
               className={cn("pointer-events-auto relative overflow-hidden rounded-lg border border-border bg-pop pl-3.5 pr-10 py-3 elev", t.tone === "error" && "border-l-2 border-l-l1")}
             >
               <div className="flex items-baseline gap-2">
-                <span className={cn("shrink-0 font-mono text-[11.5px] font-medium uppercase leading-none tracking-[0.1em]", t.tone === "error" ? "text-l1" : "text-signal")}>
-                  {t.tone === "error" ? "error" : "note"}
+                <span className={cn("inline-flex shrink-0 items-center gap-1.5 font-mono text-[11.5px] font-medium uppercase leading-none tracking-[0.1em]", TONE_TEXT[t.tone])}>
+                  {t.tone === "done" && <Check className="size-3" aria-hidden />}
+                  {LABEL[t.tone]}
                 </span>
                 <span className="text-[13.5px] leading-[1.4] text-fg">{t.title}</span>
               </div>

@@ -58,13 +58,20 @@ export function AddRepository({ disabled, recent, prominent = false }: { disable
     }
     return false;
   }
-  const retry = (id: string) => post(`/api/jobs/${encodeURIComponent(id)}/retry`, undefined, "could not retry the job");
+  const retry = async (id: string) => {
+    const ok = await post(`/api/jobs/${encodeURIComponent(id)}/retry`, undefined, "could not retry the job");
+    if (ok) toast.done("retry queued", "the ingest re-runs from the start; it is idempotent");
+    return ok;
+  };
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     const repo = normalise(value);
     if (!repo) return setErr("needs owner/repository — e.g. owner/repo");
-    if (await post("/api/services", JSON.stringify({ repo }), "could not queue the repository")) setValue("");
+    if (await post("/api/services", JSON.stringify({ repo }), "could not queue the repository")) {
+      toast.done(`watching ${repo}`, "reading its lockfile history — progress is in the job card");
+      setValue("");
+    }
   }
 
   const invalid = err != null;
@@ -180,6 +187,7 @@ function RetryButton({ onClick, disabled, compact = false }: { onClick: () => vo
 // visible, scrolls beyond) · error clamped to two lines · footer link only when done.
 function JobCard({ id, onRetry, busy }: { id: string; onRetry: (id: string) => void; busy: boolean }) {
   const router = useRouter();
+  const toast = useToast();
   const [job, setJob] = useState<Job | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const settled = useRef(false);
@@ -198,7 +206,17 @@ function JobCard({ id, onRetry, busy }: { id: string; onRetry: (id: string) => v
           setJob(body);
           if (SETTLED.has(body.status) && !settled.current) {
             settled.current = true;
-            if (body.status === "done") router.refresh();
+            // An ingest runs for minutes; nobody watches the card throughout.
+            const repo = body.repo ?? "the repository";
+            if (body.status === "done") {
+              const lockfiles = body.steps?.find((st) => st.name === "lockfiles")?.detail ?? null;
+              toast.done(`${repo} is now watched`, lockfiles ?? "its lockfile history is in the graph");
+              router.refresh();
+            } else if (body.status === "interrupted") {
+              toast.warn(`${repo} did not finish`, "the worker restarted mid-ingest — retry re-runs it idempotently");
+            } else {
+              toast.error(`${repo} failed to ingest`, body.error ?? "see the job card for the failing step");
+            }
             return;
           }
         }
@@ -212,7 +230,7 @@ function JobCard({ id, onRetry, busy }: { id: string; onRetry: (id: string) => v
       stop = true;
       clearTimeout(timer);
     };
-  }, [id, router]);
+  }, [id, router, toast]);
 
   const status = job?.status ?? "queued";
   const steps = job?.steps ?? [];
