@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import os
 
+from mcp.server.transport_security import TransportSecuritySettings
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 
@@ -23,6 +24,18 @@ load_dotenv()
 OPERATOR = os.environ.get("REACHABLE_API_KEY", "").strip()
 HOST = os.environ.get("REACHABLE_MCP_HOST", "127.0.0.1")
 PORT = int(os.environ.get("REACHABLE_MCP_PORT", "8788"))
+
+# DNS-rebinding protection is on by default and only trusts 127.0.0.1, so a proxied request arrives
+# with the public Host and is refused 421. The deployment declares its own hostname here.
+_hosts = [
+    h.strip() for h in os.environ.get("REACHABLE_MCP_ALLOWED_HOSTS", "").split(",") if h.strip()
+]
+_hosts = _hosts or [f"127.0.0.1:{PORT}", f"localhost:{PORT}", "127.0.0.1", "localhost"]
+SECURITY = TransportSecuritySettings(
+    enable_dns_rebinding_protection=True,
+    allowed_hosts=_hosts,
+    allowed_origins=[f"{scheme}://{h}" for h in _hosts for scheme in ("https", "http")],
+)
 
 
 def _bearer(request) -> str:
@@ -48,7 +61,7 @@ class Auth(BaseHTTPMiddleware):
             CALLER_KEY.reset(reset)
 
 
-app = mcp.streamable_http_app()
+app = mcp.streamable_http_app(transport_security=SECURITY)
 app.add_middleware(Auth)
 
 

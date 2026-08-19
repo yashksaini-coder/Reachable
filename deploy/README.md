@@ -63,6 +63,8 @@ curl -fsSL https://raw.githubusercontent.com/yashksaini-coder/Reachable/master/d
 
 If you allocate a static IP, attach it **before** the first run: `setup.sh` derives `API_HOST` from
 the address the box has at that moment, and the TLS certificate is issued for that hostname.
+`API_HOST` is also the MCP transport's allowed host: the SDK refuses a proxied request whose `Host`
+it was not told about (HTTP 421), so a wrong value there breaks `/mcp` and nothing else.
 
 ## 3. Data
 

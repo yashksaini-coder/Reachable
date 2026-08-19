@@ -69,6 +69,7 @@ services:
       REACHABLE_API_KEY: ${REACHABLE_API_KEY}
       REACHABLE_MCP_HOST: 0.0.0.0
       REACHABLE_MCP_PORT: "8788"
+      REACHABLE_MCP_ALLOWED_HOSTS: ${API_HOST}
     volumes:
       # The same key store the worker mints into — without it this container validates every
       # minted key against an empty file and refuses them all.
