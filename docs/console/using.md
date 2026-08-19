@@ -128,9 +128,12 @@ watching one runs the four steps above, and only then does the service get a ver
 ## Coding agents
 
 `worker/reachable/mcp_server.py` exposes twelve tools over stdio; it relays to the worker API, so
-`make up` first. Claude Code picks it up from the repo's `.mcp.json`; Codex, OpenCode, Cursor and
-Copilot take the same command and arguments (see [Running it](/docs/reference/run)). Every answer
-carries the Cypher that produced it under `cypher` and its caveats under `limitations`.
+`make up` first — or point `REACHABLE_API_URL` at a deployed one. Claude Code picks it up from the
+repo's `.mcp.json`; Codex, OpenCode, Cursor and Copilot take the same command and arguments (see
+[Running it](/docs/reference/run)). Every tool that answers a question about the graph carries the
+Cypher that produced it under `cypher` and its caveats under `limitations`; `list_services` and the
+two job tools return registry and job state, so they carry neither. Only `watch_repository` writes
+anything, and it is annotated as such so a client can tell it from the other eleven.
 
 | tool | what it answers |
 |---|---|

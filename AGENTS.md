@@ -490,7 +490,8 @@ timings and committed (`worker/out/*.json`, `benchmarks/results/*`):
 ingest inside compose) · console builds and prerenders them (Incidents, incident
 page with six answer cards, Board, Services + add-by-URL jobs, Ask, Graph) ·
 "Beyond the watched set" (GitHub code search → watch) · MCP stdio server
-(12 tools, `.mcp.json`) verified with a stdio client · README written as the
+(12 tools, `.mcp.json`) — contract asserted in `worker/tests/test_mcp.py`, whole
+path exercised against a running worker by `scripts/mcp_smoke.py` · README written as the
 submission text; JUDGE_GUIDE numbers filled from benchmarks.
 
 **UI (2026-08-17 00:xx IST):** design-handoff port landed — landing at `/`, console under

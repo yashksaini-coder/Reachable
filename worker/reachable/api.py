@@ -296,6 +296,9 @@ def find_victims(s, q) -> dict:
         "searched": searched,
         "rows": sorted(victims.values(), key=lambda v: (v["watched"], v["repo"])),
         "errors": errors,
+        # The rows come from GitHub, but the versions searched for came from the graph — carry the
+        # statement that chose them so the answer is auditable like every other one.
+        "cypher": a.cypher,
         "limitations": [
             (
                 "GitHub code search indexes default branches only and skips forks and files "

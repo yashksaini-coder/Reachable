@@ -35,6 +35,21 @@ export async function apiHealthy(): Promise<boolean> {
   }
 }
 
+// Same probe, but keeping the service count. The worker's /health runs a real Cypher count against
+// the node, so a 200 here is transitive proof the graph is answering — the only such proof a
+// deployment has when the node itself has no public port. Deliberately unauthenticated: the worker
+// exempts /health, so the status light keeps working across a key rotation.
+export async function workerHealth(): Promise<{ up: boolean; services: number | null }> {
+  try {
+    const r = await fetch(`${API}/health`, { cache: "no-store", signal: AbortSignal.timeout(1500) });
+    if (!r.ok) return { up: false, services: null };
+    const b = (await r.json()) as { services?: number };
+    return { up: true, services: typeof b.services === "number" ? b.services : null };
+  } catch {
+    return { up: false, services: null };
+  }
+}
+
 // ---- Services registry + ingest jobs (worker contract, docs/plans/2026-08-16-console-v2.md) ----
 
 export type Service = {

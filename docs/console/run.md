@@ -44,12 +44,71 @@ incident (never green — absence of a record is not a clean bill).
 ## MCP for coding agents
 
 `worker/reachable/mcp_server.py` exposes twelve tools over stdio (the six questions, proof paths,
-who-depends-on, list/watch services, job status, public-victim search, read-only Cypher). It
-relays to the worker API, so `make up` first.
+who-depends-on, list/watch services, job status, public-victim search, read-only Cypher) using the
+official Python SDK. It computes nothing: each tool is one call to the worker API, which is where
+auth, read-only enforcement and the Cypher live.
 
 ```json
-{ "mcpServers": { "reachable": { "command": ".venv/bin/python", "args": ["-m", "reachable.mcp_server"], "env": { "PYTHONPATH": "worker" } } } }
+{ "mcpServers": { "reachable": {
+  "command": ".venv/bin/python",
+  "args": ["-m", "reachable.mcp_server"],
+  "env": { "PYTHONPATH": "worker",
+           "REACHABLE_API_URL": "${REACHABLE_API_URL:-http://127.0.0.1:8787}",
+           "REACHABLE_API_KEY": "${REACHABLE_API_KEY:-}" }
+} } }
 ```
 
-Claude Code picks this up from the repo's `.mcp.json`; Codex, OpenCode, Cursor and Copilot take
-the same command/args.
+Claude Code picks this up from the repo's `.mcp.json`; Codex, OpenCode, Cursor and Copilot take the
+same command, args and env.
+
+**Against a local worker** — `make up` first, then nothing else: the default URL is loopback and a
+local worker needs no key.
+
+**Against a deployed worker** — set both variables before launching the client:
+
+```bash
+export REACHABLE_API_URL=https://api.<ip>.sslip.io
+export REACHABLE_API_KEY=…        # from deploy/.env on the VM
+```
+
+Four things that are easy to get wrong:
+
+- The key may live in `.env` (the server reads it from there) **or** in the client's `env` block.
+  What does not work is relying on a shell export when the client is launched from a desktop app
+  that inherits no shell environment.
+- Paths in `.mcp.json` are relative, so the client must start from the repository root.
+- The local virtualenv is needed only for `mcp` and `httpx` — no graph driver, no HydraDB. All the
+  computation happens on the worker.
+- Without a key against a worker that wants one, every tool returns
+  `missing or invalid API key` as a normal result rather than failing the call.
+
+### Verifying it
+
+`worker/tests/test_mcp.py` asserts the contract without needing a worker: twelve tools, every one
+described, `watch_repository` marked as the only mutating tool, and the `cypher` tool shipping the
+graph schema. `scripts/mcp_smoke.py` goes further — it drives the server as a real MCP client and
+calls every read-only tool against whatever `REACHABLE_API_URL` points at:
+
+```
+$ REACHABLE_API_URL=https://api.<ip>.sslip.io REACHABLE_API_KEY=… .venv/bin/python scripts/mcp_smoke.py
+12 tools advertised: affected_versions, cypher, exposed_services, find_public_victims, job_status,
+list_services, maintainer_fanout, resolved_while_live, typosquats, watch_repository,
+who_depends_on, why_pulled_in
+
+ ok   list_services          16 rows
+ ok   exposed_services       6 rows · 8310.6 ms · cypher[9] · limitations[1]
+ ok   affected_versions      1 rows · 119.8 ms · cypher[2] · limitations[1]
+ ok   resolved_while_live    6 rows · 178.6 ms · cypher[2] · limitations[1]
+ ok   maintainer_fanout      32 rows · 4360.1 ms · cypher[11] · limitations[3]
+ ok   typosquats             2 rows · 117.6 ms · cypher[1] · limitations[1]
+ ok   who_depends_on         6 rows · 97.0 ms · cypher[1] · limitations[1]
+ ok   why_pulled_in          53 rows · 14765.0 ms · cypher[7] · limitations[1]
+ ok   find_public_victims    30 rows · limitations[1]
+ ok   cypher                 3 rows · 83.0 ms · cypher[1] · limitations[1]
+ ok   job_status             error: no such job
+all read-only tools answered (0 unexpected)
+```
+
+`watch_repository` is listed but never called by the smoke run — it would write to the graph. The
+`job_status` line is an expected failure: the script asks for a job id that does not exist to prove
+errors come back as readable results rather than as a crashed tool.

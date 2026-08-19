@@ -8,6 +8,7 @@ import { Evidence } from "@/components/landing/Evidence";
 import { Verdicts } from "@/components/landing/Verdicts";
 import { StatBand } from "@/components/landing/StatBand";
 import { HowItRuns } from "@/components/landing/HowItRuns";
+import { Agents } from "@/components/landing/Agents";
 import { Cta } from "@/components/landing/Cta";
 import { Footer } from "@/components/landing/Footer";
 
@@ -29,6 +30,7 @@ export default async function LandingPage() {
         <Verdicts dist={m.dist} />
         <StatBand band={m.band} />
         <HowItRuns />
+        <Agents />
         <Cta />
       </main>
       <Footer snapshot={m.snapshot} />

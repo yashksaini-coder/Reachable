@@ -2,12 +2,11 @@
   "mcpServers": {
     "reachable": {
       "command": ".venv/bin/python",
-      "args": [
-        "-m",
-        "reachable.mcp_server"
-      ],
+      "args": ["-m", "reachable.mcp_server"],
       "env": {
-        "PYTHONPATH": "worker"
+        "PYTHONPATH": "worker",
+        "REACHABLE_API_URL": "${REACHABLE_API_URL:-http://127.0.0.1:8787}",
+        "REACHABLE_API_KEY": "${REACHABLE_API_KEY:-}"
       }
     }
   }

@@ -217,13 +217,27 @@ export function Shell({ children }: { children: ReactNode }) {
   );
 }
 
+type Health = {
+  hydradb: string;
+  worker: string;
+  services: number | null;
+  incidents: number;
+};
+
 // The status chip is a status light, not a badge: a 7px --l0 dot with a soft ring blipping at 1Hz
-// (the only idle loop permitted), then `HydraDB up · N incidents` in 11px mono --mut. It polls
-// /api/health (a server-side probe) and never claims "up" from cached data.
+// (the only idle loop permitted), then the state in 11px mono --mut. It polls /api/health (a
+// server-side probe) and never claims "up" from cached data.
+//
+// Liveness comes from whichever route the deployment can actually observe. The worker's /health runs
+// a Cypher count, so a 200 proves the graph answered — that is the only proof available once the
+// node has no public port, which is the normal production shape. A deployment wired to neither is
+// serving committed reports on purpose: it reads `reports only` in --dim, never a verdict colour.
+// L2 red means something is wired up and not answering, and nothing else.
+//
+// Every label is kept under ~24 mono characters: the sidebar is 236px, and the old `HydraDB no
+// token · N incidents` (30) truncated mid-word.
 function Status() {
-  const [st, setSt] = useState<{ hydradb: string; incidents: number } | null>(
-    null,
-  );
+  const [st, setSt] = useState<Health | null>(null);
   useEffect(() => {
     let alive = true;
     const tick = async () => {
@@ -231,9 +245,15 @@ function Status() {
         const r = await fetch("/api/health", { cache: "no-store" });
         const j = await r.json();
         if (alive)
-          setSt({ hydradb: j.hydradb, incidents: (j.incidents ?? []).length });
+          setSt({
+            hydradb: j.hydradb,
+            worker: j.worker,
+            services: typeof j.services === "number" ? j.services : null,
+            incidents: (j.incidents ?? []).length,
+          });
       } catch {
-        if (alive) setSt({ hydradb: "down", incidents: 0 });
+        // The console itself did not answer; say nothing about the graph.
+        if (alive) setSt({ hydradb: "down", worker: "down", services: null, incidents: 0 });
       }
     };
     void tick();
@@ -243,41 +263,39 @@ function Status() {
       clearInterval(id);
     };
   }, []);
-  const up = st?.hydradb === "up";
-  const word =
+
+  const up = st != null && (st.worker === "up" || st.hydradb === "up");
+  const idle = st != null && !up && st.worker === "unconfigured" && st.hydradb === "unconfigured";
+  const label =
     st == null
-      ? "…"
+      ? "HydraDB …"
       : up
-        ? "up"
-        : st.hydradb === "unconfigured"
-          ? "no token"
-          : "down";
+        ? st.services != null
+          ? `HydraDB up · ${st.services} services`
+          : "HydraDB up"
+        : idle
+          ? "reports only"
+          : "HydraDB down";
+
   return (
     <div
       className="flex min-w-0 items-center gap-[9px] rounded-lg border border-border bg-card px-[11px] py-[9px]"
       role="status"
       aria-live="polite"
+      title={st ? `worker ${st.worker} · node ${st.hydradb} · ${st.incidents} incidents` : undefined}
     >
       <span
         aria-hidden
         className={cn(
           "size-[7px] shrink-0 rounded-full",
-          st == null
+          st == null || idle
             ? "bg-dim"
             : up
               ? "bg-l0 shadow-[0_0_0_3px_rgba(47,208,127,.14)] blip"
               : "bg-l2 shadow-[0_0_0_3px_rgba(255,92,92,.14)]",
         )}
       />
-      <span className="min-w-0 truncate font-mono text-[11px] leading-[1.3] text-mut">
-        HydraDB {word}
-        {st && (
-          <>
-            {" "}
-            · {st.incidents} incident{st.incidents === 1 ? "" : "s"}
-          </>
-        )}
-      </span>
+      <span className="min-w-0 truncate font-mono text-[11px] leading-[1.3] text-mut">{label}</span>
     </div>
   );
 }

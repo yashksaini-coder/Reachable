@@ -60,7 +60,9 @@ real and lets HydraDB do the walking.
   every number server-rendered true and never estimated; live pages degrade to designed
   states, API errors surface as toasts, unknown routes get a designed 404.
 - **An MCP server** (`worker/reachable/mcp_server.py`) exposing twelve tools so Claude Code,
-  Codex, OpenCode, Cursor or Copilot can ask the graph the same questions.
+  Codex, OpenCode, Cursor or Copilot can ask the graph the same questions — every graph answer
+  carrying the statement that produced it, and the one tool that writes annotated as such.
+  `scripts/mcp_smoke.py` drives all eleven read-only tools against a running worker.
 - **A badge** (`/badge/{owner}/{repo}.svg`) for READMEs, and **Export PDF** on every report
   (`?print=1` expands every statement; the browser's print dialog saves the page as PDF — see
   `docs/console/using.md`).

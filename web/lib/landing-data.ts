@@ -296,3 +296,20 @@ export const RUNS = [
     body: 'An MCP server exposes the same questions to Claude Code, Codex, Cursor and others, so an answer arrives where the fix is written.',
   },
 ];
+
+// The twelve MCP tools, in the order a responder reaches for them. Names are the wire names — what
+// an agent actually calls — so this list is checkable against `worker/tests/test_mcp.py`.
+export const MCP_TOOLS: { name: string; body: string; writes?: boolean }[] = [
+  { name: 'exposed_services', body: 'which watched services resolved an affected version' },
+  { name: 'resolved_while_live', body: 'which committed the pin while it was still installable' },
+  { name: 'affected_versions', body: 'the versions, the removal and the installable window' },
+  { name: 'maintainer_fanout', body: 'what else the same maintainers publish' },
+  { name: 'typosquats', body: 'names within one edit, by kind and distance' },
+  { name: 'why_pulled_in', body: 'the dependency chain that put it in the tree' },
+  { name: 'who_depends_on', body: 'which services pin an exact version' },
+  { name: 'list_services', body: 'the watched registry and its latest commits' },
+  { name: 'job_status', body: 'progress and log of an ingest' },
+  { name: 'find_public_victims', body: 'public repos pinning an affected version today' },
+  { name: 'cypher', body: 'any read-only statement against the graph' },
+  { name: 'watch_repository', body: 'start watching a repository', writes: true },
+];
