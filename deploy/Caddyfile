@@ -1,6 +1,10 @@
 # HTTPS for the worker API. API_HOST is e.g. api.203.0.113.10.sslip.io (free, IP-based) or your domain.
 {$API_HOST} {
 	encode zstd gzip
+	# MCP over HTTP: clients connect with a URL and a bearer key, nothing to clone.
+	handle /mcp* {
+		reverse_proxy mcp:8788
+	}
 	reverse_proxy worker:8787
 	header {
 		-Server

@@ -13,6 +13,7 @@ OpenCode, Cursor, Copilot. Point REACHABLE_API_URL elsewhere if the worker is no
 
 from __future__ import annotations
 
+import contextvars
 import logging
 import os
 
@@ -23,6 +24,9 @@ from mcp.types import ToolAnnotations
 from reachable.dotenv import load_dotenv
 
 logging.getLogger("httpx").setLevel(logging.WARNING)  # stdio transport: keep the pipes quiet
+
+# Set per request by the hosted transport. Empty over stdio, where the process key applies.
+CALLER_KEY: contextvars.ContextVar[str] = contextvars.ContextVar("caller_key", default="")
 # The client launches this directly and inherits no shell exports; without this a key in .env is
 # silently ignored and every tool 401s.
 load_dotenv()
@@ -59,8 +63,10 @@ mcp = MCPServer(
 def _send(method: str, path: str, **kw) -> dict:
     """One worker call. Failures come back as readable results — a raised tool says only that
     something broke."""
+    caller = CALLER_KEY.get()
+    headers = {"Authorization": f"Bearer {caller}"} if caller else None
     try:
-        r = _c.request(method, path, **kw)
+        r = _c.request(method, path, headers=headers, **kw)
     except httpx.RequestError as e:
         return {
             "error": (

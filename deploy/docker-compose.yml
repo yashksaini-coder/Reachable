@@ -53,6 +53,23 @@ services:
     volumes:
       - worker-cache:/app/.cache
 
+  # Same image, different entrypoint: MCP over HTTP so a client needs only a URL and a key.
+  # It holds no authority of its own — each call relays with the caller's key.
+  mcp:
+    build:
+      context: ..
+      dockerfile: worker/Dockerfile
+    restart: unless-stopped
+    depends_on: [worker]
+    command: ["python", "-u", "-m", "reachable.mcp_http"]
+    mem_limit: 512m
+    memswap_limit: 512m
+    environment:
+      REACHABLE_API_URL: http://worker:8787
+      REACHABLE_API_KEY: ${REACHABLE_API_KEY}
+      REACHABLE_MCP_HOST: 0.0.0.0
+      REACHABLE_MCP_PORT: "8788"
+
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
@@ -67,6 +84,7 @@ services:
       - caddy-config:/config
     depends_on:
       - worker
+      - mcp
 
 volumes:
   worker-cache:
