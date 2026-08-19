@@ -233,7 +233,7 @@ export default async function IncidentPage({ params }: PageProps<"/incident/[adv
                           <Level level={level(svc)} />
                         </td>
                         <td className="num">{rows.length}</td>
-                        <td className="font-mono !text-[12.5px]">{latest.via ? `${short(latest.via)} · ${latest.hops} hop${latest.hops === 1 ? "" : "s"}` : "direct dependency"}</td>
+                        <td className="font-mono !text-[12.5px]">{latest.hops === null ? "— not computed" : latest.via ? `${short(latest.via)} · ${latest.hops} hop${latest.hops === 1 ? "" : "s"}` : "direct dependency"}</td>
                         <td className="font-mono !text-[12.5px]">
                           {latest.sha.slice(0, 7)} · {epoch(latest.committed_at)}
                         </td>

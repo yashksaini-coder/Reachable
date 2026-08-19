@@ -38,7 +38,7 @@ const linkCls =
 const CARD = "overflow-hidden rounded-xl border border-border bg-card elev";
 const CARD_HEAD = "flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-line px-[18px] py-3.5";
 const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? "" : "s"}`;
-const hops = (n: number) => (n === 0 ? "direct" : plural(n, "hop"));
+const hops = (n: number | null) => (n === null ? "— not computed" : n === 0 ? "direct" : plural(n, "hop"));
 
 export default async function ServicePage({ params }: PageProps<"/incident/[advisory]/[...service]">) {
   const { advisory, service } = await params;
@@ -113,7 +113,9 @@ export default async function ServicePage({ params }: PageProps<"/incident/[advi
             </div>
             {r.paths.length === 0 ? (
               <div className="p-[18px] font-mono text-[12px] leading-[1.5] text-dim [overflow-wrap:anywhere]">
-                direct RESOLVED edge to {r.bad_versions.map(short).join(", ")} (no explanation path requested)
+                {r.hops === null
+                  ? `resolved ${r.bad_versions.map(short).join(", ")} — proof path not computed (past this report\u2019s path budget); membership is exact`
+                  : `direct RESOLVED edge to ${r.bad_versions.map(short).join(", ")} (no explanation path requested)`}
               </div>
             ) : (
               /* the chain scrolls inside its card; a fade at the right edge hints there is more */

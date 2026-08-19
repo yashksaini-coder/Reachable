@@ -32,6 +32,27 @@ def test_q1_exposed_services(s):
     assert r.cypher and "RESOLVED" in r.cypher[0]  # executed statement is carried for the UI
 
 
+def test_q1_explanation_budget_never_claims_direct(s, monkeypatch):
+    """Past the path budget a row must read "not computed", never hops=0.
+
+    hops=0 renders as "direct dependency" in the report, the board and the service page. Saying
+    that about a path the engine never walked would be a fabricated claim about evidence — the one
+    thing this console is not allowed to do. Membership stays exact for every row either way.
+    """
+    monkeypatch.setattr(queries, "EXPLAIN_PATH_BUDGET", 1)
+    r = queries.q1_exposed_services(s, [BAD])
+    assert len(r.rows) > 1, "fixture needs >1 exposed lockfile to exercise the budget"
+    explained = [row for row in r.rows if row["hops"] is not None]
+    capped = [row for row in r.rows if row["hops"] is None]
+    assert explained and capped, "budget of 1 should explain some rows and cap the rest"
+    for row in capped:
+        assert row["via"] is None and row["paths"] == []
+    # membership is untouched by the budget
+    full = queries.q1_exposed_services(s, [BAD])
+    assert {row["lockfile"] for row in r.rows} == {row["lockfile"] for row in full.rows}
+    assert any("not computed" in lim for lim in r.limitations)
+
+
 def test_q1_multi_source(s):
     # Both bad and clean version: clean 5.6.0 is resolved by api only.
     r = queries.q1_exposed_services(s, [BAD, "pkg:fx/chalk@5.6.0"], explain=False)

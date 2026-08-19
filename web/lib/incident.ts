@@ -29,7 +29,7 @@ export type ExposedRow = {
   committed_at: number;
   resolved_at: number;
   bad_versions: string[];
-  hops: number;
+  hops: number | null; // null = proof path not computed (past the Q1 budget) — never 0, which means "direct"
   via: string | null;
   paths: { bad: string; chain: string[]; hops: number }[];
 };

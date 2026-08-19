@@ -19,7 +19,7 @@ type Card = {
   latestSha: string;
   latestAt: number;
   via: string | null;
-  hops: number;
+  hops: number | null;
 };
 
 // Lane colours are verdict colours at 100% (2px top rule + count), never alpha tints.
@@ -112,7 +112,7 @@ export default async function Board() {
               advisory: c.advisory,
               level: c.level,
               whileLive: c.whileLive,
-              via: c.via ? `${short(c.via)} · ${c.hops} hop${c.hops === 1 ? "" : "s"}` : "direct",
+              via: c.hops === null ? "— not computed" : c.via ? `${short(c.via)} · ${c.hops} hop${c.hops === 1 ? "" : "s"}` : "direct",
               sha: c.latestSha.slice(0, 7),
               time: fmtUtc(new Date(c.latestAt * 1000).toISOString()),
               lockfiles: c.lockfiles,

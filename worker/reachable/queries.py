@@ -81,6 +81,9 @@ def q2_affected_versions(s, advisory_key: str) -> Result:
 
 # ---------------------------------------------------------------- Q1 · who is exposed
 
+# SPpaths calls one Q1 answer may spend on explanations. Membership is never capped.
+EXPLAIN_PATH_BUDGET = 60
+
 
 def q1_exposed_services(s, bad_version_keys: list[str], *, explain: bool = True) -> Result:
     """Which services are transitively exposed, with the path that proves it.
@@ -106,13 +109,28 @@ def q1_exposed_services(s, bad_version_keys: list[str], *, explain: bool = True)
     if explain and hits:
         # One SPpaths call per (bad, lockfile): bounded, integer-id parameters, pathCount 3 keeps
         # the direct RESOLVED edge plus up to two DEPENDS_ON chains as the human explanation.
+        #
+        # That product is the whole cost of Q1, and it explodes on a wide advisory: nanoid
+        # <3.3.18 (GHSA-2v37-7h3g-55p8) matches 118 published versions, and nanoid is a transitive
+        # dependency of nearly everything, so the pairs run into the hundreds and the query stops
+        # returning at all. Membership stays exact for every lockfile — that is one hop and cheap.
+        # Only the explanation is budgeted, newest commits first, because the most recent lockfile
+        # is the one a responder acts on. Past the budget hops is None, never 0: 0 means "direct
+        # dependency", and claiming that about a path we never walked would be a false statement.
         q = (
             "CALL algo.SPpaths({sourceNode: $src, targetNode: $dst, relTypes: ['DEPENDS_ON', 'RESOLVED'], "
             "relDirection: 'incoming', maxLen: 9, pathCount: 3}) YIELD path RETURN path"
         )
-        for h in hits.values():
+        spent = 0
+        explained = 0
+        for h in sorted(hits.values(), key=lambda d: -(d["committed_at"] or 0)):
             h["paths"] = []
+            if explained and spent + len(h["bad_versions"]) > EXPLAIN_PATH_BUDGET:
+                h["hops"] = None
+                h["via"] = None
+                continue
             for key in h["bad_versions"]:
+                spent += 1
                 for row in _run(s, res, q, src=_int(gid(key)), dst=_int(h["lid"])):
                     chain = _pathkeys(row["path"])
                     h["paths"].append(
@@ -120,9 +138,16 @@ def q1_exposed_services(s, bad_version_keys: list[str], *, explain: bool = True)
                     )
             h["hops"] = min((p["hops"] for p in h["paths"]), default=0)
             h["via"] = next((p["chain"][2] for p in h["paths"] if p["hops"] > 0), None)
+            explained += 1
+        if explained < len(hits):
+            res.limitations.append(
+                f"Proof paths computed for the {explained} most recently committed of "
+                f"{len(hits)} exposed lockfiles; the rest read “— not computed”. "
+                "Membership is exact for all of them."
+            )
     for h in hits.values():
         h.pop("lid", None)
-        h.setdefault("hops", 0)
+        h.setdefault("hops", 0)  # explain=False: caller asked for membership only
         h.setdefault("paths", [])
         h.setdefault("via", None)
     res.rows = sorted(hits.values(), key=lambda d: (d["service"], -d["committed_at"]))
