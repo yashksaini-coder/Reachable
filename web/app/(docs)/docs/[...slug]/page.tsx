@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CodeBlock } from "@/components/docs/code-block";
 import { notFound } from "next/navigation";
 import { DOCS, renderDoc, type Marker } from "@/lib/docs";
 import { DIAGRAMS, Missing } from "@/components/docs/diagrams";
@@ -81,6 +82,7 @@ export default async function DocPage({ params }: PageProps<"/docs/[...slug]">) 
 
 // One interleaved block: a diagram, the executed statement(s) of a report section, or a figure.
 function Block({ m }: { m: Marker }) {
+  if (m.kind === "code") return <CodeBlock lang={m.lang} text={m.text} />;
   if (m.kind === "diagram") {
     const D = DIAGRAMS[m.name];
     return (

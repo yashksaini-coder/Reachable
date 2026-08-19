@@ -283,6 +283,12 @@
     border-radius: 8px;
     border: 3px solid var(--color-bg);
   }
+
+/* Inside a code block the track is --code, so the thumb's inset border must match it or the
+   scrollbar reads as a seam. */
+.doc-code::-webkit-scrollbar-thumb {
+  border-color: var(--color-code);
+}
   ::-webkit-scrollbar-track {
     background: transparent;
   }

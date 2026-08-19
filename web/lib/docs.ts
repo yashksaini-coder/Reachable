@@ -27,6 +27,7 @@ export const DOCS: readonly DocEntry[] = [
 const ROOT = path.resolve(process.cwd(), "..");
 
 export type Marker =
+  | { kind: "code"; lang: string; text: string }
   | { kind: "diagram"; name: string }
   | { kind: "cypher"; section: string; statements: string[] }
   | { kind: "figure"; file: string; caption: string; exists: boolean; kindOf: "gif" | "png" | "other" };
@@ -63,6 +64,13 @@ export async function renderDoc(slug: string): Promise<Rendered | null> {
 
   // Block markers: pull them out, render markdown around them, then interleave React parts.
   const blocks: Marker[] = [];
+
+  // Fenced code goes the same way. marked would emit <pre><code class="language-x"> into
+  // dangerouslySetInnerHTML, where a copy button cannot be wired — as a marker it is real React.
+  md = md.replace(/^```([a-zA-Z0-9_-]*)\n([\s\S]*?)^```\s*$/gm, (_m, lang: string, body: string) => {
+    blocks.push({ kind: "code", lang: (lang || "text").toLowerCase(), text: body.replace(/\n$/, "") });
+    return `\n\n<!--MARKER:${blocks.length - 1}-->\n\n`;
+  });
   md = md.replace(/^\{\{(diagram|cypher|figure):([^}]+)\}\}\s*$/gm, (_m, kind: string, arg: string) => {
     let marker: Marker;
     if (kind === "diagram") marker = { kind: "diagram", name: arg.trim() };

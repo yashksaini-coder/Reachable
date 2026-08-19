@@ -71,18 +71,26 @@ Two things that are easy to get wrong:
 - The virtualenv is needed only for `mcp` and `httpx` — no graph driver, no HydraDB in the client.
   All the computation happens in the worker, and all the traversal inside HydraDB.
 
-**Against a worker that is not yours** — a deployed one, or a colleague's — set the URL and the key
-its operator gave you. Everything else is identical:
+**Against a worker that is not yours** — a deployed one, or a colleague's — you need a key, and you
+can issue yourself one: **[generate a key](/keys)** in the console, name it, and copy the
+`.mcp.json` it hands back with the URL and key already filled in.
 
-```bash
-export REACHABLE_API_URL=https://api.<ip>.sslip.io
-export REACHABLE_API_KEY=…        # from deploy/.env on that VM
-```
+What you get is deliberately weaker than the operator's own key:
+
+| | |
+|---|---|
+| scope | read-only — the graph answers, but the key cannot add a repository or start an ingest |
+| lifetime | 7 days, then it stops working on its own |
+| rate | 5 keys an hour per client, 200 active on a worker |
+| at rest | stored as a sha256 digest, so a leaked key file yields nothing usable |
+
+That is why issuing them can be self-serve: a minted key reads a graph built from public
+repositories and public advisories, and can spend nothing.
 
 The key may live in `.env` or in the client's `env` block; what does not work is a shell export when
 the client is launched from a desktop app that inherits no shell. Without a key against a worker
 that wants one, every tool returns `missing or invalid API key` as a readable result rather than
-failing the call.
+failing the call — and a read-only key used on a write returns the same, rather than a crash.
 
 ### Verifying it
 
