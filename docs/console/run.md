@@ -75,7 +75,10 @@ Any client that speaks HTTP MCP takes the same two facts — a URL and a header:
 ```
 
 The key you generate is read-only, expires after 7 days, is rate-limited to 5 an hour per client and
-is stored only as a sha256 digest. It reads the graph and cannot write: `watch_repository` is the one
+is stored only as a sha256 digest. You can end one early from the same page — **Revoke** on the key
+card, or `DELETE /keys` with the key itself as the bearer token, since holding it is the proof it is
+yours to revoke. A revoked key stops authenticating on the next request, over HTTP MCP as well as
+over the API. Revoking does not refund the hourly minting budget. It reads the graph and cannot write: `watch_repository` is the one
 tool that writes, and a read-only key is refused on it. The hosted server holds no authority of its
 own — it relays each call with *your* key, so the same guard that protects the API decides.
 

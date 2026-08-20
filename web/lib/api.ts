@@ -83,7 +83,12 @@ export type GraphStats = {
 
 // Plain JSON round-trip; the caller decides how to degrade. Throws only on network/timeout.
 async function json<T>(path: string, init?: RequestInit & { timeoutMs?: number }): Promise<{ status: number; body: T }> {
-  const r = await fetch(`${API}${path}`, { cache: "no-store", signal: AbortSignal.timeout(init?.timeoutMs ?? 10_000), ...init, headers: { ...AUTH, ...(init?.headers as Record<string, string> | undefined) } });
+  // Headers, not an object spread: header names are case-insensitive on the wire but distinct keys
+  // in an object, so a caller's `Authorization` would sit *beside* the default `authorization`
+  // instead of replacing it — and the caller's intent would silently lose.
+  const headers = new Headers(AUTH);
+  for (const [k, v] of Object.entries((init?.headers as Record<string, string>) ?? {})) headers.set(k, v);
+  const r = await fetch(`${API}${path}`, { cache: "no-store", signal: AbortSignal.timeout(init?.timeoutMs ?? 10_000), ...init, headers });
   return { status: r.status, body: (await r.json().catch(() => ({}))) as T };
 }
 
@@ -124,6 +129,19 @@ export type MintedKey = { token?: string; name?: string; scope?: string; ttl_day
 export async function mintKey(name: string): Promise<{ status: number; body: MintedKey }> {
   try {
     return await json<MintedKey>("/keys", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name }) });
+  } catch {
+    return { status: 503, body: { error: "the worker did not answer" } };
+  }
+}
+
+/** Revoke a minted key. The caller's own token is the proof of ownership, so it goes on the wire
+ *  instead of the operator key — this is the one write a read-only key is allowed to make. */
+export async function revokeKey(token: string): Promise<{ status: number; body: { revoked?: boolean; error?: string } }> {
+  try {
+    return await json<{ revoked?: boolean; error?: string }>("/keys", {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
   } catch {
     return { status: 503, body: { error: "the worker did not answer" } };
   }

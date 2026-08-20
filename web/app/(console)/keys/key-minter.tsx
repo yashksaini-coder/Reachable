@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Eye, EyeOff, KeyRound } from "lucide-react";
+import { Eye, EyeOff, KeyRound, Trash2 } from "lucide-react";
 import { Copy } from "@/components/console/copy";
 import { useToast } from "@/components/console/toast";
 import { KEY_HEAD, KEY_TAIL, maskToken, mcpConfig } from "@/lib/mcp";
@@ -46,6 +46,9 @@ function settle(text: string, p: number): string {
   return out;
 }
 
+const ACTION =
+  "inline-flex h-10 shrink-0 items-center justify-center rounded-md border border-border px-3 text-[12.5px] font-medium leading-none text-mut transition-[color,background-color,border-color,transform] duration-[180ms] ease-[var(--ease)] hover:bg-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50 active:scale-[0.97]";
+
 export function KeyMinter({
   endpoint,
   revealed = false,
@@ -55,11 +58,14 @@ export function KeyMinter({
   endpoint: string;
   revealed?: boolean;
   onReveal?: (next: boolean) => void;
-  onMinted?: (token: string) => void;
+  onMinted?: (token: string | undefined) => void;
 }) {
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [key, setKey] = useState<Minted | null>(null);
+  const [confirming, setConfirming] = useState(false);
+  const [revoking, setRevoking] = useState(false);
+  const [revoked, setRevoked] = useState<string | null>(null);
   const toast = useToast();
 
   const progress = useSettle(key?.token);
@@ -74,6 +80,8 @@ export function KeyMinter({
       const b = (await r.json().catch(() => ({}))) as Minted & { error?: string };
       if (r.ok && b.token) {
         setKey(b);
+        setRevoked(null);
+        setConfirming(false);
         onReveal?.(false);
         onMinted?.(b.token);
         toast.done("key generated", `read-only · expires in ${b.ttl_days} days · shown once`);
@@ -84,6 +92,31 @@ export function KeyMinter({
       toast.error("live data unavailable", "the graph did not answer — try again in a moment");
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function revoke() {
+    if (!key) return;
+    setRevoking(true);
+    try {
+      const r = await fetch("/api/keys", { method: "DELETE", headers: { Authorization: `Bearer ${key.token}` } });
+      const b = (await r.json().catch(() => ({}))) as { revoked?: boolean; error?: string };
+      if (r.ok) {
+        setRevoked(maskToken(key.token));
+        setKey(null);
+        setConfirming(false);
+        onMinted?.(undefined);
+        // Only `revoked: true` is us having ended it. `false` means the worker found nothing live to
+        // end, which is still the outcome asked for — but say which happened rather than claim both.
+        if (b.revoked) toast.done("key revoked", "it stopped working immediately");
+        else toast.error("nothing to revoke", "that key was no longer live — it had already expired");
+      } else {
+        toast.error("could not revoke the key", b.error ?? `HTTP ${r.status}`);
+      }
+    } catch {
+      toast.error("live data unavailable", "the worker did not answer — the key is still live");
+    } finally {
+      setRevoking(false);
     }
   }
 
@@ -158,6 +191,50 @@ export function KeyMinter({
               saving. Nothing here is stored in your browser: leave the page and the key is gone, so copy it now.
             </p>
           </div>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-[18px] py-3">
+            {confirming ? (
+              <>
+                <span className="min-w-0 flex-1 text-[12.5px] leading-[1.5] text-fg">
+                  Revoke it? Any client using this key stops being able to read the graph, at once and for good.
+                </span>
+                <span className="flex shrink-0 gap-2">
+                  <button type="button" className={ACTION} onClick={() => setConfirming(false)} disabled={revoking}>
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={revoke}
+                    disabled={revoking}
+                    className={cn(ACTION, "border-fg/35 text-fg hover:border-fg/60", revoking && "pointer-events-none opacity-60")}
+                  >
+                    <Trash2 className="mr-2 size-3.5" aria-hidden />
+                    {revoking ? "revoking…" : "Revoke key"}
+                  </button>
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="min-w-0 flex-1 text-[12.5px] leading-[1.5] text-dim">
+                  Finished with it, or pasted it somewhere it should not have gone?
+                </span>
+                <button type="button" className={ACTION} onClick={() => setConfirming(true)}>
+                  Revoke
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {!key && revoked && (
+        <div className={CARD}>
+          <div className={HEAD}>
+            <span className="label">key revoked</span>
+          </div>
+          <p className="p-[18px] text-[12.5px] leading-[1.6] text-dim">
+            <span className="font-mono text-[12px] text-signal-2">{revoked}</span> no longer reads anything. A client still
+            holding it now gets the same refusal as a stranger. Generate another above whenever you need one.
+          </p>
         </div>
       )}
     </div>

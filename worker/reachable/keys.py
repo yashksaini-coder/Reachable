@@ -110,6 +110,26 @@ def touch(token: str) -> None:
         pass
 
 
+def revoke(token: str) -> bool:
+    """Drop a token now instead of waiting out its TTL. True if it was live until this call.
+
+    The mint ledger is deliberately left alone: revoking must not refund the rate limit, or
+    mint-revoke-mint would be an unbounded minting loop wearing a legitimate-looking hat.
+    """
+    if not token:
+        return False
+    h = _hash(token)
+    now = time.time()
+    with _LOCK:
+        d = _load()
+        rec = d["keys"].get(h)
+        if rec is None or not _live(rec, now):
+            return False
+        del d["keys"][h]
+        _save(d)
+    return True
+
+
 def stats() -> dict:
     now = time.time()
     d = _load()

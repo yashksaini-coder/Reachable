@@ -8,6 +8,9 @@ Endpoints (JSON):
   POST /services/add  {"repo": ...}    -> 202 {job_id}; 400 bad slug; 409 already queued/running
   GET  /jobs · /jobs/<id>              ingest job records (jobs.py; status incl. `interrupted`)
   POST /jobs/<id>/retry                re-submit that job's repo -> 202 {job_id}; 404; 409
+  POST /keys  {"name": ...}            mint a read-only key (open; rate-limited) -> 201; 429
+  GET  /keys                           key-store stats
+  DELETE /keys                         revoke the bearer token presented -> 200 {"revoked": bool}
   GET  /graph/stats                    node counts per label (null when admission control refuses)
                                        + edge counts summed from job records (never scanned)
   /ask/exposed?advisory=<id>[&service=<owner/repo>]      Q1 membership + proving paths
@@ -555,6 +558,19 @@ class Handler(BaseHTTPRequestHandler):
                 409, {"error": "a job for this repo is queued or running", "job_id": str(e)}
             )
         return self._json(202, {"job_id": job.job_id, "repo": repo})
+
+    def do_DELETE(self):
+        u = urlparse(self.path)
+        if u.path == "/keys":
+            # A key revokes itself. Holding the token is the proof of ownership, so this needs no
+            # scope of its own — and it is the one write a read-only key is allowed to make.
+            tok = self._bearer()
+            if not tok:
+                return self._json(401, {"error": "send the key to revoke as a bearer token"})
+            # Same 200 either way: a caller who already holds the token learns nothing from the
+            # boolean, and an invalid one gets no oracle telling it what exists.
+            return self._json(200, {"revoked": keys.revoke(tok)})
+        return self._json(404, {"error": "not found"})
 
     def do_GET(self):
         u = urlparse(self.path)

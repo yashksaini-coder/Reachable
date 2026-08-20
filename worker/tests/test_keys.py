@@ -58,3 +58,27 @@ def test_active_count_is_reported():
     keys.mint("b", "1.1.1.1")
     s = keys.stats()
     assert s["active"] == 2 and s["scope"] == "read" and s["ttl_days"] == keys.TTL_DAYS
+
+
+def test_revoking_stops_a_key_immediately():
+    rec = keys.mint("laptop", "1.2.3.4")
+    assert keys.check(rec["token"]) is not None
+    assert keys.revoke(rec["token"]) is True
+    assert keys.check(rec["token"]) is None, "a revoked key must not authenticate"
+    assert keys.stats()["active"] == 0
+
+
+def test_revoking_is_idempotent_and_safe_on_junk():
+    rec = keys.mint("laptop", "1.2.3.4")
+    assert keys.revoke(rec["token"]) is True
+    assert keys.revoke(rec["token"]) is False, "a second revoke reports nothing was live"
+    assert keys.revoke("rk_not_a_real_key") is False
+    assert keys.revoke("") is False
+
+
+def test_revoking_does_not_refund_the_mint_budget():
+    """Otherwise mint-revoke-mint is an unbounded minting loop."""
+    for _ in range(keys.PER_CLIENT_HOUR):
+        keys.revoke(keys.mint("x", "9.9.9.9")["token"])
+    with pytest.raises(keys.Refused):
+        keys.mint("x", "9.9.9.9")
