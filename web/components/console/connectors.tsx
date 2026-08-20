@@ -3,7 +3,7 @@
 import { Bot, Braces, Check, type LucideIcon, MousePointerClick, Terminal } from "lucide-react";
 import { CARD, HEAD, PRE } from "@/app/(console)/keys/key-minter";
 import { Copy } from "@/components/console/copy";
-import { CLIENTS, claudeAdd, mcpConfig } from "@/lib/mcp";
+import { CLIENTS, claudeAdd, maskToken, mcpConfig } from "@/lib/mcp";
 import { cn } from "@/lib/utils";
 
 // Original marks, not vendor logos — the repo carries no third-party trademarks and redrawing them
@@ -15,9 +15,11 @@ const MARK: Record<string, { Icon: LucideIcon; plate: string }> = {
   cursor: { Icon: MousePointerClick, plate: "rounded-[14px_4px_14px_4px] border-border bg-card2 text-fg" },
 };
 
-export function Connectors({ endpoint, token }: { endpoint: string; token?: string }) {
-  const config = mcpConfig({ endpoint, token });
-  const oneLiner = claudeAdd({ endpoint, token });
+export function Connectors({ endpoint, token, revealed = false }: { endpoint: string; token?: string; revealed?: boolean }) {
+  // Printed masked, copied whole — the same key is on screen twice and both halves must agree.
+  const shown = token && !revealed ? maskToken(token) : token;
+  const config = mcpConfig({ endpoint, token: shown });
+  const oneLiner = claudeAdd({ endpoint, token: shown });
   const url = endpoint;
 
   return (
@@ -71,14 +73,14 @@ export function Connectors({ endpoint, token }: { endpoint: string; token?: stri
         <div>
           <div className="label mb-2 flex items-center justify-between gap-3">
             <span>the config — identical for every client</span>
-            <Copy text={config} label="copy config" />
+            <Copy text={mcpConfig({ endpoint, token })} label="copy config" />
           </div>
           <pre className={PRE}>{config}</pre>
         </div>
         <div>
           <div className="label mb-2 flex items-center justify-between gap-3">
             <span>or, for Claude Code, one command</span>
-            <Copy text={oneLiner} label="copy command" />
+            <Copy text={claudeAdd({ endpoint, token })} label="copy command" />
           </div>
           <pre className={PRE}>{oneLiner}</pre>
         </div>

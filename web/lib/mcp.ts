@@ -33,6 +33,17 @@ export function mcpUrl(apiUrl: string, override?: string): string {
   return (override ?? `${apiUrl.replace(/\/+$/, "")}/mcp`).replace(/\/+$/, "");
 }
 
+/** How much of a key stays legible when it is masked: enough to recognise, not enough to use. */
+export const KEY_HEAD = 7;
+export const KEY_TAIL = 4;
+
+/** Display form of a minted key. Copy controls always send the real value — this is for the screen,
+ *  which may well be a shared one. */
+export function maskToken(token: string): string {
+  if (token.length <= KEY_HEAD + KEY_TAIL + 4) return token;
+  return token.slice(0, KEY_HEAD) + "\u2022".repeat(token.length - KEY_HEAD - KEY_TAIL) + token.slice(-KEY_TAIL);
+}
+
 /** The config block, with a real token when one has just been minted and a placeholder otherwise. */
 export function mcpConfig({ endpoint, token }: { endpoint: string; token?: string }): string {
   return JSON.stringify(

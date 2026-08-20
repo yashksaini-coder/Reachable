@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { KeyRound } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Eye, EyeOff, KeyRound } from "lucide-react";
 import { Copy } from "@/components/console/copy";
 import { useToast } from "@/components/console/toast";
-import { mcpConfig } from "@/lib/mcp";
+import { KEY_HEAD, KEY_TAIL, maskToken, mcpConfig } from "@/lib/mcp";
 import { cn } from "@/lib/utils";
 
 type Minted = { token: string; name: string; ttl_days: number };
@@ -13,13 +13,58 @@ export const CARD = "elev overflow-hidden rounded-xl border border-border bg-car
 export const HEAD = "flex h-12 shrink-0 items-center justify-between border-b border-line px-[18px]";
 export const PRE = "m-0 overflow-x-auto rounded-md border border-border bg-code p-3 font-mono text-[12.5px] leading-[1.65] text-signal-2";
 
-export function KeyMinter({ endpoint, onMinted }: { endpoint: string; onMinted?: (token: string) => void }) {
+const SETTLE_MS = 900;
+const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+
+/** 0 → 1 once per minted key. The key arrives as noise and resolves left to right, so a viewer sees
+ *  it being made rather than finding it already there. Reduced motion gets the settled value. */
+function useSettle(trigger: string | undefined): number {
+  const [p, setP] = useState(1);
+  useEffect(() => {
+    if (!trigger) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setP(1);
+      return;
+    }
+    setP(0);
+    const start = performance.now();
+    let raf = requestAnimationFrame(function tick(now: number) {
+      const q = Math.min(1, (now - start) / SETTLE_MS);
+      setP(q);
+      if (q < 1) raf = requestAnimationFrame(tick);
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [trigger]);
+  return p;
+}
+
+function settle(text: string, p: number): string {
+  if (p >= 1) return text;
+  const done = Math.round(p * text.length);
+  let out = text.slice(0, done);
+  for (let i = done; i < text.length; i++) out += ALPHABET[(Math.random() * ALPHABET.length) | 0];
+  return out;
+}
+
+export function KeyMinter({
+  endpoint,
+  revealed = false,
+  onReveal,
+  onMinted,
+}: {
+  endpoint: string;
+  revealed?: boolean;
+  onReveal?: (next: boolean) => void;
+  onMinted?: (token: string) => void;
+}) {
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [key, setKey] = useState<Minted | null>(null);
   const toast = useToast();
 
-  const mcpJson = key ? mcpConfig({ endpoint, token: key.token }) : "";
+  const progress = useSettle(key?.token);
+  const shownToken = key ? (revealed ? key.token : maskToken(key.token)) : "";
+  const chars = settle(shownToken, progress);
 
   async function mint(e: React.FormEvent) {
     e.preventDefault();
@@ -29,6 +74,7 @@ export function KeyMinter({ endpoint, onMinted }: { endpoint: string; onMinted?:
       const b = (await r.json().catch(() => ({}))) as Minted & { error?: string };
       if (r.ok && b.token) {
         setKey(b);
+        onReveal?.(false);
         onMinted?.(b.token);
         toast.done("key generated", `read-only · expires in ${b.ttl_days} days · shown once`);
       } else {
@@ -80,20 +126,36 @@ export function KeyMinter({ endpoint, onMinted }: { endpoint: string; onMinted?:
         <div className={CARD}>
           <div className={HEAD}>
             <span className="label">your key — shown once</span>
-            <Copy text={key.token} label="copy key" />
+            <span className="inline-flex shrink-0 items-center gap-2">
+              <button
+                type="button"
+                onClick={() => onReveal?.(!revealed)}
+                aria-pressed={revealed}
+                aria-label={revealed ? "hide the key" : "reveal the key"}
+                title={revealed ? "hide the key" : "reveal the key"}
+                className="inline-flex size-10 shrink-0 items-center justify-center rounded-md border border-border text-mut transition-[color,background-color,transform] duration-[180ms] ease-[var(--ease)] hover:bg-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50 active:scale-[0.97]"
+              >
+                {revealed ? <EyeOff className="size-3.5" aria-hidden /> : <Eye className="size-3.5" aria-hidden />}
+              </button>
+              <Copy text={key.token} label="copy key" />
+            </span>
           </div>
           <div className="flex flex-col gap-4 p-[18px]">
-            <pre className={PRE}>{key.token}</pre>
+            <pre className={cn(PRE, "text-[13px] tracking-[0.02em]")} aria-label="your generated key">
+              <span>{chars.slice(0, KEY_HEAD)}</span>
+              <span className={revealed ? undefined : "text-dim"}>{chars.slice(KEY_HEAD, chars.length - KEY_TAIL)}</span>
+              <span>{chars.slice(chars.length - KEY_TAIL)}</span>
+            </pre>
             <div>
-              <div className="label mb-2 flex items-center justify-between">
+              <div className="label mb-2 flex items-center justify-between gap-3">
                 <span>drop this wherever your client keeps its MCP servers</span>
-                <Copy text={mcpJson} label="copy config" />
+                <Copy text={mcpConfig({ endpoint, token: key.token })} label="copy config" />
               </div>
-              <pre className={PRE}>{mcpJson}</pre>
+              <pre className={PRE}>{mcpConfig({ endpoint, token: shownToken })}</pre>
             </div>
             <p className="text-[12.5px] leading-[1.6] text-dim">
-              Restart your client after saving. Nothing here is stored in your browser — leave the page and the key is gone,
-              so copy it now.
+              Masked so it survives a shared screen — the copy buttons always send the whole key. Restart your client after
+              saving. Nothing here is stored in your browser: leave the page and the key is gone, so copy it now.
             </p>
           </div>
         </div>
