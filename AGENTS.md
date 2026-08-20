@@ -16,7 +16,7 @@ differentiator — which of those exposures are *actually reachable* from
 first-party code and need action tonight.
 
 Built for **Hack Hydra** (Aug 12–20, 2026), Track 02A. Solo project.
-Full plan: `docs/spec-v3.md`. Read it before making architectural decisions.
+The frozen graph schema is `docs/schema.md`. Read it before making architectural decisions.
 
 Surfaces: web console (primary) · README badge (`/badge/{owner}/{repo}.svg`).
 **There is no desktop app.** The CLI (`npx reachable-scan`) was cut on 2026-08-16
@@ -102,10 +102,7 @@ Data sources: `registry.npmjs.org` (versions, maintainers, publish times) ·
 
 ```
 docs/
-  spec-v3.md           the plan (its §4 data model is superseded by schema.md)
   schema.md            THE frozen graph schema — labels, properties, id scheme
-  JUDGE_GUIDE.md       90-second path + six-question table for judges
-  hack-hydra-participant-guide.pdf   the official rules (source for §13)
 worker/
   reachable/
     db.py              driver + env; the only place HYDRA_TOKEN is read (env, with .env auto-loaded)
@@ -499,7 +496,7 @@ page with six answer cards, Board, Services + add-by-URL jobs, Ask, Graph) ·
 "Beyond the watched set" (GitHub code search → watch) · MCP stdio server
 (12 tools, `.mcp.json`) — contract asserted in `worker/tests/test_mcp.py`, whole
 path exercised against a running worker by `scripts/mcp_smoke.py` · README written as the
-submission text; JUDGE_GUIDE numbers filled from benchmarks.
+submission text, with its numbers filled from benchmarks.
 
 **UI (2026-08-17 00:xx IST):** design-handoff port landed — landing at `/`, console under
 `web/app/(console)/` (`/incidents`, `/incident/[advisory]`, service detail, `/board`,
@@ -532,7 +529,7 @@ make targets exist, .env untracked, licence present).
 reference/{schema,ask,run,data}); markdown in docs/console/*.md with markers `{{diagram:NAME}}`
 (web/components/docs/diagrams/*), `{{stat:PATH|ms|int|s}}` and `{{cypher:SECTION}}` pulled from
 worker/out/MAL-2025-46974.json at build, `{{figure:FILE|caption}}` served from docs/assets/guide/
-via /guide/[file]. Plan + the owner's image/GIF prompt sheet: docs/superpowers/plans/2026-08-17-guide.md.
+via /guide/[file].
 
 **Deployed 2026-08-17 22:45 IST:** Vercel project `reachable` (root dir `web`, deploy from the repo
 root so worker/out, docs, demo upload; `.vercelignore` at root; `vercel.json` in web/); production
@@ -573,7 +570,6 @@ or broad patterns — the node runs in the same session.
 
 Phases: 0 engine · 1 model · 2 ingestion · 3 queries · 4 web · 5 differentiators
 · 6 reachability · 7 badge/MCP · 8 deploy · 9 submission.
-See `docs/spec-v3.md` for each phase's goal, done-when, and cut-if-late.
 
 ---
 
@@ -596,8 +592,7 @@ Either is safe.
 
 **The video has a prescribed running order** — four beats, in this sequence:
 the problem · the project (what you built) · the demo (show it working) ·
-HydraDB (where it is used, and why it matters). Our script in `docs/spec-v3.md`
-§7 already follows this order. Do not reorder it to be clever.
+HydraDB (where it is used, and why it matters). Do not reorder it to be clever.
 
 **The repo must carry**, and judges must find without asking for access:
 complete source · OSS licence · no participant-authored commits before Aug 12 ·

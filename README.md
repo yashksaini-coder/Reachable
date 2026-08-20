@@ -174,7 +174,7 @@ worker/reachable/   db · ids · load · pipeline · sources/{github,npm,osv,rea
 worker/tests/       14 golden tests (isolated node on :17687)
 web/                Next 16 console (app/, lib/, api routes are server-only proxies)
 worker/out/         composed incidents (the web contract)      benchmarks/results/  stamped timings
-docs/               schema.md · JUDGE_GUIDE.md · console/ (in-app docs) · plans/ · screenshots/
+docs/               schema.md · console/ (in-app docs) · screenshots/
 demo/               services.txt · incidents.txt               AGENTS.md  source of truth for rules and engine facts
 ```
 

@@ -49,7 +49,7 @@ export async function workerHealth(): Promise<{ up: boolean; services: number | 
   }
 }
 
-// ---- Services registry + ingest jobs (worker contract, docs/plans/2026-08-16-console-v2.md) ----
+// ---- Services registry + ingest jobs (worker contract) ----
 
 export type Service = {
   key: string; // svc:owner/repo

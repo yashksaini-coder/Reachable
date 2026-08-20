@@ -2,7 +2,7 @@
 
 {{figure:reference.png|Reference — the graph, drawn to scale}}
 
-This supersedes `spec-v3.md` §4. Every construct here was verified against a
+Every construct here was verified against a
 running HydraDB node before freezing (see `AGENTS.md` §8). Change it only with
 a probe result in hand — a schema change after ingest means a full reload.
 

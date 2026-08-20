@@ -11,7 +11,4 @@ worker/tests
 scripts
 benchmarks
 docs/screenshots
-docs/superpowers
-docs/plans
-docs/*.pdf
 *.log
