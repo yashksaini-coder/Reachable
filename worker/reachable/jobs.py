@@ -32,7 +32,11 @@ from reachable.sources import github, reach
 HISTORY = Path(".cache") / "jobs.jsonl"
 STEPS = ["lockfiles", "packages", "advisories", "reach"]
 TERMINAL = ("done", "failed", "interrupted")
-INTERRUPTED = "the worker restarted while this job was running — retry re-runs it idempotently"
+INTERRUPTED = (
+    "the worker restarted while this job was running — most often a large ingest reaching the "
+    "worker's memory ceiling. Retry is safe and idempotent, but a repository that interrupts "
+    "every time is one this worker cannot finish rather than one that was unlucky."
+)
 
 
 class Conflict(Exception):

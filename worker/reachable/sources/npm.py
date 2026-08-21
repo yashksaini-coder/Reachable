@@ -28,7 +28,12 @@ def epoch(s: str) -> int:
 _ts = epoch
 
 
-@functools.lru_cache(maxsize=4096)
+# Bounded by *count*, so the real ceiling is whatever the fattest 48 packuments weigh. 4096 was
+# effectively unbounded: a 438-package repo kept every packument alive for the whole job and peaked
+# at 1292 MB RSS — over the worker's 1 GB cap — so the ingest was OOM-killed and came back as
+# `interrupted`, identically on every retry. At 48 the same repo peaks at 670 MB. Evictions are
+# cheap: the HTTP layer keeps a disk cache, so a miss re-reads a local file rather than npm.
+@functools.lru_cache(maxsize=48)
 def fetch_packument(name: str) -> dict | None:
     """Full packument (has the `time` map). None on 404 or on a name safe_name rejects.
     Memoised per process: a packument can be 10 MB and the advisory stage asks for the same

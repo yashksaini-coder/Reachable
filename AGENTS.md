@@ -551,6 +551,13 @@ carries the caller's authority rather than the operator's. Q1 measured on the de
 `MAL-2025-46974` 27 ms, `GHSA-2v37-7h3g-55p8` (118 affected versions, 200 exposed lockfiles across
 11 services) 0.72–1.0 s.
 
+**Ingest memory (2026-08-21):** the packument LRU was bounded by count (4096), not bytes, so a
+438-package repository (`RS-labhub/Discord-Live-Members-Count-Badge`) held every packument for the
+whole job and peaked at **1292 MB RSS** against the worker's 1 GB cap — OOM-killed, job
+`interrupted`, identically on every retry. `maxsize=48` brings the same ingest to **670 MB**, output
+unchanged (5 commits, 456 versions, 438 packages, 82 advisories, 59 825 AFFECTS). Measure before
+raising it again; the HTTP disk cache makes evictions cheap.
+
 **Known open items:** video ≤ 3:00 in the prescribed order · form · final disqualifier pass
 (private-window links, no pre-Aug-12 commits, licence, `.env` never committed).
 
